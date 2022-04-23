@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/spring_boot_action?serverTimeZone=UTC
+    username: root
+    password: esmile
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+#      why: 禁止spring容器自动启动容器
+      enabled: false
+
+  sql:
+    init:
+      schema-locations: classpath:/org/springframework/batch/core/schema-mysql.sql
