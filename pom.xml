@@ -12,7 +12,7 @@
     <groupId>com.esmile</groupId>
     <artifactId>springboot-in-action</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>  <!-- 打包方式 -->
+    <packaging>pom</packaging>  <!-- parent项目的打包方式 -->
     <name>springboot-in-action</name>
     <description>springboot-in-action</description>
 
@@ -21,16 +21,15 @@
         <spring.boot.starter.version>2.6.6</spring.boot.starter.version>
         <lombok.version>1.18.22</lombok.version>
         <mysql.version>8.0.28</mysql.version>
-
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-web</artifactId>
-                <version>${spring.boot.starter.version}</version>
-            </dependency>
+            <!--<dependency>-->
+            <!--    <groupId>org.springframework.boot</groupId>-->
+            <!--    <artifactId>spring-boot-starter-web</artifactId>-->
+            <!--    <version>${spring.boot.starter.version}</version>-->
+            <!--</dependency>-->
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -38,11 +37,12 @@
                 <version>${spring.boot.starter.version}</version>
             </dependency>
 
-            <!--<dependency>-->
-            <!--    <groupId>org.springframework.boot</groupId>-->
-            <!--    <artifactId>spring-boot-starter-test</artifactId>-->
-            <!--    <scope>test</scope>-->
-            <!--</dependency>-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-test</artifactId>
+                <scope>test</scope>
+                <version>${spring.boot.starter.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -56,12 +56,11 @@
             <!--    <version>3.4.3.4</version>-->
             <!--</dependency>-->
 
-            <!--<dependency>-->
-            <!--    <groupId>mysql</groupId>-->
-            <!--    <artifactId>mysql-connector-java</artifactId>-->
-            <!--    <version>${mysql.version}</version>-->
-            <!--</dependency>-->
-
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
 
         </dependencies>
     </dependencyManagement>

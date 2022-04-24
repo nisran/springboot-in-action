@@ -24,7 +24,9 @@ public class SpringBatchApplication {
         JobLauncher jobLauncher = (JobLauncher) applicationContext.getBean("jobLauncher");
 
         //避免出现 <spring batch restart Step already complete or not restartable>, 无法重复测试batchJob
-        final JobParameters jobParameters = new JobParametersBuilder().addDate("date", new Date()).toJobParameters();
+        final JobParametersBuilder jobParametersBuilder = new JobParametersBuilder();
+        // jobParametersBuilder.addDate("date", new Date());
+        final JobParameters jobParameters = jobParametersBuilder.toJobParameters();
 
         try {
             jobLauncher.run(sampleJob, jobParameters);

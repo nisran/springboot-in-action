@@ -21,6 +21,8 @@ public class SampleWriter implements ItemWriter<String> {
     @AfterStep
     public void getResultList() {
         log.info("after step resultList: " + resultList);
+        log.info("******************************************************************************");
+
     }
 
 }
