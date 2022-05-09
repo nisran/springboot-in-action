@@ -1,13 +1,16 @@
 // package com.esmile.batch;
 //
 // import org.junit.jupiter.api.Test;
-// import org.springframework.boot.test.context.SpringBootTest;
+// import org.quartz.*;
 //
-// @SpringBootTest
-// class SpringBatchApplicationTests {
+// import java.util.Timer;
+// import java.util.TimerTask;
 //
-//     @Test
-//     void contextLoads() {
-//     }
-//
-// }
+// // @SpringBootTest
+// // class SpringBatchApplicationTests {
+// //
+// //     @Test
+// //     void contextLoads() {
+// //     }
+// //
+// // }
