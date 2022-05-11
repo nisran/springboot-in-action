@@ -1,4 +1,4 @@
-package com.esmile.spring.batch.reader;
+package com.esmile.batch.reader;
 
 import lombok.extern.java.Log;
 import org.springframework.batch.core.annotation.BeforeStep;

@@ -1,14 +1,13 @@
-package com.esmile.spring.batch.config;
+package com.esmile.batch.config;
 
-import com.esmile.spring.batch.peocessor.SampleProcessor;
-import com.esmile.spring.batch.reader.SampleReader;
-import com.esmile.spring.batch.writer.SampleWriter;
+import com.esmile.batch.peocessor.SampleProcessor;
+import com.esmile.batch.reader.SampleReader;
+import com.esmile.batch.writer.SampleWriter;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

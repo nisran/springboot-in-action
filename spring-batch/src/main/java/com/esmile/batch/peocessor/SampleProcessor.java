@@ -1,4 +1,4 @@
-package com.esmile.spring.batch.peocessor;
+package com.esmile.batch.peocessor;
 
 import lombok.extern.java.Log;
 import org.springframework.batch.item.ItemProcessor;

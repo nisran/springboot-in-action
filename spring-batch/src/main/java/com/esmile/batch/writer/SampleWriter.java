@@ -1,4 +1,4 @@
-package com.esmile.spring.batch.writer;
+package com.esmile.batch.writer;
 
 import lombok.extern.java.Log;
 import org.springframework.batch.core.annotation.AfterStep;

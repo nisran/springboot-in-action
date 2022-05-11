@@ -1,4 +1,4 @@
-package com.esmile.spring.batch;
+package com.esmile;
 
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
@@ -11,8 +11,6 @@ import org.springframework.batch.core.repository.JobRestartException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import java.util.Date;
 
 @SpringBootApplication
 public class SpringBatchApplication {
