@@ -14,5 +14,8 @@
 
     </properties>
 
+    <modules>
+        <module>spring-boot-actuator</module>
+    </modules>
 
 </project>
