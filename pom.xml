@@ -6,7 +6,7 @@
     <groupId>com.esmile</groupId>
     <artifactId>springboot-in-action</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>pom</packaging>  <!-- parent项目的打包方式 -->
+    <packaging>pom</packaging>
     <name>springboot-in-action</name>
     <description>springboot-in-action</description>
 
