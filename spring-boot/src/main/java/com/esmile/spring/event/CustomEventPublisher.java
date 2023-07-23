@@ -1,6 +1,5 @@
 package com.esmile.spring.event;
 
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
  * @Created by nisran
  */
 @Slf4j
-@Data
 @Component
 public class CustomEventPublisher {
 

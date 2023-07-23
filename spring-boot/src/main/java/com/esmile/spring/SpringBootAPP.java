@@ -10,9 +10,6 @@ public class SpringBootAPP {
 
 	public static void main(String[] args) {
 		final ConfigurableApplicationContext applicationContext = SpringApplication.run(SpringBootAPP.class, args);
-
-		final CustomEventPublisher publisher = applicationContext.getBean(CustomEventPublisher.class);
-		publisher.publishCustomEvent("Hello");
 	}
 
 }
