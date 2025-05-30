@@ -1,10 +1,12 @@
 package com.esmile.data.jpa;
 
 import jakarta.persistence.*;
+import jakarta.persistence.metamodel.StaticMetamodel;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
+@StaticMetamodel(Record.class)
 @Entity
 @Data
 @Table(name = "records")

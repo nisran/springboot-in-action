@@ -12,23 +12,23 @@ public class RecordSpecification {
             var predicates = new ArrayList<>();
 
             if (StringUtils.hasText(searchDTO.getName())) {
-                predicates.add(criteriaBuilder.like(root.get("name"), "%" + searchDTO.getName() + "%"));
+                predicates.add(criteriaBuilder.like(root.get(Record_.name), "%" + searchDTO.getName() + "%"));
             }
 
             if (StringUtils.hasText(searchDTO.getType())) {
-                predicates.add(criteriaBuilder.equal(root.get("type"), searchDTO.getType()));
+                predicates.add(criteriaBuilder.equal(root.get(Record_.type), searchDTO.getType()));
             }
 
             if (StringUtils.hasText(searchDTO.getStatus())) {
-                predicates.add(criteriaBuilder.equal(root.get("status"), searchDTO.getStatus()));
+                predicates.add(criteriaBuilder.equal(root.get(Record_.status), searchDTO.getStatus()));
             }
 
             if (searchDTO.getStartDate() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), searchDTO.getStartDate()));
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get(Record_.createdDate), searchDTO.getStartDate()));
             }
 
             if (searchDTO.getEndDate() != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), searchDTO.getEndDate()));
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(Record_.createdDate), searchDTO.getEndDate()));
             }
 
             return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
