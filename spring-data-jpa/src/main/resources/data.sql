@@ -1,0 +1,2 @@
+INSERT INTO records (name, type, status, created_date) VALUES ('Test Name 1', 'Type A', 'Active', '2023-01-01T10:00:00');
+INSERT INTO records (name, type, status, created_date) VALUES ('Test Name 2', 'Type B', 'Inactive', '2023-01-02T11:00:00');
