@@ -1,5 +1,6 @@
-package com.esmile.data.jpa;
+package com.esmile.data.jpa.specification;
 
+import com.esmile.data.jpa.Record_;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 

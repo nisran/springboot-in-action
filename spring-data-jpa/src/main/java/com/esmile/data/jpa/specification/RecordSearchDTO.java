@@ -1,4 +1,4 @@
-package com.esmile.data.jpa;
+package com.esmile.data.jpa.specification;
 
 import lombok.Data;
 import java.time.LocalDateTime;
