@@ -1,4 +1,4 @@
-package com.esmile.data.jpa;
+package com.esmile.data.jpa.specification;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -1,4 +1,4 @@
-package com.esmile.data.jpa;
+package com.esmile.data.jpa.specification;
 
 import jakarta.persistence.*;
 import jakarta.persistence.metamodel.StaticMetamodel;
@@ -20,4 +20,8 @@ public class Record {
     private String status;
     private LocalDateTime createdDate;
 
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+    }
 }
