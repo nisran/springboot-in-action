@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 12 章 · 经典同步题 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#strategy">解题总纲 ⭐</a>
+  <a href="#g-print">打印协调（题 1-3）</a>
+  <a class="lvl2" href="#p1">1 FooBar 交替打印 ⭐</a>
+  <a class="lvl2" href="#p2">2 ZeroEvenOdd</a>
+  <a class="lvl2" href="#p3">3 FizzBuzz</a>
+  <a href="#g-res">配额与生产消费（题 4-7）</a>
+  <a class="lvl2" href="#p4">4 H2O 水分子</a>
+  <a class="lvl2" href="#p5">5 读者-写者 ⭐</a>
+  <a class="lvl2" href="#p6">6 有界缓冲区</a>
+  <a class="lvl2" href="#p7">7 生产者-消费者 ⭐</a>
+  <a href="#g-os">OS 经典调度（题 8-11）</a>
+  <a class="lvl2" href="#p8">8 哲学家进餐 ⭐</a>
+  <a class="lvl2" href="#p9">9 睡眠理发师</a>
+  <a class="lvl2" href="#p10">10 吸烟者问题</a>
+  <a class="lvl2" href="#p11">11 圣诞老人</a>
+  <a href="#g-abc">收官：ABC 轮转（题 12）</a>
+  <a class="lvl2" href="#p12">12 按序打印 ABC</a>
+  <a href="#followup">追问套路与变式</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="11-并发挑战.html">⬅ 上一章：11 并发挑战</a>
+  <a href="13-并发设计题.html">下一章：13 并发设计题 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 12 章 · 经典同步题（12 道）</h1>
+    <div class="sub">FooBar · ZeroEvenOdd · FizzBuzz · H2O · 读者-写者 · 有界缓冲 · 生产者-消费者 · 哲学家 · 理发师 · 吸烟者 · 圣诞老人 · ABC 轮转 —— 把互斥与协作焊进肌肉记忆</div>
+    <div class="meta">
+      <span>⭐ 高频：交替打印 · 生产者-消费者 · 哲学家</span>
+      <span>蓝本：AlgoMaster Concurrency 编程题 · LeetCode 1115/1116/1195/1117</span>
+      <span>刷题章 · 12 道全覆盖</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li><strong>白板手写</strong>：给 LeetCode 1115/1116/1195/1117 原题，15-20 分钟写出结构完整、能运行的类 ⭐</li>
+      <li><strong>口述同步关系</strong>：不写代码，说清"几个线程、共享什么变量、谁在等谁的信号、信号怎么接力"</li>
+      <li><strong>改需求追问</strong>：写完之后追"线程从 2 变 5 怎么改？""顾客等不到怎么办（超时）？""写者会不会饿死？"</li>
+      <li><strong>判卷点</strong>：能跑只是及格线——锁粒度、惊群、饥饿、死锁四条件的破坏方式才是区分度</li>
+    </ol>
+  </div>
+  <p>这一章是<strong>刷题章</strong>：12 道题覆盖互斥与协作的全部组合形态。练到"看题 30 秒内说出用哪套原语、信号怎么接力"，面试时这章就是送分章。去重说明：这些题主实现与讲解都在本章，07-LLD 板块的并发速查章只保留一页纸速查表。</p>
+</section>
+
+<section id="strategy">
+  <h2><span class="no">02</span>解题总纲 ⭐</h2>
+  <h3>第一步：分清两类需求</h3>
+  <table>
+    <tr><th></th><th>互斥（Mutual Exclusion）</th><th>协作（Coordination）</th></tr>
+    <tr><td>本质</td><td>保护共享资源：同时只许一个（或一类）线程进入</td><td>控制执行顺序：等某个事件 / 信号发生再走</td></tr>
+    <tr><td>判断口诀</td><td>"不能一起动"</td><td>"轮到我了吗"</td></tr>
+    <tr><td>典型场景</td><td>count++、队列入队出队、叉子的占用</td><td>交替打印、满等空 / 空等满、凑齐成键</td></tr>
+    <tr><td>对应原语</td><td>synchronized · Lock · Semaphore(1)</td><td>wait/notify · Condition · Semaphore(0) · Latch/Barrier</td></tr>
+  </table>
+  <p>几乎所有题都是两类需求的<strong>复合</strong>：生产者-消费者 = 互斥（保护队列）+ 协作（满等空、空等满）；哲学家 = 互斥（叉子）+ 协作（拿叉策略防死锁）。动手前先拆成"互斥清单 + 接力图"两张账。</p>
+  <h3>第二步：三套原语的分工</h3>
+  <table>
+    <tr><th>原语</th><th>当互斥锁用</th><th>当协作信令用</th><th>特点</th></tr>
+    <tr><td>synchronized + wait/notify（管程）</td><td>任意对象当 monitor</td><td>一把锁一个等待队列，notify 无法指定叫醒谁 → 只能 notifyAll + while 守卫</td><td>零依赖、白板首选；唤醒不精确</td></tr>
+    <tr><td>Semaphore</td><td>permits=1 就是互斥锁</td><td>permits=0 预置"尚未发生"的信号，谁干完谁 release 放行下一棒</td><td>轮次 / 配额题最直观；本身不保护代码块，互斥需另配</td></tr>
+    <tr><td>Lock + Condition</td><td>ReentrantLock</td><td>一把锁挂多个条件队列，signal 精确唤醒某一类等待者</td><td>notFull/notEmpty 这类双条件场景之王</td></tr>
+    <tr><td>CountDownLatch / CyclicBarrier</td><td>—</td><td>到齐 / 会合：N 个线程互相等</td><td>Barrier 可重用、可带 action；Latch 一次性</td></tr>
+  </table>
+  <h3>第三步：解题三板斧</h3>
+  <ol>
+    <li><strong>找共享变量</strong>：谁在读改写什么（队列、计数、轮次标志、叉子占用表）——它们就是需要互斥保护的资产。</li>
+    <li><strong>定同步关系</strong>：画出"接力图"——每个动作完成后 release/signal 谁、谁正 acquire/await 等谁。12 道题的差别只在接力图的形状。</li>
+    <li><strong>选原语</strong>：纯互斥 → synchronized / Lock；固定轮次接力 → Semaphore(0) 链；多角色精确唤醒 → Lock+Condition；到齐开会 → CyclicBarrier。</li>
+  </ol>
+  <div class="box tip"><p><strong>信号量语义</strong>：把 Semaphore 当计数器——<code>acquire()</code> 减 1（不够就阻塞排队），<code>release()</code> 加 1（有欠账就唤醒队头）。<strong>负值的绝对值 = 正在排队等待的线程数</strong>；release 不要求先 acquire（可以先发信号再等人），也不必由拿走许可的线程来还——FooBar 用 1/0 两个信号量互推正是靠这一点。</p></div>
+  <div class="box warn"><p><strong>铁律</strong>：任何 wait / await 的条件判断永远是 <code>while</code> 不是 <code>if</code>——虚假唤醒 + notifyAll 会惊醒不该醒的人，if 版本会在被意外唤醒后直接冲过条件（原因详见 <a href="03-互斥与同步.html">第 03 章</a>）。本章所有代码都按这条铁律写。</p></div>
+</section>
+
+<section id="g-print">
+  <h2><span class="no">03</span>打印协调三连（题 1-3）</h2>
+  <p>打印类是最友好的入口：几乎没有共享数据要保护，考点全在<strong>协作接力</strong>。三道 LeetCode 原题从两角色一路加到四角色，覆盖"轮次接力"的全部形态。</p>
+
+  <h3 id="p1">题 1 · 交替打印 FooBar（LeetCode 1115）⭐</h3>
+  <p><strong>题意</strong>：两个线程并发跑，foo 线程打印 "foo"、bar 线程打印 "bar"，各 n 次，输出 "foobarfoobar..."。</p>
+  <ul>
+    <li><strong>同步关系</strong>：foo 先行 → 打完放行 bar → bar 打完再放行 foo，两节点循环接力。</li>
+    <li><strong>管程版</strong>：一把锁 + 布尔轮次标志，没轮到的 wait；<strong>信号量版</strong>：两个信号量 1/0 互推——连 while 守卫和 notifyAll 都省了，体会"信号量当信令"的简洁。</li>
+  </ul>
+  <h4>版本一：synchronized + wait/notify（管程）</h4>
+  <pre><code>class FooBar {
+    private int n;
+    private final Object lock = new Object();
+    private boolean fooTurn = true;              // 轮次标志（都在锁内读写，无需 volatile）
+    public FooBar(int n) { this.n = n; }
+    public void foo(Runnable printFoo) {
+        for (int i = 0; i &lt; n; i++) {
+            synchronized (lock) {
+                while (!fooTurn)                 // 没轮到我：睡
+                    try { lock.wait(); } catch (InterruptedException e) { return; }
+                printFoo.run();
+                fooTurn = false;                 // 交棒
+                lock.notifyAll();                // 叫醒 bar
+            }
+        }
+    }
+    public void bar(Runnable printBar) {
+        for (int i = 0; i &lt; n; i++) {
+            synchronized (lock) {
+                while (fooTurn)
+                    try { lock.wait(); } catch (InterruptedException e) { return; }
+                printBar.run();
+                fooTurn = true;
+                lock.notifyAll();
+            }
+        }
+    }
+}</code></pre>
+  <h4>版本二：Semaphore 交替放行（推荐）</h4>
+  <pre><code>class FooBar {
+    private int n;
+    private final Semaphore fooSem = new Semaphore(1);   // foo 先行：预置一张票
+    private final Semaphore barSem = new Semaphore(0);   // bar 后行：先欠一张票
+    public FooBar(int n) { this.n = n; }
+    public void foo(Runnable printFoo) throws InterruptedException {
+        for (int i = 0; i &lt; n; i++) {
+            fooSem.acquire();       // 拿到"该打 foo"的信号（第一轮直接通过）
+            printFoo.run();
+            barSem.release();       // 放行 bar
+        }
+    }
+    public void bar(Runnable printBar) throws InterruptedException {
+        for (int i = 0; i &lt; n; i++) {
+            barSem.acquire();       // 没票就睡，直到 foo release
+            printBar.run();
+            fooSem.release();       // 还票给 foo
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：为什么管程版用 notifyAll 不用 notify？</strong>→ 两线程时 notify 恰好叫醒对方，看似安全，实属撞大运：一旦有第三类等待者共用这把锁，notify 可能叫醒同类。口径：默认 notifyAll，只有明确"等待者只有对方一类"时才可 notify。</li>
+    <li><strong>追问：fooTurn 要 volatile 吗？</strong>→ 不用。读写全在 synchronized 内，锁的 happens-before 已保证可见性（<a href="02-JMM.html">第 02 章</a>）。</li>
+    <li><strong>追问：信号量版为什么没有 while 守卫？</strong>→ acquire 本身就是"票不够就睡"，release 精确对应"条件成真"，不存在被错误唤醒后冲过条件的窗口——信令语义天然免虚假唤醒。</li>
+  </ul>
+
+  <h3 id="p2">题 2 · ZeroEvenOdd 打印 0 与奇偶数（LeetCode 1116）</h3>
+  <p><strong>题意</strong>：三个线程：zero 每轮打印一个 0，even 打印偶数，odd 打印奇数，输出 "0102030405..."（到 n）。</p>
+  <ul>
+    <li><strong>同步关系</strong>：zero 是总调度——每打一个 0，按第 i 个数的奇偶决定下一棒给 odd 还是 even；打完数字还票给 zero。三条放行闸，一张总票。</li>
+  </ul>
+  <pre><code>class ZeroEvenOdd {
+    private int n;
+    private final Semaphore zSem = new Semaphore(1);   // 0 的闸：先发一张票
+    private final Semaphore oSem = new Semaphore(0);   // 奇数闸
+    private final Semaphore eSem = new Semaphore(0);   // 偶数闸
+    public ZeroEvenOdd(int n) { this.n = n; }
+    public void zero(IntConsumer printNumber) throws InterruptedException {
+        for (int i = 1; i &lt;= n; i++) {
+            zSem.acquire();                    // 拿到"该打 0"的票
+            printNumber.accept(0);
+            if (i % 2 == 1) oSem.release();    // 第 i 个数是奇数 → 放行 odd
+            else            eSem.release();    // 是偶数 → 放行 even
+        }
+    }
+    public void odd(IntConsumer printNumber) throws InterruptedException {
+        for (int i = 1; i &lt;= n; i += 2) {      // 起点 1 步长 2，天然只跑奇数次
+            oSem.acquire();
+            printNumber.accept(i);
+            zSem.release();                    // 还票给 zero
+        }
+    }
+    public void even(IntConsumer printNumber) throws InterruptedException {
+        for (int i = 2; i &lt;= n; i += 2) {
+            eSem.acquire();
+            printNumber.accept(i);
+            zSem.release();
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：为什么三个信号量？</strong>→ 三岔路口需要三条独立放行闸：一个信号量表达不了"下一个该谁"的分派逻辑；zSem 是总票，o/e 是两条支线闸。</li>
+    <li><strong>追问：单锁 + state 取模能写吗？</strong>→ 能，就是题 12 的模式（while (state % 3 != who) await），代码更少，代价是三类线程挤一个条件队列、signalAll 惊群。</li>
+    <li><strong>追问：n 为奇数时 even 少跑一轮怎么处理？</strong>→ 循环写成起点 2、步长 2、条件 i &lt;= n，自动少一次，不需要特判。</li>
+  </ul>
+
+  <h3 id="p3">题 3 · FizzBuzz 多线程版（LeetCode 1195）</h3>
+  <p><strong>题意</strong>：四个线程分别只打印 fizz（3 的倍数）、buzz（5 的倍数）、fizzbuzz（15 的倍数）、数字本身，从 1 到 n 按序输出。</p>
+  <ul>
+    <li><strong>同步关系</strong>：关键认知——<strong>"当前该打谁"本身就是共享状态</strong>，必须有人持有调度权。number 线程兼任调度员：按 i 的整除性把打印权发出去，工人打完归还令牌。四个信号量 = 一张令牌 + 三条工位闸。</li>
+  </ul>
+  <pre><code>class FizzBuzz {
+    private int n;
+    private final Semaphore token = new Semaphore(1);       // 调度令牌，number 先持
+    private final Semaphore fizzSem = new Semaphore(0);
+    private final Semaphore buzzSem = new Semaphore(0);
+    private final Semaphore fizzbuzzSem = new Semaphore(0);
+    public FizzBuzz(int n) { this.n = n; }
+    // number 线程兼任调度员
+    public void number(Runnable printNumber) throws InterruptedException {
+        for (int i = 1; i &lt;= n; i++) {
+            token.acquire();                       // 拿到调度权
+            if (i % 3 != 0 &amp;&amp; i % 5 != 0) {
+                printNumber.run();                 // 普通数字：自己打
+            } else {
+                if (i % 15 == 0)      fizzbuzzSem.release();
+                else if (i % 3 == 0)  fizzSem.release();
+                else                  buzzSem.release();
+                token.acquire();                   // 等工人打完归还令牌
+            }
+            token.release();                       // 放行下一轮
+        }
+    }
+    public void fizz(Runnable printFizz) throws InterruptedException {
+        for (int j = 0, times = n / 3 - n / 15; j &lt; times; j++) {  // 3 倍数挖掉 15 倍数
+            fizzSem.acquire();
+            printFizz.run();
+            token.release();                       // 归还调度权
+        }
+    }
+    public void buzz(Runnable printBuzz) throws InterruptedException {
+        for (int j = 0, times = n / 5 - n / 15; j &lt; times; j++) {
+            buzzSem.acquire(); printBuzz.run(); token.release();
+        }
+    }
+    public void fizzbuzz(Runnable printFizzBuzz) throws InterruptedException {
+        for (int j = 0, times = n / 15; j &lt; times; j++) {
+            fizzbuzzSem.acquire(); printFizzBuzz.run(); token.release();
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：四个线程为什么不各自判断 i 自己打？</strong>→ 没有共享游标 i：谁也不知道"现在轮到第几个"，必须有唯一的调度权持有者（token）串行分发。</li>
+    <li><strong>追问：times = n / 3 - n / 15 是什么？</strong>→ fizz 的打印次数：3 的倍数里挖掉 15 的倍数（那部分归 fizzbuzz）。buzz 同理是 n / 5 - n / 15。</li>
+    <li><strong>追问：更省事的写法？</strong>→ 一个锁 + state 分发（题 12 模式）把整除 if-else 链放进一个统一循环；调度员模式胜在职责清晰、和 OS 题（理发师、吸烟者）同构。</li>
+  </ul>
+</section>
+
+<section id="g-res">
+  <h2><span class="no">04</span>配额与生产消费（题 4-7）</h2>
+  <p>这一组开始互斥与协作<strong>复合</strong>：H2O 是配额 + 会合；读者-写者是互斥调度；有界缓冲区与生产者-消费者是同一问题的两个深度——后者是面试出现率最高的并发手写题。</p>
+
+  <h3 id="p4">题 4 · H2O 生成水分子（LeetCode 1117）</h3>
+  <p><strong>题意</strong>：氢线程打印 "H"、氧线程打印 "O"（线程数不限），保证输出按 "HHO" / "HOH" 分组——每 3 个字符一组恰为 2 个 H、1 个 O。</p>
+  <ul>
+    <li><strong>同步关系</strong>：配额（每批 2 氢 1 氧）+ 会合（凑齐 3 个才能"成键"放行）。两个信号量管比例，CyclicBarrier(3) 管成键，缺一不可。</li>
+    <li>纯管程替代：锁内两个计数当"氢 / 氧队列"（while (h == 2) wait / h++，氧对称 o == 1），barrier 照旧凑批——结构等价，信号量版更短。</li>
+  </ul>
+  <pre><code>class H2O {
+    private final Semaphore hSem = new Semaphore(2);          // 每批 2 个氢名额
+    private final Semaphore oSem = new Semaphore(1);          // 每批 1 个氧名额
+    private final CyclicBarrier bond = new CyclicBarrier(3);  // 凑齐 2H+1O 才放行
+    public void hydrogen(Runnable releaseHydrogen)
+            throws InterruptedException, BrokenBarrierException {
+        hSem.acquire();           // 抢氢名额（第 3 个氢在这里等到下一批）
+        releaseHydrogen.run();    // 打印 H
+        bond.await();             // 等成键：本批 3 个线程到齐才一起过
+        hSem.release();           // 归还名额，放行下一批
+    }
+    public void oxygen(Runnable releaseOxygen)
+            throws InterruptedException, BrokenBarrierException {
+        oSem.acquire();
+        releaseOxygen.run();      // 打印 O
+        bond.await();
+        oSem.release();
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：只有两个信号量、没有 barrier 行不行？</strong>→ 不行。名额立刻归还，第 3 个氢会提前挤进"下一批"，输出可能串成 HHHO——名额管比例，barrier 把 2H+1O 焊成一个分子再放行。</li>
+    <li><strong>追问：只有 barrier 行不行？</strong>→ 也不行。barrier(3) 只知道"来了 3 个线程"，3 个氧也能凑满放行，比例就失控了。</li>
+    <li><strong>追问：为什么用 CyclicBarrier 不用 CountDownLatch？</strong>→ 分子一个接一个生成，凑批点要可重复使用；Latch 一次性，到 0 就废（对比见 <a href="08-并发工具类.html">第 08 章</a>）。</li>
+  </ul>
+
+  <h3 id="p5">题 5 · 读者-写者问题 ⭐</h3>
+  <p><strong>题意</strong>：多个读者可同时读共享数据；写者必须独占（读写互斥、写写互斥、读读并行）。互斥调度的经典考题。</p>
+  <h4>版本一：ReadWriteLock（工程口径）</h4>
+  <pre><code>class ReadersWritersRW {
+    private final ReadWriteLock rw = new ReentrantReadWriteLock();
+    private int data = 0;                       // 被保护的共享数据
+    public int read() {
+        rw.readLock().lock();                   // 读锁：读者之间不互斥，与写互斥
+        try {
+            return data;
+        } finally {
+            rw.readLock().unlock();
+        }
+    }
+    public void write(int v) {
+        rw.writeLock().lock();                  // 写锁：独占一切
+        try {
+            data = v;
+        } finally {
+            rw.writeLock().unlock();
+        }
+    }
+}</code></pre>
+  <p>两个高频深挖点：</p>
+  <ul>
+    <li><strong>"读锁内修改共享计数"是经典陷阱</strong>：读锁只保证与写互斥，读者之间照样并发——在读锁里做 readCount++ 统计并发读者是竞态。要数就上 AtomicInteger（CAS）；或者干脆别自己数——RRWL 内部自带读计数（AQS state 高 16 位记读、低 16 位记写，见 <a href="04-锁策略.html">第 04 章</a>）。</li>
+    <li><strong>锁升降级</strong>：读锁"升级"为写锁会死锁（两个读者同时申请升级互等），RRWL 直接不支持；<strong>写锁降级读锁</strong>是支持的：</li>
+  </ul>
+  <pre><code>// 写 → 读降级：先拿读锁、再放写锁；反向"读升级写"会死锁，RRWL 拒绝
+rw.writeLock().lock();
+try {
+    data = recompute();
+    rw.readLock().lock();      // ① 持写锁期间先拿好读锁
+} finally {
+    rw.writeLock().unlock();   // ② 再放写锁：降级完成，无人能看到中间态
+}
+try { return data; }           // 之后按读锁语义继续读
+finally { rw.readLock().unlock(); }</code></pre>
+  <h4>版本二：Semaphore + 互斥信号量（OS 教科书口径）</h4>
+  <pre><code>class ReadersWriters {
+    private final Semaphore mutex = new Semaphore(1);  // 互斥信号量：保护 readCount
+    private final Semaphore wrt = new Semaphore(1);    // "房间门"：读写真正互斥处
+    private int readCount = 0;                         // 房间里当前的读者数
+    public void read() throws InterruptedException {
+        mutex.acquire();
+        readCount++;
+        if (readCount == 1) wrt.acquire();   // 第一个读者进门：替全体读者锁门
+        mutex.release();
+        // ……读共享数据（多个读者同时在此，读锁语义）
+        mutex.acquire();
+        readCount--;
+        if (readCount == 0) wrt.release();   // 最后一个读者出门：开门放写者
+        mutex.release();
+    }
+    public void write() throws InterruptedException {
+        wrt.acquire();                       // 独占房间（有读者在时阻塞在这）
+        // ……写共享数据
+        wrt.release();
+    }
+}</code></pre>
+  <p>这是<strong>读者优先</strong>版：只要有读者在读，新读者直接进，写者必须等读者清零——读者流量大时<strong>写者饥饿</strong>。写优先版给写者也配"计数 + 一道门"（新读者看到有写者排队就在门外等），牺牲读者并发换写者不被饿；更工程化的答案是公平模式。</p>
+  <ul>
+    <li><strong>追问：为什么第一个读者要 acquire(wrt)？</strong>→ 它代表全体读者把房间锁上挡住写者，最后一个离开的读者再开门——readCount 的增减全程在 mutex 保护下，两个信号量配合完成"读可重入、写独占"。</li>
+    <li><strong>追问：读者优先怎么改成不饿写者？</strong>→ 写优先挡门（如上），或 new ReentrantReadWriteLock(true) 公平模式——队列里谁先到谁上，读写都不饿，代价是吞吐降。</li>
+    <li><strong>追问：读写锁适合什么场景？</strong>→ 读多写少且读临界区不能太短：临界区太短时，锁状态维护（CAS 竞争）的开销会吃掉并发读的收益。</li>
+  </ul>
+
+  <h3 id="p6">题 6 · 手写有界缓冲区（ArrayBlockingQueue 的骨架）</h3>
+  <p><strong>题意</strong>：实现线程安全的定长缓冲区：put 满则阻塞、take 空则阻塞——这正是 <a href="09-并发容器.html">第 09 章 ArrayBlockingQueue</a> 的内部结构本身。</p>
+  <ul>
+    <li><strong>一把锁、两个条件队列</strong>：notFull（生产者睡这）+ notEmpty（消费者睡这），put 成功 signal 一个消费者、take 成功 signal 一个生产者。</li>
+  </ul>
+  <pre><code>class BoundedBuffer&lt;T&gt; {
+    private final Object[] items;
+    private int putIdx, takeIdx, count;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition notFull  = lock.newCondition();   // 生产者等"不满"
+    private final Condition notEmpty = lock.newCondition();   // 消费者等"不空"
+    public BoundedBuffer(int capacity) { items = new Object[capacity]; }
+    public void put(T e) throws InterruptedException {
+        lock.lock();
+        try {
+            while (count == items.length)       // ⭐ while 守卫
+                notFull.await();                // 满：睡在 notFull 队列上
+            items[putIdx] = e;
+            if (++putIdx == items.length) putIdx = 0;   // 环形数组
+            count++;
+            notEmpty.signal();                  // 精确唤醒一个消费者
+        } finally {
+            lock.unlock();
+        }
+    }
+    @SuppressWarnings("unchecked")
+    public T take() throws InterruptedException {
+        lock.lock();
+        try {
+            while (count == 0)
+                notEmpty.await();               // 空：睡在 notEmpty 队列上
+            T e = (T) items[takeIdx];
+            items[takeIdx] = null;              // 帮 GC
+            if (++takeIdx == items.length) takeIdx = 0;
+            count--;
+            notFull.signal();                   // 精确唤醒一个生产者
+            return e;
+        } finally {
+            lock.unlock();
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：为什么必须两个 Condition？</strong>→ 一个条件队列里混着等"不满"的生产者和等"不空"的消费者，signal() 可能叫醒同类——被唤醒者发现条件不满足又睡回去，功能对但空转；两个队列才能指名道姓，这是 Condition 相对 Object.wait 的核心增益。</li>
+    <li><strong>追问：这就是 ArrayBlockingQueue 源码吗？</strong>→ 是：items / putIndex / takeIndex / count / notFull / notEmpty 一一对应（<a href="09-并发容器.html">第 09 章</a>拆过源码）。</li>
+    <li><strong>追问：while 换 if 行不行？</strong>→ 不行：从被 signal 到自己重新拿到锁之间，条件可能又被别的线程打破；虚假唤醒同理（<a href="03-互斥与同步.html">第 03 章</a>）。</li>
+  </ul>
+
+  <h3 id="p7">题 7 · 生产者-消费者（三版对比）⭐</h3>
+  <p><strong>题意</strong>：生产者往共享队列放数据、消费者取数据，队列有界；满时生产者等、空时消费者等——面试出现率最高的并发手写题。</p>
+  <h4>版本一：synchronized + wait/notifyAll</h4>
+  <pre><code>class ProducerConsumerSync {
+    private final Queue&lt;Integer&gt; queue = new LinkedList&lt;&gt;();
+    private final int cap = 10;
+    private final Object lock = new Object();
+    public void put(int v) throws InterruptedException {
+        synchronized (lock) {
+            while (queue.size() == cap)     // ⭐ while 守卫，不是 if
+                lock.wait();                // 满：放锁等待
+            queue.offer(v);
+            lock.notifyAll();               // 叫醒所有等待者——对面才该醒
+        }
+    }
+    public Integer take() throws InterruptedException {
+        synchronized (lock) {
+            while (queue.isEmpty())
+                lock.wait();                // 空：放锁等待
+            Integer v = queue.poll();
+            lock.notifyAll();
+            return v;
+        }
+    }
+}</code></pre>
+  <h4>版本二：Lock + Condition（精确唤醒）</h4>
+  <pre><code>// 两个条件队列，signal 指名道姓（完整实现就是题 6 的 BoundedBuffer）
+private final ReentrantLock lock = new ReentrantLock();
+private final Condition notFull  = lock.newCondition();
+private final Condition notEmpty = lock.newCondition();
+public void put(int v) throws InterruptedException {
+    lock.lock();
+    try {
+        while (queue.size() == cap) notFull.await();   // 只睡在"不满"队列
+        queue.offer(v);
+        notEmpty.signal();                             // 只叫消费者，不惊动同类
+    } finally { lock.unlock(); }
+}
+// take 对称：notEmpty.await() + notFull.signal()</code></pre>
+  <h4>版本三：直接用 BlockingQueue（工程首选）</h4>
+  <pre><code>BlockingQueue&lt;Integer&gt; queue = new ArrayBlockingQueue&lt;&gt;(10);
+queue.put(1);               // 满了自动阻塞（内部就是 notFull/notEmpty）
+Integer v = queue.take();   // 空了自动阻塞
+// 生产代码：线程池 + 有界队列 = 生产者-消费者架构本体（第 06 章）</code></pre>
+  <ul>
+    <li><strong>追问：版本一的 notifyAll 换 notify 行不行？</strong>→ 不行。notify 叫醒的可能是同类（唤醒另一个生产者），它检查条件不满足又睡回去，真正该醒的消费者永远等不到——极端下全员互睡。</li>
+    <li><strong>追问：三版怎么选？</strong>→ v1 展示基本功（while 守卫 + notifyAll 的原因能讲清），v2 讲精确唤醒，v3 表明工程判断——生产代码没有理由手写第四版。</li>
+    <li><strong>追问：队列满了还不停提交怎么办？</strong>→ 有界队列 + 拒绝策略，或 put 阻塞形成背压，链 <a href="06-线程池.html">第 06 章线程池</a>。</li>
+  </ul>
+</section>
+
+<section id="g-os">
+  <h2><span class="no">05</span>OS 经典调度四题（题 8-11）</h2>
+  <p>四道 OS 教科书题在国内高级岗面试出现率不低（尤其哲学家）。价值不在背代码，而在<strong>把调度策略翻译成信号量接力</strong>的思路——每道题先画"谁按铃、谁等铃"。</p>
+
+  <h3 id="p8">题 8 · 哲学家进餐 ⭐</h3>
+  <p><strong>题意</strong>：5 位哲学家围桌，两两之间一把叉子；进餐须同时拿起左右两把叉，吃完放下。人人先拿左叉不放 = 死锁教科书现场。</p>
+  <h4>死锁现场（反面教材）</h4>
+  <pre><code>class Philosopher extends Thread {
+    private final Object left, right;
+    Philosopher(int id, Object[] forks) {
+        left = forks[id];
+        right = forks[(id + 1) % forks.length];  // 5 号的右叉 = 0 号的左叉 → 成环
+    }
+    public void run() {
+        while (true) {
+            synchronized (left) {           // ① 先拿左叉
+                synchronized (right) {      // ② 再拿右叉
+                    eat();                  // 5 人同时走到① → 全员卡死在②
+                }
+            }
+        }
+    }
+    private void eat() { /* 进餐 */ }
+}</code></pre>
+  <p>五人同时到达"已拿左叉、等右叉"：每人持有别人要的叉、等别人持有的叉——<strong>循环等待</strong>成立，死锁四条件（互斥 / 持有并等待 / 不可剥夺 / 循环等待，详见 <a href="11-并发挑战.html">第 11 章</a>）全部凑齐。四种解法各破坏其中一条：</p>
+  <table>
+    <tr><th>解法</th><th>破坏的条件</th><th>代价</th></tr>
+    <tr><td>① 只许 4 人入座 Semaphore(4)</td><td>循环等待（4 人 5 叉，鸽笼原理必有一人能凑齐两把）</td><td>并发度降为 4，入座要排队</td></tr>
+    <tr><td>② 奇偶编号拿叉顺序相反</td><td>循环等待（资源有序分配的变体）</td><td>几乎零成本</td></tr>
+    <tr><td>③ tryLock 超时，拿不到就放</td><td>持有并等待（近似实现"可剥夺"）</td><td>活锁风险，需随机退避</td></tr>
+    <tr><td>④ 管程服务员集中分发</td><td>持有并等待（两把叉原子获取）</td><td>服务员是单点，竞争集中</td></tr>
+  </table>
+  <h4>解法 ① 只许 4 人同时上桌</h4>
+  <pre><code>class PhilosopherRoom extends Thread {
+    private static final Semaphore room = new Semaphore(4);   // 桌旁只放 4 把椅子
+    private final Object left, right;
+    PhilosopherRoom(int id, Object[] forks) {
+        left = forks[id]; right = forks[(id + 1) % forks.length];
+    }
+    public void run() {
+        while (true) {
+            try {
+                room.acquire();             // 先抢座位：最多 4 人同时伸手拿叉
+                synchronized (left) {
+                    synchronized (right) { eat(); }
+                }
+            } catch (InterruptedException e) {
+                return;
+            } finally {
+                room.release();             // 离桌让位 —— 第 5 人进不来，环不成型
+            }
+        }
+    }
+    private void eat() { /* 进餐 */ }
+}</code></pre>
+  <h4>解法 ② 奇偶反序拿叉（最常用）</h4>
+  <pre><code>// run() 内：偶数号先左后右、奇数号先右后左（破坏"人人先拿同一侧"的对称）
+Object first, second;
+if (id % 2 == 0) { first = left;  second = right; }
+else             { first = right; second = left; }
+// 效果：相邻两人必在"同一把叉"上正面相遇，输家两手空空、不持有任何叉 → 环被斩断
+synchronized (first) {
+    synchronized (second) { eat(); }
+}</code></pre>
+  <h4>解法 ③ tryLock 超时放弃</h4>
+  <pre><code>// forks 改用 ReentrantLock[]；100ms 内凑不齐两把就全部放弃、随机退避后重试
+if (forks[id].tryLock(100, TimeUnit.MILLISECONDS)) {
+    try {
+        if (forks[(id + 1) % 5].tryLock(100, TimeUnit.MILLISECONDS)) {
+            try { eat(); } finally { forks[(id + 1) % 5].unlock(); }
+        }
+        // 右叉没抢到：什么都不做，finally 放掉左叉
+    } finally {
+        forks[id].unlock();       // 拿不到右叉就放左 —— 不做"半持有"的人
+    }
+}</code></pre>
+  <h4>解法 ④ 管程服务员（集中分发）</h4>
+  <pre><code>class Waiter {                              // 要么两把都给，要么一把都不给
+    private final boolean[] used = new boolean[5];
+    public synchronized void take(int i) throws InterruptedException {
+        while (used[i] || used[(i + 1) % 5])
+            wait();                         // 缺任何一把就空手等待
+        used[i] = true;
+        used[(i + 1) % 5] = true;           // 两把叉原子到手
+    }
+    public synchronized void put(int i) {
+        used[i] = false;
+        used[(i + 1) % 5] = false;
+        notifyAll();                        // 叫醒邻居们重新检查
+    }
+}
+// 哲学家线程体：waiter.take(id); eat(); waiter.put(id);</code></pre>
+  <ul>
+    <li><strong>追问：四种解法各破坏哪个条件？</strong>→ 见上表。先背死锁四条件，再"任选其一破坏"给解法——这是标准答题路线（四条件详见 <a href="11-并发挑战.html">第 11 章</a>）。</li>
+    <li><strong>追问：工程上像什么？</strong>→ 奇偶反序 = 资源有序分配（分布式锁按排序后的 key 依次加锁）；tryLock 超时 = 数据库锁等待超时；管程服务员 = 集中式锁 / 事务管理器。</li>
+    <li><strong>追问：解法 ③ 的活锁怎么破？</strong>→ 退避时间加随机抖动，避免所有人同频"拿起-放下-再拿起"。</li>
+  </ul>
+
+  <h3 id="p9">题 9 · 睡眠理发师</h3>
+  <p><strong>题意</strong>：理发店无顾客时理发师睡觉；顾客到店，有等待椅（N 把）就坐下等，满了扭头就走；理发师依次招待。</p>
+  <ul>
+    <li><strong>同步关系</strong>：customers 是"叫号铃"（理发师没人就睡在它上面）；barberReady 是"上椅令"；waiting 计数配互斥信号量保护——check-then-act 必须原子。</li>
+  </ul>
+  <pre><code>class BarberShop {
+    private static final int CHAIRS = 5;                    // 等待椅数
+    private int waiting = 0;                                // 正在等的顾客数
+    private final Semaphore customers  = new Semaphore(0);  // 叫号铃
+    private final Semaphore barberReady = new Semaphore(0); // 上椅令
+    private final Semaphore mutex = new Semaphore(1);       // 保护 waiting
+    public void customer() throws InterruptedException {
+        mutex.acquire();
+        if (waiting == CHAIRS) {            // 没椅子：扭头就走（不等待）
+            mutex.release();
+            return;
+        }
+        waiting++;                          // 坐下排队
+        mutex.release();
+        customers.release();                // 按叫号铃（理发师在睡就唤醒）
+        barberReady.acquire();              // 等理发师招呼自己上理发椅
+        // ……坐上理发椅开始剪发
+    }
+    public void barber() throws InterruptedException {
+        while (true) {
+            customers.acquire();            // 没顾客就睡在这里
+            mutex.acquire();
+            waiting--;                      // 队头离队、上理发椅
+            mutex.release();
+            barberReady.release();          // 招呼顾客
+            // ……剪发，剪完回到 customers.acquire 叫下一个
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：waiting 为什么必须配 mutex？</strong>→ "看还有没有椅子"和"坐下"是 check-then-act，不原子的话满员后还继续放人进队。</li>
+    <li><strong>追问：两张信号量的语义？</strong>→ customers：顾客到店的信令（理发师等它）；barberReady：服务就绪的信令（顾客等它）——两张信号量完成一次双向握手。</li>
+    <li><strong>追问：扩展成 k 个理发师？</strong>→ 等待椅不变；barberReady 的 permits 初始化为 k，顾客 acquire 到哪把椅就哪位剪——Semaphore 天然是资源池。</li>
+  </ul>
+
+  <h3 id="p10">题 10 · 吸烟者问题</h3>
+  <p><strong>题意</strong>：三个吸烟者分别持有烟草、纸、火柴中的一种（各不相同且不补货）；供应者每轮往桌上摆另外两种材料，恰好凑齐三种材料的人卷烟抽掉，抽完通知供应者摆下一桌。</p>
+  <ul>
+    <li><strong>同步关系</strong>：三种桌面组合 → 三条信令，每条恰好对应"唯一不缺这两样"的吸烟者，一对一、无需判断；smoked 是"抽完了"回执——供应者串行摆桌。</li>
+  </ul>
+  <pre><code>class Cigarette {
+    // 三种"桌面组合"信令：摆什么就按哪条铃
+    private final Semaphore tobaccoPaper = new Semaphore(0);  // 有火柴的吸烟者等这
+    private final Semaphore tobaccoMatch = new Semaphore(0);  // 有纸的等这
+    private final Semaphore paperMatch   = new Semaphore(0);  // 有烟草的等这
+    private final Semaphore smoked = new Semaphore(0);        // "抽完了"回执
+    public void supplier() throws InterruptedException {
+        for (int round = 0; round &lt; 10; round++) {
+            int k = round % 3;                      // 0/1/2 轮流摆三种组合（随机同理）
+            if (k == 0)      tobaccoPaper.release();   // 摆 烟草+纸
+            else if (k == 1) tobaccoMatch.release();   // 摆 烟草+火柴
+            else             paperMatch.release();     // 摆 纸+火柴
+            smoked.acquire();                        // 等抽完，再摆下一桌
+        }
+    }
+    // 吸烟者 A：手里有火柴，只等"烟草+纸"这一桌
+    public void smokerWithMatch() throws InterruptedException {
+        while (true) {
+            tobaccoPaper.acquire();   // 桌上出现了自己缺的两样
+            // ……卷烟、点烟、抽
+            smoked.release();         // 通知供应者可以摆下一桌
+        }
+    }
+    // 另两位对称：有纸的等 tobaccoMatch，有烟草的等 paperMatch
+}</code></pre>
+  <ul>
+    <li><strong>追问：桌面信令为什么是三个？</strong>→ 三种组合各对应唯一的吸烟者，一对一信令不需要任何条件判断——比"一个信号量+轮询"干净得多。</li>
+    <li><strong>追问：smoked 回执去掉会怎样？</strong>→ 供应者可能连摆两桌，材料混桌、"一桌一烟"的语义被破坏——这是"完成信号"的标准用法（和第 08 章线程间协作同款）。</li>
+    <li><strong>追问：本质是什么？</strong>→ 事件驱动调度：每个 worker 等自己关心的那种事件，调度者按序发事件、收回执再发下一个——MQ 消费路由是它的工程放大版。</li>
+  </ul>
+
+  <h3 id="p11">题 11 · 圣诞老人问题</h3>
+  <p><strong>题意</strong>：圣诞老人睡觉，被唤醒只可能是两件事之一：3 只精灵凑成一队来咨询，或 9 只驯鹿全部归队要出发送礼。<strong>驯鹿优先</strong>：两边同时来先送礼。</p>
+  <ul>
+    <li><strong>同步关系</strong>：CyclicBarrier(3) 带自动按铃的 action 凑精灵队；驯鹿用互斥保护的计数凑 9 只；圣诞老人醒来先查驯鹿——优先级就是检查顺序。</li>
+  </ul>
+  <pre><code>class SantaClaus {
+    private static final int ELF_TEAM = 3;                    // 精灵 3 只一队
+    private final Semaphore wakeSanta = new Semaphore(0);     // 圣诞老人起床铃
+    private final Semaphore fly = new Semaphore(0);           // 出发令
+    private final Semaphore help = new Semaphore(0);          // 咨询放行令
+    private final Semaphore mutex = new Semaphore(1);         // 保护 deerCount
+    private int deerCount = 0;                                // 已归队驯鹿数
+    private final CyclicBarrier elfTeam =
+            new CyclicBarrier(ELF_TEAM, () -> wakeSanta.release());  // 凑齐自动按铃
+    public void elf() throws InterruptedException, BrokenBarrierException {
+        elfTeam.await();        // 凑满 3 只一队（barrier 可重用，下一队自动开凑）
+        help.acquire();         // 等圣诞老人放行 —— 驯鹿在场时会被优先晾着
+        // ……咨询
+    }
+    public void reindeer() throws InterruptedException {
+        mutex.acquire();
+        if (++deerCount == 9) {     // 第 9 只驯鹿归队
+            mutex.release();
+            wakeSanta.release();    // 按起床铃
+        } else {
+            mutex.release();
+        }
+        fly.acquire();              // 等出发令
+        // ……拉雪橇送礼
+    }
+    public void santa() throws InterruptedException {
+        while (true) {
+            wakeSanta.acquire();                    // 睡到有人按铃
+            mutex.acquire();
+            boolean deerReady = (deerCount == 9);
+            if (deerReady) deerCount = 0;           // 清零：本批已出发，下一批重凑
+            mutex.release();
+            if (deerReady) fly.release(9);          // 优先：先送礼物
+            else           help.release(3);         // 否则：接见精灵队
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：驯鹿优先体现在哪？</strong>→ santa 被叫醒后先查 deerCount：即使两边同时按铃（铃上积了两张许可），第一轮也先送礼、第二轮再咨询——优先级就是"检查顺序 + 信号量许可可累积"。</li>
+    <li><strong>追问：驯鹿为什么用计数变量不用 CountDownLatch？</strong>→ Latch 一次性：getCount() 一旦到 0 就永远是 0，santa 会反复误判"驯鹿到齐"；计数变量能在每批出发后清零复用。</li>
+    <li><strong>追问：CyclicBarrier 的 action 参数干嘛的？</strong>→ 第 3 只精灵到达的瞬间自动执行 run（按起床铃），省掉"第 N 个到达者手动 release"的判断——对比题 4 手动 release 的写法。</li>
+  </ul>
+</section>
+
+<section id="g-abc">
+  <h2><span class="no">06</span>收官：ABC 轮转与条件队列（题 12）</h2>
+  <h3 id="p12">题 12 · 三个线程按 A/B/C 顺序各打印 n 轮</h3>
+  <p><strong>题意</strong>：三个线程分别只打印 A、B、C，输出 "ABCABC..." 共 n 轮——题 1 的三线程版，也是管程收尾题。</p>
+  <ul>
+    <li><strong>同步关系</strong>：三节点环形接力。这里故意用<strong>一个</strong> Condition + state 取模：三个线程睡在同一个条件队列上，signalAll 后谁的状态匹配谁走——正确但有惊群；想精确唤醒就拆成三个 Condition（追问里展开）。</li>
+  </ul>
+  <pre><code>class PrintABC {
+    private final int n;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition cond = lock.newCondition();   // 一个条件队列：三人共睡
+    private int state = 0;                                // state % 3 == 0/1/2 → 该打 A/B/C
+    public PrintABC(int n) { this.n = n; }
+    public void printA(Runnable p) throws InterruptedException { loop(0, p); }
+    public void printB(Runnable p) throws InterruptedException { loop(1, p); }
+    public void printC(Runnable p) throws InterruptedException { loop(2, p); }
+    private void loop(int who, Runnable p) throws InterruptedException {
+        for (int i = 0; i &lt; n; i++) {
+            lock.lock();
+            try {
+                while (state % 3 != who)     // 没轮到我：继续睡
+                    cond.await();
+                p.run();                     // 打印 A/B/C
+                state++;                     // 交棒
+                cond.signalAll();            // 叫醒同伴：谁的状态匹配谁走
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>追问：一个 Condition 为什么也够？</strong>→ 轮转是全序：signalAll 之后谁的状态匹配谁走、其余继续睡。正确，但每棒惊醒两人、多两次无谓唤醒。</li>
+    <li><strong>追问：怎么改精确唤醒？</strong>→ 拆成 turnA/turnB/turnC 三个 Condition，A 打完只 signal turnB 的队列——与题 6 的 notFull/notEmpty 同一思想：条件队列按"等待的条件"分堆。</li>
+    <li><strong>追问：和题 2 的三信号量版怎么选？</strong>→ 信号量把"轮到谁"藏进 permits 计数，代码最短；Condition 版 state 显式可见，改需求（如某角色连打两次、插入新角色）更直观。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">07</span>追问套路：写完之后的"改需求"怎么接</h2>
+  <ul>
+    <li><strong>改线程数 / 轮数</strong>→ 信号量链跟着角色走：几个角色几条放行闸（题 2/3）；单锁 + state 版只需改取模基数和判断分支（题 12）。面试官最爱用这招看你是不是真理解结构。</li>
+    <li><strong>加超时</strong>→ tryAcquire(timeout) / tryLock(timeout) / awaitNanos：拿不齐资源就放弃已持有的并重试，既防永久卡死，也顺手破坏"持有并等待"（哲学家解法 ③）。</li>
+    <li><strong>问饥饿与公平</strong>→ 读者-写者、哲学家必被追问：new Semaphore(k, true)、公平 ReentrantLock / ReentrantReadWriteLock(true)，以及"写优先挡门"的手写计数。</li>
+    <li><strong>问异常</strong>→ InterruptedException 永远别吞：恢复中断标志（Thread.currentThread().interrupt()）或直接上抛，否则线程池的取消机制失灵。</li>
+    <li><strong>问性能</strong>→ 惊群（notifyAll 滥用）换多 Condition 精确唤醒；锁粒度（管程服务员的单点 vs 分散叉子）按竞争强度权衡。</li>
+    <li><strong>问生产落地</strong>→ 手写是面试题，工程直接 BlockingQueue / 线程池 / MQ。能主动补这句，才是"写过生产代码的人"。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">08</span>面试自查清单</h2>
+  <ol>
+    <li>任给一题，30 秒内判断"互斥为主还是协作为主"，说出用哪套原语。</li>
+    <li>FooBar 两版都能白板写全，讲清两个信号量 1/0 互推的语义（release 不要求先 acquire）。</li>
+    <li>ZeroEvenOdd / FizzBuzz 的多路分发：信号量链或令牌调度员，能口述完整接力关系。</li>
+    <li>H2O 说清"信号量管比例、barrier 管成键，缺一不可"。</li>
+    <li>读者-写者：ReadWriteLock 版 + Semaphore 读者优先版，讲清"读锁内改计数的竞态、写降读支持 / 读升级死锁、写者饥饿与公平模式"。</li>
+    <li>有界缓冲区能手写：一把锁两个 Condition（notFull/notEmpty），知道它就是 ArrayBlockingQueue 的骨架。</li>
+    <li>生产者-消费者三版对比：notifyAll 为什么必须、Condition 精确唤醒的优势、工程直接 BlockingQueue。</li>
+    <li>哲学家：先写死锁现场，再按"破坏四条件之一"给出四种解法并说清各破坏哪条。</li>
+    <li>理发师 / 吸烟者 / 圣诞老人：能画出"谁按铃、谁等铃"的信令接力图。</li>
+    <li>PrintABC：单 Condition + state 取模会写，也知道拆三 Condition 精确唤醒的改法。</li>
+    <li>写完自查两件事：所有 wait/await 都在 while 里；InterruptedException 没被吞。</li>
+  </ol>
+  <div class="pager">
+    <a href="11-并发挑战.html">⬅ 上一章：11 并发挑战</a>
+    <a class="next" href="13-并发设计题.html">下一章：13 并发设计题 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；本章以蓝本 AlgoMaster + 自研题解为主；JavaGuide/pdai 无整页对应，②③仅作个别问法口径参照；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 12 章 经典同步题</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

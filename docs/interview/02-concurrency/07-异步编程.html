@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 07 章 · 异步编程：Future 与 CompletableFuture — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#future">Future 的局限 ⭐</a>
+  <a href="#create">创建与默认池大坑 ⭐</a>
+  <a href="#chain">串行编排</a>
+  <a href="#combine">组合与聚合 ⭐</a>
+  <a href="#exception">异常传播三剑客 ⭐</a>
+  <a href="#timeout">超时控制</a>
+  <a href="#thread">回调在哪个线程执行 ⭐</a>
+  <a href="#internal">原理：Completion 栈</a>
+  <a href="#practice">实战：并行 RPC 聚合</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="06-线程池.html">⬅ 上一章：06 线程池</a>
+  <a href="08-并发工具类.html">下一章：08 并发工具类 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 07 章 · 异步编程：Future 与 CompletableFuture</h1>
+    <div class="sub">Future 的三大局限 · supplyAsync 与 commonPool 大坑 · 链式编排 · allOf 聚合 · 异常传播三剑客 · 回调线程问题 —— 从"能等到结果"进化到"能编排异步流"</div>
+    <div class="meta">
+      <span>⭐ 高频：Future 局限 · allOf 聚合 · exceptionally/handle/whenComplete · 回调线程</span>
+      <span>蓝本：Concurrency Interview · 97 讲（Futures &amp; CompletableFuture）</span>
+      <span class="tag exist">已合并：Java/java 基础.md Future 与 CF 节 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>Future 接口有什么局限？为什么还需要 CompletableFuture？⭐（几乎必问的开场）</li>
+      <li>supplyAsync 和 runAsync 的区别？不传线程池时任务在哪个池跑？有什么坑？⭐</li>
+      <li>thenApply / thenAccept / thenRun / thenCompose 分别什么时候用？</li>
+      <li>两个 CompletableFuture 的结果怎么合并？多个呢？allOf 之后怎么取结果？⭐</li>
+      <li>exceptionally / handle / whenComplete 三者有什么区别？⭐（经典对比题）</li>
+      <li>链上某个任务抛了异常，后面的 thenApply 还执行吗？异常什么时候抛出来？</li>
+      <li>thenApply 的回调到底在哪个线程执行？回调里能依赖 ThreadLocal 吗？⭐（高频坑）</li>
+      <li>orTimeout / completeOnTimeout 是干嘛的？JDK 几引入的？超时会取消底层任务吗？</li>
+      <li>CompletableFuture 的实现原理？（提示：观察者模式、result + stack 两个字段）</li>
+      <li>场景题：商品详情页要并行调 3 个 RPC 再聚合，怎么用 CF 写？超时怎么兜底？⭐</li>
+    </ol>
+  </div>
+  <p>本章答题心法：<strong>Future 挑毛病 → CF 给解法</strong>。三大局限（阻塞、不能组合、异常处理不便）正好对应 CF 的三大卖点（回调非阻塞、链式组合、异常传播可控）——把这条对应线讲顺，整章的题都是它的展开。生产经验集中在两处：默认线程池的坑和回调线程不确定性，这两处能讲到事故案例就是高级岗水平。</p>
+</section>
+
+<section id="future">
+  <h2><span class="no">02</span>Future 的三大局限 ⭐</h2>
+  <p>Future 是"异步结果的凭据"：submit 拿到凭据，将来用它取结果。但它只有"取"的能力，没有"编排"的能力（笔记三大局限并入）：</p>
+  <ul>
+    <li><strong>阻塞获取结果</strong>：<code>get()</code> 会一直挂起调用线程；轮询 <code>isDone()</code> 既浪费又延迟。</li>
+    <li><strong>缺乏组合能力</strong>：不能声明"完成后自动做 X"，两个 Future 相互依赖时只能层层 get 嵌套，异步写成了同步。</li>
+    <li><strong>异常处理不便</strong>：任务里的异常被包成 <code>ExecutionException</code>，只有调 get() 时才抛出——不 get 就永远不知道出了错。</li>
+  </ul>
+  <pre><code>ExecutorService pool = Executors.newFixedThreadPool(2);   // 演示用，生产见第 06 章手动创建
+Future&lt;User&gt; f1 = pool.submit(() -&gt; queryUser(id));    // 任务 1
+Future&lt;List&lt;Order&gt;&gt; f2 = pool.submit(() -&gt; queryOrders(id)); // 任务 2
+// 局限 1：任务虽并行了，取结果还是得阻塞串行等
+User u = f1.get();
+List&lt;Order&gt; o = f2.get();
+// 局限 2：做不到"f1 完成后自动转换再接 f2"，只能 get 完手动串
+// 局限 3：任务里抛的异常只在 get() 时以 ExecutionException 抛出，cause 才是真实异常
+try { f1.get(); }
+catch (ExecutionException e) {
+    Throwable real = e.getCause();     // ⚠️ 真实异常在 cause 里，别只打 e
+}</code></pre>
+  <div class="box note"><p>一句话总结：Future 把"任务的提交"和"结果的取得"解耦了，但<strong>结果的取得仍是同步思维</strong>；CompletableFuture 补上的正是"完成后自动怎样"的回调编排能力——它是 Future 的实现类，同时实现了 CompletionStage 接口（所有 thenXxx 都定义在这里）。</p></div>
+</section>
+
+<section id="create">
+  <h2><span class="no">03</span>创建与默认线程池的坑 ⭐</h2>
+  <h3>两个静态工厂</h3>
+  <ul>
+    <li><code>supplyAsync(Supplier)</code>：任务<strong>有返回值</strong>，返回 <code>CompletableFuture&lt;T&gt;</code>。</li>
+    <li><code>runAsync(Runnable)</code>：任务<strong>无返回值</strong>，返回 <code>CompletableFuture&lt;Void&gt;</code>。</li>
+    <li>两者各有重载：不传 Executor 时<strong>默认提交到 ForkJoinPool.commonPool()</strong>；传了 Executor 就用你的池。</li>
+  </ul>
+  <div class="box warn"><p><strong>默认 commonPool 的坑（生产重灾区）</strong>：commonPool 大小 = CPU 核数 − 1，且是<strong>守护线程</strong>、全 JVM 共享。把 IO/RPC 任务默认丢上去会发生两件事：① 池被慢 IO 占满，<strong>全应用的并行流和其他默认用 commonPool 的组件一起饿死</strong>；② 守护线程随 JVM 退出被硬杀，收尾逻辑不可靠。结论：<strong>生产代码必须显式传自定义线程池</strong>（笔记结论 + 阿里规约同口径）。</p></div>
+  <pre><code>// ⚠️ 反面教材：默认 commonPool（核数-1、守护线程、全局共享）
+CompletableFuture&lt;String&gt; bad = CompletableFuture.supplyAsync(() -&gt; slowRpc());
+
+// ✅ 生产写法：显式传线程池（IO 密集给足线程数，见第 06 章怎么定）
+ThreadPoolExecutor rpcPool = new ThreadPoolExecutor(
+        20, 40, 60L, TimeUnit.SECONDS,
+        new ArrayBlockingQueue&lt;&gt;(200),
+        r -&gt; new Thread(r, "rpc-pool-" + seq.incrementAndGet()),
+        new ThreadPoolExecutor.CallerRunsPolicy());
+
+CompletableFuture&lt;String&gt; userF =
+        CompletableFuture.supplyAsync(() -&gt; slowRpc(), rpcPool);  // ← 第二个参数传池</code></pre>
+  <div class="box tip"><p>追问"为什么 commonPool 大小是核数−1"：设计定位是 CPU 密集分治（Fork/Join），留 1 核给调用线程本身，避免提交者被饿死——详见 <a href="06-线程池.html">第 06 章 Fork/Join 节</a>。再追"虚拟线程出来后 CF 默认池变了吗"→ <strong>没变</strong>，仍是 commonPool；IO 链路要自己显式传虚拟线程 executor（<a href="10-虚拟线程.html#commonpool">10 章 §05</a>）。</p></div>
+</section>
+
+<section id="chain">
+  <h2><span class="no">04</span>串行编排：then 系四兄弟</h2>
+  <table>
+    <tr><th>方法</th><th>入参（拿什么）</th><th>返回</th><th>语义（类比）</th></tr>
+    <tr><td><code>thenApply(fn)</code></td><td>上游结果 T</td><td>CF&lt;R&gt;</td><td>转换：结果 → 结果（<strong>map</strong>）</td></tr>
+    <tr><td><code>thenAccept(fn)</code></td><td>上游结果 T</td><td>CF&lt;Void&gt;</td><td>消费：结果 → 副作用（落库、发通知）</td></tr>
+    <tr><td><code>thenRun(fn)</code></td><td>不看结果</td><td>CF&lt;Void&gt;</td><td>执行：上游完成 → 做件事</td></tr>
+    <tr><td><code>thenCompose(fn)</code></td><td>上游结果 T → 新的 CF</td><td>CF&lt;R&gt;（扁平化）</td><td>串联下一个异步任务（<strong>flatMap</strong>）</td></tr>
+  </table>
+  <pre><code>// 串行链：查 id → 转成 User → 创建订单 → 发通知（每步拿上一步的结果）
+CompletableFuture&lt;Void&gt; flow = CompletableFuture
+    .supplyAsync(() -&gt; queryUserId(), pool)   // CF&lt;Long&gt;
+    .thenApply(id -&gt; loadUser(id))            // 转换：CF&lt;User&gt;
+    .thenApply(user -&gt; createOrder(user))     // 再转换：CF&lt;Order&gt;
+    .thenAccept(order -&gt; notify(order));      // 消费：无返回，链终止于 CF&lt;Void&gt;
+
+// thenCompose：下一步"本身也是异步的"
+// 用 thenApply 会嵌套：CF&lt;CF&lt;Order&gt;&gt; —— 拆包裹才能用
+CompletableFuture&lt;CompletableFuture&lt;Order&gt;&gt; nested =
+    queryUserIdAsync(pool).thenApply(id -&gt; loadUserAsync(id, pool));
+// 用 thenCompose 直接扁平化成 CF&lt;Order&gt; ✅
+CompletableFuture&lt;Order&gt; flat =
+    queryUserIdAsync(pool).thenCompose(id -&gt; loadUserAsync(id, pool));</code></pre>
+  <div class="box tip"><p><strong>thenApply vs thenCompose 一句话</strong>：回调返回"值"用 thenApply，返回"又一个 CF"用 thenCompose——与 Stream/Optional 的 map vs flatMap 完全同款区分，面试可以用这个类比秒答。笔记里的"一次排序（串行），then..."就是这组。</p></div>
+</section>
+
+<section id="combine">
+  <h2><span class="no">05</span>组合与聚合 ⭐</h2>
+  <h3>两两组合与竞速</h3>
+  <ul>
+    <li><code>thenCombine(other, (r1, r2) -&gt; ...)</code>：<strong>两个都完成</strong>才走，拿两个结果合并成一个（笔记 thenCombine）。</li>
+    <li><code>applyToEither(other, fn)</code> / <code>acceptEither(other, fn)</code>：<strong>任一完成</strong>就用谁的结果（转换 / 消费），另一个被忽略——竞速、多机房就近读的写法。</li>
+  </ul>
+  <h3>多任务聚合：allOf / anyOf</h3>
+  <ul>
+    <li><code>allOf(cf...)</code>：等<strong>全部</strong>完成才完成；返回 <code>CompletableFuture&lt;Void&gt;</code>——<strong>泛型丢了</strong>，结果要回到各个子 CF 上取。</li>
+    <li><code>anyOf(cf...)</code>：等<strong>任一</strong>完成；返回 <code>CompletableFuture&lt;Object&gt;</code>，注意类型收窄。</li>
+  </ul>
+  <pre><code>CompletableFuture&lt;User&gt; userF  = CompletableFuture.supplyAsync(() -&gt; rpcUser(id), pool);
+CompletableFuture&lt;List&lt;Order&gt;&gt; orderF = CompletableFuture.supplyAsync(() -&gt; rpcOrders(id), pool);
+CompletableFuture&lt;Integer&gt; pointF = CompletableFuture.supplyAsync(() -&gt; rpcPoints(id), pool);
+
+// 两两合并（都完成才走）
+CompletableFuture&lt;String&gt; two = userF.thenCombine(orderF, (u, o) -&gt; render(u, o));
+
+// 竞速（任一完成）：主备两个源，谁先回用谁
+CompletableFuture&lt;User&gt; first = primaryRpc.applyToEither(backupRpc, u -&gt; u);
+
+// 全部完成再聚合 ⭐（allOf 只返回 CF&lt;Void&gt;，回到各自 CF 上 join）
+CompletableFuture&lt;Detail&gt; all = CompletableFuture.allOf(userF, orderF, pointF)
+    .thenApply(v -&gt; new Detail(
+        userF.join(),    // 此时已全部完成，join 不会阻塞；若某个子任务失败，join 在这里抛异常
+        orderF.join(),
+        pointF.join()));
+
+// 想对"未完成/失败"的子任务兜底，可用 getNow(null) 判空替代 join
+Detail safe = new Detail(
+    Optional.ofNullable(userF.getNow(null)).orElse(User.DEFAULT), ...);</code></pre>
+  <div class="box warn"><p><strong>allOf 的两个坑</strong>：① <strong>泛型丢失</strong>——返回 CF&lt;Void&gt;，必须在 thenApply 里回头 join 各子 CF（join 时已全部完成，不阻塞）；② <strong>一损俱损</strong>——任何一个子任务异常，allOf 整体异常、join 抛 CompletionException。要"部分失败不影响整体"，得给每个子任务先套 handle/exceptionally 兜底，再进 allOf（第 10 节实战就是这么写的）。</p></div>
+</section>
+
+<section id="exception">
+  <h2><span class="no">06</span>异常传播三剑客 ⭐</h2>
+  <p>CF 的核心卖点之一：异常不用等 get() 才处理，在链上就能接住（笔记"优雅处理异常，无需在 get 时捕获"）。三者区别是经典对比题：</p>
+  <table>
+    <tr><th>方法</th><th>回调签名</th><th>正常时</th><th>异常时</th><th>能否改变结果</th></tr>
+    <tr><td><code>exceptionally</code></td><td>e → 兜底值</td><td><strong>跳过不执行</strong></td><td>执行，返回兜底值（恢复）</td><td>能：异常 → 恢复成默认值</td></tr>
+    <tr><td><code>handle</code></td><td>(result, e) → 新值</td><td>执行（e = null）</td><td>执行（result = null）</td><td>能：<strong>正常异常都走</strong>，可统一转换</td></tr>
+    <tr><td><code>whenComplete</code></td><td>(result, e) → void</td><td>执行（e = null）</td><td>执行（result = null）</td><td><strong>不能</strong>：只旁观，原结果原样传下游（打点/日志用）</td></tr>
+  </table>
+  <pre><code>CompletableFuture&lt;Integer&gt; safe = CompletableFuture
+    .supplyAsync(() -&gt; 100 / n, pool)        // n = 0 → ArithmeticException 沿链下传
+    .handle((r, e) -&gt; {                      // 正常/异常都走：记日志 + 给默认值
+        if (e != null) { log.warn("failed", e); return 0; }
+        return r;
+    })
+    .exceptionally(e -&gt; -1);                 // 再兜一层（前面已恢复，通常不会再触发）
+
+// whenComplete 只旁观：打点埋点用，改不了结果
+safe.whenComplete((r, e) -&gt; metrics.count("calc.done"));</code></pre>
+  <h3>异常怎么传播、何时抛出</h3>
+  <ul>
+    <li>异常发生后，链上后续的 thenApply / thenAccept 等<strong>全部跳过</strong>，直接流向最近的异常回调（exceptionally / handle）；恢复了就继续正常走。</li>
+    <li>一路没人拦截 → 异常一直存到终端：<code>join()</code> 抛 <code>CompletionException</code>（非受检），<code>get()</code> 抛受检的 <code>ExecutionException</code>（真实异常在 cause）。</li>
+  </ul>
+  <div class="box warn"><p><strong>最隐蔽的线上事故</strong>：子任务抛了异常、链上没有 exceptionally/handle、又从不 join/get——异常被<strong>静默吞掉</strong>，任务"看起来没执行"。防御：每个异步链的末端要么消费异常，要么统一挂一个兜底 whenComplete 打日志。</p></div>
+</section>
+
+<section id="timeout">
+  <h2><span class="no">07</span>超时控制：orTimeout / completeOnTimeout</h2>
+  <ul>
+    <li><code>orTimeout(long, unit)</code>（JDK 9）：到时未完成 → 以 <code>TimeoutException</code> <strong>异常完成</strong>，走 exceptionally/handle 兜底。</li>
+    <li><code>completeOnTimeout(T, long, unit)</code>（JDK 9）：到时未完成 → 直接用给定值<strong>正常完成</strong>——一步到位的超时兜底，更常用。</li>
+    <li>老办法 <code>get(timeout)</code>：超时抛 TimeoutException 但阻塞的是<strong>调用方线程</strong>，不如上面两个异步优雅。</li>
+  </ul>
+  <pre><code>// 写法一：completeOnTimeout —— 超时给默认值，链上无异常（推荐）
+CompletableFuture&lt;String&gt; f1 = CompletableFuture
+    .supplyAsync(() -&gt; rpcCall(), pool)
+    .completeOnTimeout(DEFAULT_VALUE, 500, TimeUnit.MILLISECONDS);
+
+// 写法二：orTimeout —— 超时以异常完成，再自己兜底
+CompletableFuture&lt;String&gt; f2 = CompletableFuture
+    .supplyAsync(() -&gt; rpcCall(), pool)
+    .orTimeout(500, TimeUnit.MILLISECONDS)
+    .exceptionally(e -&gt; DEFAULT_VALUE);</code></pre>
+  <div class="box warn"><p><strong>注意</strong>：orTimeout / completeOnTimeout 只是让<strong>结果作废</strong>，<strong>不会中断或取消底层任务</strong>——那个慢 RPC 还在池里占着线程。所以超时兜底要配"池容量按超时预算设计"（最坏情况：池被慢任务占满，靠第 06 章的水位告警发现），真要终止任务得任务内部响应 interrupt 或用可取消的 HTTP 客户端。</p></div>
+</section>
+
+<section id="thread">
+  <h2><span class="no">08</span>回调在哪个线程执行 ⭐（高频坑）</h2>
+  <p>thenApply 系列（不带 Async 后缀）的回调<strong>执行线程不确定</strong>，只有两种可能，取决于注册时上游是否已完成：</p>
+  <ul>
+    <li><strong>上游已完成</strong> → 回调由<strong>注册回调的线程</strong>（调用 thenApply 的那个线程）<strong>立即执行</strong>。</li>
+    <li><strong>上游未完成</strong> → 回调被压入栈，由<strong>完成任务的线程</strong>（跑 supplyAsync 的池线程，或事后调 complete() 的线程）触发执行。</li>
+    <li>要确定性 → 用 <code>thenApplyAsync(fn, pool)</code>：回调强制切换到指定线程池执行。</li>
+  </ul>
+  <pre><code>ThreadLocal&lt;String&gt; ctx = new ThreadLocal&lt;&gt;();
+ctx.set("trace-123");
+
+CompletableFuture
+    .supplyAsync(() -&gt; "data", pool)       // 在 pool 的线程执行
+    .thenApply(d -&gt; {
+        // ⚠️ 这里可能是 pool 线程，也可能是注册回调的主线程——不确定！
+        // ctx.get() 大概率是 null（换了线程）→ traceId / MDC 上下文丢失
+        log.info("trace={}", ctx.get());   // 经典事故：日志没 traceId，链路断了
+        return d;
+    });
+// 需要固定执行线程时：thenApplyAsync(fn, callbackPool)</code></pre>
+  <div class="box tip"><p><strong>推论必背</strong>：CF 的链会跨线程，<strong>不能依赖 ThreadLocal 传上下文</strong>——用户信息、traceId 要显式传参，或用阿里 TransmittableThreadLocal（TTL）在提交任务时捕获快照。MDC 丢失是 CF 上线后第一名的事故，ThreadLocal 细节见 <a href="09-并发容器.html">第 09 章 并发容器</a>。</p></div>
+</section>
+
+<section id="internal">
+  <h2><span class="no">09</span>原理：result + Completion 栈（观察者模式）</h2>
+  <p>CompletableFuture 内部只有两个核心字段（笔记 693-696 并入）：</p>
+  <ul>
+    <li><code>volatile Object result</code>：结果（值或异常），CAS 写入——写入成功即"完成"。</li>
+    <li><code>volatile Completion stack</code>：完成后要触发的<strong>操作栈</strong>——所有注册的回调（依赖）以 Treiber 栈（无锁 CAS 栈）形式挂在这里。</li>
+  </ul>
+  <pre><code>注册阶段（thenApply/thenAccept/...）：
+    上游未完成 → 把"这个回调 + 下一步"包装成节点，CAS 压入 stack
+    上游已完成 → 不入栈，直接在当前线程执行回调
+
+完成阶段（任务跑完 / complete() / completeOnTimeout 到时）：
+    CAS 写入 result 成功
+      → postComplete()：从 stack 逐个弹出节点，触发里面挂着的依赖
+      → 依赖完成后又会触发它的 stack —— 一环扣一环传播下去</code></pre>
+  <p>这就是<strong>观察者模式</strong>：回调是观察者，注册即订阅，任务完成即通知——比起 Future 的"你必须来取"，CF 是"完成了我叫你"。</p>
+  <div class="box note"><p>每个 Completion 节点既持有"要执行的回调"，又持有"下游的 CompletableFuture"（依赖），触发时算出下游结果、完成下游、再触发下游的栈——所以一条 thenApply(...).thenApply(...) 链在数据结构上就是一串节点，异常跳过正常回调、直达异常回调的传播行为也由此而来。</p></div>
+</section>
+
+<section id="practice">
+  <h2><span class="no">10</span>实战：并行调 3 个 RPC 再聚合 ⭐</h2>
+  <p>商品详情页：并行取用户、库存、推荐三个 RPC，各自超时兜底 + 异常降级，<code>allOf</code> 等齐后聚合，整链再留一道总闸——<strong>三层防御</strong>的标准生产写法：</p>
+  <pre><code>public CompletableFuture&lt;Detail&gt; loadDetail(long itemId) {
+    // 第一层：每个子任务独立兜底 —— 失败/超时降级为默认值，不带着异常进 allOf
+    CompletableFuture&lt;User&gt; userF = CompletableFuture
+        .supplyAsync(() -&gt; userRpc.get(itemId), rpcPool)
+        .completeOnTimeout(User.DEFAULT, 300, TimeUnit.MILLISECONDS)
+        .exceptionally(e -&gt; { log.warn("userRpc failed, itemId={}", itemId, e); return User.DEFAULT; });
+
+    CompletableFuture&lt;Stock&gt; stockF = CompletableFuture
+        .supplyAsync(() -&gt; stockRpc.get(itemId), rpcPool)
+        .completeOnTimeout(Stock.DEFAULT, 300, TimeUnit.MILLISECONDS)
+        .exceptionally(e -&gt; Stock.DEFAULT);
+
+    CompletableFuture&lt;List&lt;Item&gt;&gt; recF = CompletableFuture
+        .supplyAsync(() -&gt; recRpc.get(itemId), rpcPool)
+        .completeOnTimeout(List.of(), 500, TimeUnit.MILLISECONDS)   // 推荐可降级为空列表
+        .exceptionally(e -&gt; List.of());
+
+    // 第二层：allOf 等齐 → 聚合（子任务都已兜底，join 不会抛）
+    // 第三层：整链总闸 orTimeout + 总兜底（三级全挂 → 降级页）
+    return CompletableFuture.allOf(userF, stockF, recF)
+        .thenApply(v -&gt; new Detail(userF.join(), stockF.join(), recF.join()))
+        .orTimeout(800, TimeUnit.MILLISECONDS)
+        .exceptionally(e -&gt; Detail.degraded(itemId));
+}</code></pre>
+  <div class="box tip"><p><strong>答题模板</strong>：先说架构（三个子任务并行、各自兜底、allOf 聚合、总闸兜底），再解释为什么每个子任务先兜底（避免一损俱损，见第 05 节的坑），最后补一刀"超时不取消底层任务，池容量要按超时预算设计"。这套讲完，场景题基本满分。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">11</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：Future 局限 → CF 怎么解决 → 回调写多了不也是"回调地狱"？</strong>→ thenCompose 扁平化串联 + 类型安全的链式 API，比嵌套回调可读得多。</li>
+    <li><strong>追问链：不传线程池用哪个池 → commonPool 多大、什么线程 → 为什么 IO 任务不能放</strong>→ 核数−1、守护线程、全局共享 → 占满后并行流全饿死 → 生产传自定义池。</li>
+    <li><strong>追问链：thenApply vs thenCompose → 回调返回什么决定用哪个</strong>→ 值用 thenApply，CF 用 thenCompose（map vs flatMap）→ thenApply vs thenApplyAsync → 执行线程是否强制切池。</li>
+    <li><strong>追问链：allOf 之后怎么拿结果</strong>→ 返回 CF&lt;Void&gt; 泛型丢失 → 在 thenApply 里回头 join 各子 CF（已全部完成，不阻塞）→ 某个子任务可能失败 → join 抛 CompletionException → 要部分容错就先给每个子任务 handle。</li>
+    <li><strong>陷阱：异常静默吞掉</strong>→ 无异常回调 + 不 join/get = 异常无人知晓；防御：链末端统一挂 whenComplete 记日志。</li>
+    <li><strong>陷阱：join vs get</strong>→ join 抛非受检的 CompletionException（适合 Stream/lambda 里用），get 抛受检的 ExecutionException + InterruptedException。</li>
+    <li><strong>陷阱：ThreadLocal / MDC 丢失</strong>→ 回调线程不确定（第 08 节），上下文显式传参或用 TTL。</li>
+    <li><strong>陷阱：orTimeout 不取消任务</strong>→ 只是结果作废，慢任务还占着线程；池会被拖满，要配水位监控。</li>
+    <li><strong>场景题：CF 任务"不执行"怎么排查？</strong>→ 先看是不是默认 commonPool 被别的组件占满 → 再看自定义池是否队列满触发 CallerRuns → 最后看是不是异常被吞（末端 whenComplete 没挂日志）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">12</span>面试自查清单</h2>
+  <ol>
+    <li>Future 三大局限（阻塞、不能组合、异常要 get 才拿到）+ ExecutionException 的 cause 细节，能配代码佐证。</li>
+    <li>supplyAsync / runAsync 区别；默认 commonPool 的大小（核数−1）、守护线程属性、IO 任务饿死并行流的坑。</li>
+    <li>then 系四兄弟各自语义；thenApply vs thenCompose 能用 map/flatMap 类比一句话讲清。</li>
+    <li>thenCombine / acceptEither / applyToEither / allOf / anyOf 场景对应；allOf 后 join 取结果 + 泛型丢失原因。</li>
+    <li>exceptionally / handle / whenComplete 三列对比表（正常走不走、异常走不走、能否改结果）张口就来。</li>
+    <li>异常传播规则：中间回调跳过、直达异常回调；终端 join 抛 CompletionException、get 抛 ExecutionException。</li>
+    <li>orTimeout / completeOnTimeout 的差异，且知道超时不取消底层任务。</li>
+    <li>回调执行线程的两种可能 + ThreadLocal/MDC 丢失事故 + thenApplyAsync 解决法。</li>
+    <li>原理：result + Completion 栈（Treiber 栈）、注册压栈 / 完成弹栈、观察者模式口径。</li>
+    <li>能默写"并行 3 RPC + 子任务兜底 + allOf 聚合 + 总闸超时"三层防御的完整代码。</li>
+  </ol>
+  <div class="pager">
+    <a href="06-线程池.html">⬅ 上一章：06 线程池与 Executor</a>
+    <a class="next" href="08-并发工具类.html">下一章：08 并发工具类 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；② <a href="https://javaguide.cn/java/concurrent/java-concurrent-questions-03.html">JavaGuide 并发常见题（下）</a>（Future / CompletableFuture 口径）；pdai 无专篇，机制细节以蓝本+笔记为底；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 07 章 异步编程：Future 与 CompletableFuture</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

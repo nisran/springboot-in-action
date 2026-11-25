@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 09 章 · 并发容器与 ThreadLocal — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#chm">ConcurrentHashMap 使用视角 ⭐</a>
+  <a href="#bq">BlockingQueue 家族 ⭐</a>
+  <a href="#cow">CopyOnWriteArrayList</a>
+  <a href="#tl">ThreadLocal ⭐⭐</a>
+  <a href="#itl">Inheritable 与 TTL</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="08-并发工具类.html">⬅ 上一章：08 并发工具类</a>
+  <a href="10-虚拟线程.html">下一章：10 虚拟线程 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 09 章 · 并发容器与 ThreadLocal</h1>
+    <div class="sub">ConcurrentHashMap 使用视角 · BlockingQueue 家族 · CopyOnWriteArrayList · ThreadLocal 原理与内存泄漏 —— ⭐ 重章，ThreadLocal 是 7 年经验面试的分水岭题</div>
+    <div class="meta">
+      <span>⭐⭐ 必考：ThreadLocal 内存泄漏 · BlockingQueue 四组 API</span>
+      <span>蓝本：AlgoMaster Concurrency · Concurrent Collections / ThreadLocal</span>
+      <span class="tag exist">已合并：Java/java 基础.md ThreadLocal 节 + JUC 并发容器节 ✅</span>
+      <span class="tag exist">三源合并：JavaGuide + pdai ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>ConcurrentHashMap 的 putIfAbsent / computeIfAbsent / merge 有什么区别？各用什么场景？⭐</li>
+      <li>"先 get 判断再 put"在并发下有什么问题？正确写法是什么？⭐（check-then-act 的容器版）</li>
+      <li>ConcurrentHashMap 为什么 key 和 value 都不允许存 null？⭐</li>
+      <li>遍历 ConcurrentHashMap 时别的线程在修改，会抛 ConcurrentModificationException 吗？size() 准确吗？</li>
+      <li>BlockingQueue 的四组 API（add / offer / put / 超时）分别什么行为？⭐</li>
+      <li>ArrayBlockingQueue 和 LinkedBlockingQueue 底层实现有什么区别？LinkedBlockingQueue 的默认容量陷阱？⭐</li>
+      <li>SynchronousQueue、PriorityBlockingQueue、DelayQueue 各适合什么场景？</li>
+      <li>CopyOnWriteArrayList 为什么读不用加锁？代价是什么？适合什么场景？</li>
+      <li>ThreadLocal 的原理？数据到底存在哪？⭐⭐（几乎必问）</li>
+      <li>ThreadLocal 为什么会内存泄漏？key 为什么用弱引用？弱引用解决问题了吗？⭐⭐</li>
+      <li>InheritableThreadLocal 在线程池里为什么失效？TTL 怎么解决的？（生产实践加分点）</li>
+    </ol>
+  </div>
+  <p>本章是并发板块的 <strong>⭐ 重章</strong>：前半章讲"并发容器怎么选、怎么用对"，后半章的 ThreadLocal 是高级岗面试的<strong>分水岭题</strong>——多数人能说出"线程隔离"，少数人能画出引用链，能讲到 expungeStaleEntry 和 TTL 的人一眼就是踩过坑的。既有笔记（java 基础.md 461-495 行 ThreadLocal 节、627-642 行 JUC 并发容器节）是本章底子，全部并入并展开。</p>
+  <div class="box warn"><p><strong>先纠一个错</strong>：笔记另一处（java 基础.md 约 609-611 行）写"ThreadLocal 底层是 HashMap"——这是<strong>错误说法</strong>，正确答案是 <strong>ThreadLocalMap：数组 + 开放定址（线性探测）</strong>，与 HashMap 的链地址法（数组 + 链表/红黑树）完全是两套冲突解决策略。面试时答错这一步，后面的内存泄漏就讲不下去了——本章第 05 节展开。</p></div>
+</section>
+
+<section id="chm">
+  <h2><span class="no">02</span>ConcurrentHashMap：并发使用视角 ⭐</h2>
+  <div class="box note"><p><strong>⚠️ 去重约定</strong>：putVal 的 CAS + synchronized、树化阈值 8、sizeCtl、CounterCell 计数等<strong>源码细节已在 <a href="../01-java/08-集合框架.html">01-java/08 集合框架</a>完整拆解</strong>（含 JDK 7 分段锁 → JDK 8 CAS + synchronized 的演进），本章不重复——只讲面试更常考的<strong>"并发使用视角"：复合操作、迭代器、null、缓存场景</strong>。</p></div>
+  <h3>复合操作原子性：putIfAbsent / computeIfAbsent / merge ⭐</h3>
+  <p>第 01 章讲过 <strong>check-then-act 不原子</strong>——在容器上最典型的形态就是"先查后放"：</p>
+  <pre><code>ConcurrentHashMap&lt;String, Integer&gt; counter = new ConcurrentHashMap&lt;&gt;();
+
+// ❌ 先查后放：containsKey 和 put 两步之间，别的线程可能已经 put 了 —— 竞态
+if (!counter.containsKey("uv")) counter.put("uv", 1);
+
+// ✅ 原子复合操作：判断与写入在一个锁定范围内一步完成
+counter.putIfAbsent("uv", 1);                       // 不存在才放；返回旧值可判断是否真的放进去了
+counter.computeIfAbsent("uv", k -&gt; loadFromDb(k));    // ⭐ 不存在才"计算 + 放入"，计算期间锁住该桶
+counter.merge("uv", 1, Integer::sum);                // ⭐ 计数聚合最惯用：存在则按函数合并，不存在则放入
+counter.compute("uv", (k, v) -&gt; v == null ? 1 : v + 1);  // 新旧值都要参与时用</code></pre>
+  <table>
+    <tr><th>方法</th><th>语义</th><th>典型用途</th></tr>
+    <tr><td><code>putIfAbsent(k, v)</code></td><td>没有才放（v 是现成的值）</td><td>注册表：已存在就保留旧的</td></tr>
+    <tr><td><code>computeIfAbsent(k, fn)</code></td><td>没有才<strong>计算</strong>并放入</td><td>⭐ 惰性初始化、嵌套 map、本地缓存（见下）</td></tr>
+    <tr><td><code>merge(k, v, fn)</code></td><td>没有就放 v，有就用 fn 合并旧值与 v</td><td>⭐ 计数/求和聚合，一行顶四行</td></tr>
+    <tr><td><code>compute(k, fn)</code></td><td>读写都基于旧值做函数</td><td>需要"看旧值再决定"的更新</td></tr>
+  </table>
+  <table>
+    <tr><th>操作类别</th><th>并发安全吗</th><th>说明</th></tr>
+    <tr><td>单个 get / put / remove</td><td>✅ 原子</td><td>CAS + synchronized 保证的桶级原子性（链 01-java/08）</td></tr>
+    <tr><td>size / contains / 迭代</td><td>⚠️ 弱一致</td><td>不是"坏了"，是估计值 / 某一刻的快照</td></tr>
+    <tr><td>get + 判断 + put 的组合</td><td>❌ 竞态</td><td>两步之间 map 可能被改——必须换成上面的复合操作</td></tr>
+  </table>
+  <div class="box tip"><p><strong>putIfAbsent 的返回值别浪费</strong>：它返回"实际存进去的值"——已存在就返回旧值，不存在返回你传入的新值。因此 <code>V prev = map.putIfAbsent(k, v)</code> 一次调用就能知道"是不是我放进去的"，常用来实现"只有一个线程能注册成功"的语义。</p></div>
+  <h3>弱一致迭代器</h3>
+  <pre><code>for (String k : counter.keySet()) {    // 弱一致（weakly consistent）迭代器
+    process(k);                        // 遍历期间别的线程 put/remove：不抛 CME
+}                                      // 但不保证看到迭代开始后的最新修改</code></pre>
+  <ul>
+    <li>与 HashMap 对比：<code>HashMap</code> 迭代中修改会抛 <code>ConcurrentModificationException</code>（fail-fast）；CHM 的迭代器是<strong>弱一致 fail-safe</strong>：不抛异常，但反映的是"某一刻"的状态，之后的写入可能看不到。</li>
+    <li>CHM 迭代器<strong>支持 remove()</strong>（注意与 CopyOnWriteArrayList 迭代器不支持 remove 对比——后面第 04 节）。</li>
+    <li>口径：弱一致不是缺陷而是设计——强一致迭代需要全局锁，与高并发读写的设计目标矛盾。</li>
+  </ul>
+  <h3>size() 与 mappingCount()：弱一致的估计值</h3>
+  <pre><code>long approx = counter.mappingCount();   // 大 map 用它：返回 long，语义同为"估计值"
+int  maybe = counter.size();            // int 版；并发下两者都只是"接近真值"</code></pre>
+  <p>并发下的 <code>size()</code> 是<strong>估计值</strong>（各桶/计数单元的瞬时不完全统计，<code>CounterCell</code> 分散计数就是为了不让计数成为热点，细节链 <a href="../01-java/08-集合框架.html">01-java/08</a>）；大 map 用返回 long 的 <code>mappingCount()</code>。结论口径：<strong>别用 CHM 的 size 做精确的业务判断</strong>（比如"队列满没满"），它只适合监控展示。</p>
+  <h3>为什么 key 和 value 都不许 null ⭐</h3>
+  <ul>
+    <li>核心：<strong>并发下 null 有二义</strong>。<code>get(k)</code> 返回 null，无法区分"key 不存在"还是"key 存在但值就是 null"。</li>
+    <li>追问"HashMap 不是可以用 containsKey 再查一次吗"：<strong>单线程可以，并发不行</strong>——get 和 containsKey 两次调用之间 map 可能已被别的线程改掉，二次确认本身又是 check-then-act 竞态。与其留一个用不对的口子，不如直接禁止。</li>
+    <li>HashMap 允许一个 null key（hash 定位到 0 号桶的特殊处理）；CHM 里 null key 同理被禁。</li>
+  </ul>
+  <h3>用做本地缓存与缓存击穿防护 ⭐</h3>
+  <pre><code>// computeIfAbsent 天然防缓存击穿：同 key 的并发请求只有一次真正回源
+ConcurrentHashMap&lt;String, Product&gt; cache = new ConcurrentHashMap&lt;&gt;();
+Product p = cache.computeIfAbsent(sku, this::loadFromDb);   // 相同 sku 的并发线程等这一次计算完成
+
+// 计算很重时：值放 Future，把计算丢进线程池，阻塞范围缩到最小
+ConcurrentHashMap&lt;String, CompletableFuture&lt;Product&gt;&gt; cache2 = new ConcurrentHashMap&lt;&gt;();
+cache2.computeIfAbsent(sku, k -&gt; CompletableFuture.supplyAsync(() -&gt; loadFromDb(k), pool))
+     .thenAccept(this::render);    // 防重复回源，又不长时间占住桶锁</code></pre>
+  <ul>
+    <li><strong>缓存击穿</strong>：热点 key 过期瞬间大量请求同时回源打垮 DB。<code>computeIfAbsent</code> 是 JVM 内的 single-flight——同 key 并发只算一次，其余线程等结果。</li>
+    <li><strong>返回 Future 的意义</strong>：computeIfAbsent 的计算期间锁住桶，如果计算本身很慢（回源 DB 几百毫秒），会阻塞落在同一个桶上的其他 key——把计算塞进 <code>CompletableFuture</code>，computeIfAbsent 里只是"放个 Future"（微秒级），重活异步跑。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱：computeIfAbsent 的函数里不能再改同一个 map</strong>——递归更新会在 JDK 9+ 抛 <code>IllegalStateException: Recursive update</code>，即便不抛也可能自锁。函数要求：纯计算、要快、不碰容器本身。</p></div>
+</section>
+
+<section id="bq">
+  <h2><span class="no">03</span>BlockingQueue 家族 ⭐</h2>
+  <p><strong>定位：队列 + "满时写阻塞、空时读阻塞"</strong>——正是 <a href="08-并发工具类.html">第 08 章 生产者-消费者模式</a>的标准载体。面试考两件事：四组 API 的行为差异 + 各实现的结构取舍。</p>
+  <h3>四组 API（背熟 ⭐）</h3>
+  <table>
+    <tr><th>组</th><th>入队</th><th>出队</th><th>查看队首</th><th>失败行为</th></tr>
+    <tr><td><strong>抛异常</strong></td><td><code>add(e)</code></td><td><code>remove()</code></td><td><code>element()</code></td><td>队满/队空抛 <code>IllegalStateException</code></td></tr>
+    <tr><td><strong>返回特殊值</strong></td><td><code>offer(e)</code></td><td><code>poll()</code></td><td><code>peek()</code></td><td>立即返回 <code>false</code> / <code>null</code>，不等待</td></tr>
+    <tr><td><strong>阻塞</strong></td><td><code>put(e)</code></td><td><code>take()</code></td><td>—</td><td>阻塞直到成功（可被中断）</td></tr>
+    <tr><td><strong>超时</strong></td><td><code>offer(e, t, unit)</code></td><td><code>poll(t, unit)</code></td><td>—</td><td>阻塞至多 t，超时返回 false / null</td></tr>
+  </table>
+  <div class="box tip"><p><strong>选组口径</strong>：生产代码默认 <code>put/take</code>（满则背压、空则等待，语义最清晰）；要"满了就丢弃/降级/记日志"的策略用返回特殊值组；<code>add/remove</code> 基本只在测试和"违反约定就该炸"的场景用；等待要有上限（怕对端挂掉）用超时组。</p></div>
+  <pre><code>// 生产模板：有界队列 + 满则背压 + 消费侧带超时
+BlockingQueue&lt;Event&gt; queue = new ArrayBlockingQueue&lt;&gt;(500);
+
+queue.put(event);                              // 队列满：生产者阻塞 —— 天然背压（backpressure）
+Event e = queue.poll(2, TimeUnit.SECONDS);     // 队列空：最多等 2 秒，返回 null 可做健康检查/优雅退出</code></pre>
+  <h3>六个实现：结构、锁、容量的取舍</h3>
+  <h4>1. ArrayBlockingQueue —— 单锁双条件，有界</h4>
+  <ul>
+    <li>底层<strong>环形数组</strong> + <strong>一把 ReentrantLock</strong> + <strong>两个 Condition（notEmpty / notFull）</strong>：put 在 notFull 上等待，take 在 notEmpty 上等待；入队唤醒 notEmpty，出队唤醒 notFull。</li>
+    <li><strong>有界，构造必须传容量</strong>；数组预分配、无每元素结点 GC，内存紧凑行为可预测。</li>
+    <li>代价：put 和 take 共用一把锁互相排斥——同一时刻生产和消费只能有一个在动。</li>
+  </ul>
+  <h4>2. LinkedBlockingQueue —— 两把锁分离，⚠️ 默认无界陷阱</h4>
+  <ul>
+    <li>底层单向链表，<strong>两把 ReentrantLock（putLock / takeLock）分离</strong>：生产和消费各锁各的（用原子 count 协调满/空判断）——<strong>生产者与消费者可真正并行，吞吐高于 ArrayBlockingQueue</strong>。</li>
+    <li>⚠️ <strong>默认容量 Integer.MAX_VALUE ≈ 无界</strong>：生产快消费慢时队列无限堆积直至 OOM。更危险的是 <code>Executors.newFixedThreadPool / newSingleThreadExecutor</code> 用的就是无参 LinkedBlockingQueue——这是阿里规约"不许用 Executors 创建线程池"的直接原因，案例展开见 <a href="06-线程池.html">第 06 章 线程池</a>。</li>
+    <li>正确姿势：永远显式给容量 <code>new LinkedBlockingQueue&lt;&gt;(1000)</code>，把背压留在自己手里。</li>
+  </ul>
+  <h4>3. SynchronousQueue —— 零容量直接交接</h4>
+  <ul>
+    <li><strong>没有容量，不存元素</strong>：每个 put 必须等待一个 take，元素在两个线程手里直接交接（类似 Exchanger 的单向版）。</li>
+    <li><code>offer(e)</code> 此刻没有消费者等着就立即返回 false——<code>Executors.newCachedThreadPool</code> 正是借这个语义判断"没空闲线程就新建线程"，展开链 <a href="06-线程池.html">第 06 章</a>。</li>
+    <li>适合"任务不该排队、要么立刻被接手要么触发扩容/拒绝"的直通场景。</li>
+  </ul>
+  <h4>4. PriorityBlockingQueue —— 二叉堆，无界</h4>
+  <ul>
+    <li><strong>无界</strong>阻塞队列，内部<strong>二叉堆（小顶堆）</strong>存储，take 每次取出<strong>优先级最高</strong>的元素；元素必须实现 <code>Comparable</code> 或构造时传 <code>Comparator</code>。</li>
+    <li>两个坑：① 无界——入队永不阻塞（put 等价 offer），堆积风险自己兜；② <strong>堆只保证堆首最小，遍历不全局有序</strong>——要有序输出得 drain 出来排序。</li>
+  </ul>
+  <h4>5. DelayQueue —— 延时取</h4>
+  <ul>
+    <li>元素实现 <code>Delayed</code>（getDelay 剩余延时）；take 阻塞直到<strong>队首元素到期</strong>，未到期就算队列非空也取不到——本质是 PriorityBlockingQueue（按到期时间排序）+ 延时等待（leader/follower 模式减少无效定时唤醒）。</li>
+    <li>场景：<strong>订单超时未支付自动关闭、失败重试的退避排队、本地延时任务</strong>。与 Redis ZSet / 时间轮的选型对比在 <a href="13-并发设计题.html">第 13 章 并发设计题（延时队列设计）</a>。</li>
+  </ul>
+  <pre><code>class DelayedTask implements Delayed {                 // 入队元素要实现 Delayed
+    private final long deadline = System.currentTimeMillis() + delayMs;
+
+    public long getDelay(TimeUnit u) {                 // 剩余等待时间 —— 到 0 才可被 take
+        return u.convert(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+    }
+    public int compareTo(Delayed o) { /* 按 deadline 比大小 */ return 0; }
+}
+
+delayQueue.put(new DelayedTask(30_000));   // 30 秒后到期
+delayQueue.take();                         // 队首未到期就阻塞，到点自动醒来 —— 不需要定时器轮询</code></pre>
+  <h4>6. LinkedTransferQueue —— 直接交付（一句）</h4>
+  <ul>
+    <li>无锁（CAS）链表结构，兼有 LinkedBlockingQueue 的容量语义与 SynchronousQueue 的交接语义：除了 put/offer 还有 <code>transfer(e)</code>——<strong>阻塞直到消费者直接取走这个元素</strong>（不进队列）。需要"生产者必须确认消费者已拿到"的消息语义时用它，一般了解即可。</li>
+  </ul>
+  <table>
+    <tr><th>实现</th><th>结构</th><th>容量</th><th>锁策略</th><th>一句话场景</th></tr>
+    <tr><td>ArrayBlockingQueue</td><td>环形数组</td><td>有界（必传）</td><td>单锁 + notEmpty/notFull</td><td>内存紧凑、行为可预测的有界队列</td></tr>
+    <tr><td>LinkedBlockingQueue</td><td>单向链表</td><td>默认 MAX_VALUE ⚠️</td><td>put/take 两把锁</td><td>高吞吐，但必须显式设容量</td></tr>
+    <tr><td>SynchronousQueue</td><td>无</td><td>0（直接交接）</td><td>CAS + 队列</td><td>不排队、直接交接（cachedThreadPool）</td></tr>
+    <tr><td>PriorityBlockingQueue</td><td>二叉堆</td><td>无界</td><td>单锁</td><td>按优先级出队</td></tr>
+    <tr><td>DelayQueue</td><td>堆（按到期时间）</td><td>无界</td><td>单锁 + leader/follower</td><td>延时任务（超时关单、重试退避）</td></tr>
+    <tr><td>LinkedTransferQueue</td><td>链表</td><td>无界（可预占）</td><td>无锁 CAS</td><td>transfer 直接交付语义</td></tr>
+  </table>
+  <ul>
+    <li><strong>Array 还是 Linked？</strong>要"行为完全可预测、内存紧凑"（嵌入式/低 GC 敏感）选 Array；要"生产消费并行的高吞吐"选 Linked，但<strong>容量必须显式给</strong>——默认无界是事故不是特性。</li>
+    <li><strong>背压视角</strong>：有界队列 + put = 满了让生产者慢下来；无界队列 = 把过载延迟成 OOM——前者是即时疼痛，后者是半夜告警。</li>
+    <li><strong>JDK 7 起还有 LinkedTransferQueue 一个"全家桶"选项</strong>：既当普通队列又当交接队列，多数场景它是 LinkedBlockingQueue 的等价替代，但面试记住前六个的名字和差异就够用。</li>
+  </ul>
+  <h3>旁支：非阻塞的 ConcurrentLinkedQueue</h3>
+  <p>BlockingQueue 全家靠"锁 + 条件等待"实现阻塞语义；<strong>ConcurrentLinkedQueue（CLQ）走另一条路：CAS 无锁链表</strong>（Michael-Scott 无锁队列算法）——入队出队都是 CAS 自旋，不阻塞、不挂起，也没有容量概念。JavaGuide 常这么问："ConcurrentLinkedQueue 是 BlockingQueue 吗？"</p>
+  <ul>
+    <li><strong>两族的分界</strong>：要"满了背压、空了等待"的<strong>协调</strong>语义 → BlockingQueue；只要一个线程安全队列、节奏由调用方自己管（配合自己的限流/自旋消费）→ CLQ。</li>
+    <li><strong>size() 是 O(n)</strong>：没有计数器字段（维护精确计数会重新制造 CAS 热点），每次 size 都遍历整条链，并发下仍是估计值——高频调 size 是性能事故。</li>
+    <li><strong>不允许 null</strong>：与 CHM 同理——poll 返回 null 是"队空"的约定信号，存 null 就无法区分"空"和"值是 null"。</li>
+    <li>迭代器弱一致不抛 CME；JDK 7 起的 <code>ConcurrentLinkedDeque</code> 是它的双端版本。</li>
+  </ul>
+</section>
+
+<section id="cow">
+  <h2><span class="no">04</span>CopyOnWriteArrayList：写时复制</h2>
+  <p><strong>模型：读操作完全无锁；写操作加锁后复制整个数组、改副本、把 volatile 引用指向新数组。</strong>任何时刻读到的都是某一版本的不可变快照，天然线程安全。</p>
+  <pre><code>// 写：lock -&gt; 复制整个数组 -&gt; 改副本 -&gt; 引用换新（volatile 保证立即可见）
+private transient volatile Object[] array;
+
+// 读：不加任何锁，直接遍历当前引用指向的数组快照
+for (Listener l : listeners) { l.onEvent(e); }</code></pre>
+  <ul>
+    <li><strong>适合：读极多、写极少的场景</strong>——监听器/订阅者列表（注册一次，广播千万次）、配置白名单、灰度开关、路由表。读写比越高，"读零开销"摊薄写成本越划算。</li>
+  </ul>
+  <pre><code>// 监听器列表：注册/注销一天没几次，广播每秒上万次 —— COW 的教科书场景
+private final List&lt;Listener&gt; listeners = new CopyOnWriteArrayList&lt;&gt;();
+
+void register(Listener l) { listeners.add(l); }      // O(n) 复制——无所谓，极少发生
+void fire(Event e) {
+    for (Listener l : listeners) l.onEvent(e);       // 无锁广播；迭代中有人注销也不抛异常
+}</code></pre>
+  <ul>
+    <li><strong>三个代价 ⚠️</strong>：① 写是 <strong>O(n) 全量复制</strong>，写频繁 = 内存和 CPU 双重灾难；② 复制瞬间<strong>新旧两个数组并存，内存翻倍</strong>（还制造大量 GC 垃圾）；③ 迭代器是<strong>创建那一刻的快照</strong>——弱一致（之后的写看不到），且 <code>iterator.remove()</code> 直接抛 <code>UnsupportedOperationException</code>（快照改不动）。</li>
+    <li><strong>对比</strong>：要"迭代时抛异常"的强一致没有，要"读写都多"该用 <a href="#chm">ConcurrentHashMap</a>（当 set 用 keySet）或 <code>Collections.synchronizedList</code>（全表锁，读写都排队）。</li>
+    <li><strong>COW 的思想：读写分离 + 最终一致</strong>——不锁读者，用"版本切换"让读者看旧版、写者造新版。这个思想在 Linux fork、Redis RDB 持久化、Git 分支里反复出现，CHM 与 COW 的完整源码级对比在 <a href="../01-java/08-集合框架.html">01-java/08 集合框架</a>。</li>
+    <li><code>CopyOnWriteArraySet</code> 一句：底层就是 COWArrayList，add 要 O(n) 扫描查重——只适合小集合（比如监听器去重）。</li>
+  </ul>
+  <h3>读多写少场景的四方案对比</h3>
+  <table>
+    <tr><th>方案</th><th>读</th><th>写</th><th>迭代中修改</th><th>适用</th></tr>
+    <tr><td>CopyOnWriteArrayList</td><td>无锁</td><td>锁 + O(n) 复制</td><td>不抛异常（快照）</td><td>读极多写极少</td></tr>
+    <tr><td><code>Collections.synchronizedList</code></td><td>全表锁</td><td>全表锁</td><td>迭代需手动包 synchronized，否则 CME</td><td>低并发通用</td></tr>
+    <tr><td>ConcurrentHashMap.newKeySet()</td><td>桶级无锁</td><td>桶级锁</td><td>弱一致不抛异常</td><td>读写都多、当 set 用</td></tr>
+    <tr><td>ReadWriteLock + ArrayList</td><td>读锁（仍有开销）</td><td>写锁</td><td>需自己控制</td><td>读多写不算少、要强一致</td></tr>
+  </table>
+</section>
+
+<section id="tl">
+  <h2><span class="no">05</span>ThreadLocal ⭐⭐</h2>
+  <h3>定位：不是同步，是"以空间换隔离"</h3>
+  <p>ThreadLocal <strong>不是用来解决共享变量竞争的，它是从根上避开共享</strong>：每个线程一份独立副本，线程内随手可得、线程间互不可见——把"共享 + 同步"的问题转化成"每线程私有 + 隔离"的问题。代价是每线程一份内存（空间），换来的是读写的零竞争。</p>
+  <div class="box tip"><p><strong>开场口径</strong>：先纠正一句"ThreadLocal 不是同步工具，是隔离工具"——很多面试者上来就答"解决线程安全"，方向就错了；先定性再展开，这道题的起点分就拿满了。</p></div>
+  <ul>
+    <li><strong>currentUser 上下文</strong>（笔记原始场景）：网关/过滤器里 set 登录用户，后续 controller、service、mapper 深层调用随手 get，不用层层传参。</li>
+    <li><strong>SimpleDateFormat</strong>：它线程不安全（Calendar 字段共享），new 又贵——每线程持有一个实例，或干脆换不可变的 DateTimeFormatter（见第 07 节追问）。</li>
+    <li><strong>traceId 全链路追踪</strong>：日志框架 MDC 的底层就是一个 ThreadLocalMap；Spring 事务把 Connection 绑定到线程（TransactionSynchronizationManager）也是——框架视角链 <a href="../04-spring/README.html">04-spring</a>。</li>
+  </ul>
+  <pre><code>// SimpleDateFormat 线程不安全的经典止血：每线程一个实例（withInitial 是 JDK8 起的便捷写法）
+private static final ThreadLocal&lt;SimpleDateFormat&gt; SDF =
+        ThreadLocal.withInitial(() -&gt; new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
+
+SDF.get().format(new Date());      // 线程内随手用，无竞争；新代码请直接换 DateTimeFormatter（见追问）</code></pre>
+  <pre><code>private static final ThreadLocal&lt;UserContext&gt; CTX = new ThreadLocal&lt;&gt;();   // ⭐ 推荐 static final
+
+CTX.set(currentUser);       // 过滤器入口
+UserContext uc = CTX.get(); // 调用链任意深处
+CTX.remove();               // 出口清理（后面细讲为什么必须）</code></pre>
+  <h3>底层：数据不在 ThreadLocal 里，在每个 Thread 身上</h3>
+  <ul>
+    <li>每个 <code>Thread</code> 对象里有一个字段 <code>ThreadLocal.ThreadLocalMap threadLocals</code>——<strong>set 时以 ThreadLocal 实例为 key、值为 value，存进当前线程自己的这个 map</strong>；get 也是从当前线程身上取。所以<strong>同一份 ThreadLocal 在 100 个线程里各有独立的一条记录</strong>。</li>
+    <li>这个设计解释了两件事：线程结束 → map 随线程对象一起回收（数据自然消亡）；线程被池复用 → map 长存（数据残留，泄漏温床）。</li>
+  </ul>
+  <pre><code>// ThreadLocal.set 的真实路径（源码示意）—— 三个 this/Thread 的指向要看清
+public void set(T value) {
+    Thread t = Thread.currentThread();            // ① 拿当前线程
+    ThreadLocalMap map = t.threadLocals;          // ② map 是线程身上的字段，不是 ThreadLocal 的
+    if (map != null) map.set(this, value);        // ③ 以 ThreadLocal 实例（this）为 key 存入
+    else t.threadLocals = createMap(this, value);
+}
+// get / remove 同理：Thread.currentThread() -&gt; threadLocals -&gt; 以 this 为 key 定位 Entry</code></pre>
+  <div class="box warn"><p><strong>纠错（面试高频错答）</strong>：ThreadLocalMap <strong>不是 HashMap</strong>。它是数组 + <strong>开放定址（线性探测）</strong>：hash 冲突不拉链表，而是向后找下一个空槽位；HashMap 用的是链地址法（数组 + 链表，长链转红黑树）。另外散列也不一样：每个 ThreadLocal 实例持有 <code>threadLocalHashCode</code>，从随机初始值起、每 new 一个自增 <strong>0x61c88647（黄金分割增量）</strong>——让相邻实例均匀散布在 2 的幂长度的数组上，配合开放定址减少堆积。</p></div>
+  <h3>Entry 源码：key 弱引用、value 强引用（笔记原码）</h3>
+  <pre><code>static class Entry extends WeakReference&lt;ThreadLocal&lt;?&gt;&gt; {   // Entry 本身就是一个弱引用
+    Object value;
+
+    Entry(ThreadLocal&lt;?&gt; k, Object v) {
+        super(k);  // 将 key 作为弱引用，注意super方法
+        value = v; // value 是强引用
+    }
+}</code></pre>
+  <ul>
+    <li><strong>WeakReference 语义</strong>（笔记 471-475）：弱引用不阻止 GC——一旦 <code>ThreadLocal</code> 实例的外部强引用断开，下次 GC 时实例被回收，此后 <code>weakRef.get()</code> 返回 null。</li>
+    <li>所以每个 Entry 里：<strong>key（ThreadLocal 实例）是弱引用，value 是强引用</strong>——这个不对称就是内存泄漏问题的全部来源。</li>
+  </ul>
+  <h3>为什么 key 用弱引用</h3>
+  <ul>
+    <li>反证：若 key 是强引用——外部对 ThreadLocal 的引用没了（局部变量出栈、静态字段被置换），但 Entry 还强引用着它，<strong>这个 ThreadLocal 实例只要线程活着就永远回收不了</strong>（key 泄漏，连带它的 Class 元数据）。</li>
+    <li>用了弱引用：外部引用一断，key 就可被 GC；死掉的 Entry 变成 <code>key == null</code> 的 stale entry——它成了"待清理"的标记（探测式清理的依据，见下）。</li>
+    <li><strong>口径：弱引用是"自救"，不是泄漏的原因</strong>。把泄漏归咎于弱引用是这道题最常见的反向答案。</li>
+  </ul>
+  <h3>内存泄漏链条 ⭐（画得出这张图就是满分）</h3>
+  <pre><code>GC Root（线程池的 worker 长存不销毁）
+  └─ Thread
+       └─ threadLocals (ThreadLocalMap)        ← Map 挂在线程身上
+            └─ Entry[]
+                 └─ Entry
+                      ├─ key   --弱引用--&gt; ThreadLocal 实例    外部引用断开后，下次 GC 即回收 ✅
+                      └─ value --强引用--&gt; 大对象              key 死了它还活着 ⚠️ 泄漏点</code></pre>
+  <ul>
+    <li><strong>链条</strong>：线程池线程长存 → Thread → ThreadLocalMap → Entry → value 这条<strong>强引用链不断</strong> → value 虽然再也没有代码能访问到（key 已死，get 定位不到它），GC 却回收不掉——典型内存泄漏。</li>
+    <li><strong>弱引用只救了 key，没救 value</strong>（笔记 490-492 的要点）：key 能被回收恰恰是因为弱引用；value 是强引用，没人 remove 就一直挂着。</li>
+    <li><strong>JDK 的自救（不可靠）</strong>：set / get / remove 走到 stale entry（key == null）附近时，会顺手触发 <code>expungeStaleEntry</code> 把 value 置 null、清理死 Entry（插入新元素时还有启发式的 <code>cleanSomeSlots</code> 小步扫描）——但探测式清理只发生在"之后还有线程调同一个 map 的 set/get/remove"且"恰好扫到邻近槽位"时。线程归还池后若再没人 set/get，清理永远不会发生（笔记 493：线程复用，ThreadLocalMap 不会自动销毁）。</li>
+    <li><strong>结论（背这句）</strong>：泄漏的根因是"长存线程 + value 强引用 + 忘记 remove"三者叠加，弱引用只是缓解了 key 那一半——所以<strong>必须手动 remove</strong>。</li>
+  </ul>
+  <h3>最佳实践：try-finally 中 remove（笔记 495）</h3>
+  <pre><code>try {
+    CTX.set(currentUser);
+    // ... 整条调用链随取随用 CTX.get()
+} finally {
+    CTX.remove();   // ⭐ 线程池场景必须：切断 value 的强引用，同时清掉残留状态
+}</code></pre>
+  <ul>
+    <li>线程池场景 remove 不是"可选的优化"而是<strong>必须</strong>：除了泄漏，还有更凶的<strong>"串号"业务事故</strong>——忘了 remove，下一个复用该线程的请求会 get 到上一个请求的用户上下文，等于拿别人的身份做事（数据越权级故障）。</li>
+    <li>定义处用 <code>private static final</code>：类级一份 ThreadLocal；写成实例字段则每个对象一个 ThreadLocal，白白占用数组槽位还增加泄漏面。</li>
+  </ul>
+  <div class="box warn"><p><strong>常见误用清单（自查）</strong>：① 定义成实例字段而非 <code>private static final</code>；② remove 不放 finally——异常路径必漏清理；③ 往上下文里塞大对象/大集合——泄漏时损失按线程数放大；④ 指望"线程结束自动回收"——线程池里线程几乎不结束；⑤ 拿 ThreadLocal 存数据库连接做事务——Spring 事务管理已经替你绑定了，重复造轮子还容易和事务边界打架。</p></div>
+</section>
+
+<section id="itl">
+  <h2><span class="no">06</span>InheritableThreadLocal 与 TTL</h2>
+  <h3>父传子：创建子线程时拷贝</h3>
+  <pre><code>InheritableThreadLocal&lt;String&gt; ctx = new InheritableThreadLocal&lt;&gt;();
+ctx.set("trace-001");
+new Thread(() -&gt; log(ctx.get())).start();   // 创建子线程时（Thread 构造里）拷贝父线程的值 → "trace-001"</code></pre>
+  <ul>
+    <li>机制：Thread 初始化时把<strong>父线程的 inheritableThreadLocals 拷贝</strong>给子线程（注意是拷贝引用——value 若是可变对象，父子改的是同一个，这也是坑）。</li>
+    <li>它只解决"每次 new Thread"的老代码；<strong>线程池下基本必翻车</strong>。</li>
+    <li>典型可用场景一句话：main 线程解析好的配置/用户身份，随 <code>new Thread</code> 传给子线程可见——注意是"创建时快照"，之后父线程再改，子线程看不到。</li>
+  </ul>
+  <h3>坑：线程池复用破坏传递 ⭐</h3>
+  <pre><code>// worker 线程在池初始化时就创建了，拷贝的是"当年创建它时"那个父线程的值
+pool.execute(() -&gt; log(ctx.get()));   // 大概率是 null，或者 —— 更糟 —— 别人很久以前留下的 traceId</code></pre>
+  <ul>
+    <li>原因：拷贝发生在 <strong>Thread 对象构造的那一刻</strong>，而任务提交时线程早就存在、被反复复用——上下文传的是"线程的历史"，不是"任务的当下"。污染（拿到别人的值）比丢失（null）更危险：日志串链路、串号事故。</li>
+  </ul>
+  <h3>解法：阿里 TransmittableThreadLocal（TTL）——生产实践加分点</h3>
+  <pre><code>TransmittableThreadLocal&lt;String&gt; ttl = new TransmittableThreadLocal&lt;&gt;();
+Runnable task = TtlRunnable.get(() -&gt; log(ttl.get()));   // 提交时 capture → 执行时 replay → 结束 restore
+pool.submit(task);</code></pre>
+  <ul>
+    <li>TTL 把传递时机从"线程创建"挪到"任务提交"：包装 Runnable/Callable（或用 <strong>ttl-agent 字节码增强线程池类</strong>，业务零侵入），提交时<strong>快照（capture）</strong>当前父线程上下文，任务执行前<strong>回放（replay）</strong>覆盖到 worker 线程，执行完<strong>还原（restore）</strong>——既传对了值，又不污染后续任务。</li>
+    <li>配套 <code>TtlExecutors.getTtlExecutorService(pool)</code> 包装整个池；这是链路追踪、异步上下文框架（以及多数公司的内部 starter）的标准做法。</li>
+  </ul>
+  <h3>四种"线程上下文"方案横向对比（总结背诵）</h3>
+  <table>
+    <tr><th>方案</th><th>传递语义</th><th>线程池安全</th><th>一句话</th></tr>
+    <tr><td>ThreadLocal</td><td>线程内隔离，不传递</td><td>✅（须 remove）</td><td>默认答案，配 try-finally</td></tr>
+    <tr><td>InheritableThreadLocal</td><td>创建子线程时拷贝一次</td><td>❌ 复用即失效/串值</td><td>只适合每次 new Thread 的老代码</td></tr>
+    <tr><td>TransmittableThreadLocal</td><td><strong>任务提交时</strong>快照回放</td><td>✅</td><td>capture/replay/restore，生产正解</td></tr>
+    <tr><td>ScopedValue（JDK 21+）</td><td>作用域绑定，不可变</td><td>✅（绑定随结构化并发走）</td><td>虚拟线程时代替代 ThreadLocal</td></tr>
+  </table>
+  <div class="box note"><p><strong>虚拟线程时代的答案（一句）</strong>：百万级虚拟线程时，"每线程一份副本"的 ThreadLocal 内存与克隆成本被急剧放大，JDK 21+ 给出 <strong>ScopedValue</strong>——不可变、绑定作用域、用完自动失效，不需要 remove——完整对比见 <a href="10-虚拟线程.html">第 10 章 虚拟线程</a>。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">07</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链（ThreadLocal 标准四连，背熟）</strong>：原理（Thread 身上的 ThreadLocalMap）→ 为什么 key 弱引用（防 key 泄漏的自救）→ 那为什么还会泄漏（value 是强引用，链路 Thread→Map→Entry→value 不断）→ 怎么办（try-finally remove，线程池必须，还有串号风险）。一环扣一环，答断任何一环都会被追到底。</li>
+    <li><strong>追问链：ThreadLocalMap 是 HashMap 吗 →</strong> 不是：开放定址（线性探测）vs 链地址法；hash 用 0x61c88647 黄金分割增量。答"就是 HashMap"基本宣告这题报废。</li>
+    <li><strong>追问链：CHM 为什么不许 null → HashMap 为什么可以 →</strong> 并发下 get 返回 null 有二义；单线程可用 containsKey 二次确认，并发下二次确认本身又是竞态。</li>
+    <li><strong>追问：遍历 CHM 时别的线程 put →</strong> 不抛 CME（弱一致迭代器），但可能看不到新值；size() 也只是弱一致估计。</li>
+    <li><strong>陷阱：computeIfAbsent 里做重活/递归改 map →</strong> 慢计算长时间占桶锁、递归更新抛 IllegalStateException；重计算用"存 Future"的变体。</li>
+    <li><strong>陷阱：new LinkedBlockingQueue() 不传容量 →</strong> 默认 Integer.MAX_VALUE 无界，生产慢时任务堆积 OOM；newFixedThreadPool 的事故就是这个（链第 06 章）。</li>
+    <li><strong>陷阱：SynchronousQueue 的 offer 立即返回 false →</strong> 不是失败 bug，是 cachedThreadPool 判断"要不要扩线程"的依据；别拿 add 的异常语义去用它。</li>
+    <li><strong>陷阱：COW 迭代器上 remove →</strong> UnsupportedOperationException（快照不可变）；写频繁场景用 COW 是内存灾难。</li>
+    <li><strong>追问：SimpleDateFormat 现在还用 ThreadLocal 包吗 →</strong> 新代码直接换 <code>DateTimeFormatter</code>（不可变、线程安全，static 共享即可）；ThreadLocal 是给存量代码不安全不改逻辑的止血方案——能说出这层选型才算懂。</li>
+    <li><strong>追问：PriorityBlockingQueue 遍历有序吗 →</strong> 不。堆只保证堆首是当前最小/最大；要有序输出必须 drain 后排序。</li>
+    <li><strong>陷阱：把 BlockingQueue 当业务列表用 →</strong> remove(Object) / contains 都是 O(n) 且要锁全表——队列就是通道，不是存储；要检索就该用 CHM 或数据库。</li>
+    <li><strong>追问：ThreadLocalMap 会扩容吗 →</strong> 会：负载超过数组长度的 2/3 就 rehash 扩容一倍——又一条"set/get 顺手做的事"，也是清理时机之一；这个细节知道即可，别主动展开。</li>
+    <li><strong>追问：ConcurrentLinkedQueue 是 BlockingQueue 吗 →</strong> 不是：CAS 无锁队列（Michael-Scott），没有 put/take 的阻塞协调语义；要背压/等待必须上 BlockingQueue；它的 size() 是 O(n) 估计值、不允许 null。</li>
+    <li><strong>追问：InheritableThreadLocal 失效了怎么办 →</strong> TTL：capture/replay/restore 三步，agent 或 TtlRunnable 接入——能说到"提交时快照、执行时回放"就是生产级答案。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">08</span>面试自查清单</h2>
+  <ol>
+    <li>CHM 复合操作四件套（putIfAbsent / computeIfAbsent / merge / compute）语义与场景张口就来，能写 merge 计数和 computeIfAbsent 缓存。</li>
+    <li>能论证 CHM 为什么 key/value 都不许 null（并发二义 + 二次确认竞态），并知道迭代器弱一致不抛 CME、size 是估计值。</li>
+    <li>BlockingQueue 四组 API 表（抛异常/特殊值/阻塞/超时）+ 六个实现的结构、容量、锁差异；LinkedBlockingQueue 默认无界陷阱能讲成事故故事。</li>
+    <li>知道非阻塞旁支 ConcurrentLinkedQueue：CAS 无锁、size() 是 O(n) 估计值、不许 null，与 BlockingQueue 的语义分界。</li>
+    <li>COW 三代价（写 O(n) 复制、内存翻倍、快照迭代器）与适用判据（读极多写极少）说得出，COW 思想能举一反三（读写分离 + 最终一致）。</li>
+    <li>ThreadLocal：数据在每个 Thread 身上的 threadLocals，不是 ThreadLocal 里；ThreadLocalMap 是开放定址不是 HashMap，能说出 0x61c88647。</li>
+    <li>Entry 源码背得出：key 弱引用（super(k)）、value 强引用；弱引用救 key 不救 value 的逻辑讲得清。</li>
+    <li>内存泄漏链条能画：长存线程 → Map → Entry → value；知道 expungeStaleEntry 只是不可靠的自救；最佳实践 static final + try-finally remove + "串号"事故。</li>
+    <li>InheritableThreadLocal 池化失效的原因（拷贝在线程创建时）+ TTL 的 capture/replay/restore + ScopedValue 一句（链第 10 章）。</li>
+  </ol>
+  <div class="pager">
+    <a href="08-并发工具类.html">⬅ 上一章：并发工具类</a>
+    <a class="next" href="10-虚拟线程.html">下一章：虚拟线程 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源合并）：① 蓝本 AlgoMaster Concurrency（Concurrent Collections / ThreadLocal）；② <a href="https://javaguide.cn/java/concurrent/java-concurrent-questions-03.html">JavaGuide 并发常见题（下）</a>（ThreadLocal / 线程池 / 并发容器口径）及 <a href="https://javaguide.cn/java/concurrent">并发专题</a>；③ <a href="https://pdai.tech/md/java/thread/java-thread-x-overview.html">pdai.tech 并发系列</a>（并发集合篇：ConcurrentLinkedQueue / COW）；既有笔记 Java/java 基础.md ThreadLocal 节（461-495）+ JUC 并发容器节（627-642）。CHM 源码视角的来源见 <a href="../01-java/08-集合框架.html">01-java/08 集合框架</a>章末。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 09 章 并发容器与 ThreadLocal</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

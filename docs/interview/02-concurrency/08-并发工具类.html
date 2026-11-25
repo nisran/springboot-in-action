@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 08 章 · 并发工具类 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#semaphore">Semaphore 信号量</a>
+  <a href="#latch">CountDownLatch ⭐</a>
+  <a href="#barrier">CyclicBarrier 与对比 ⭐</a>
+  <a href="#exchanger">Exchanger</a>
+  <a href="#pick">场景选型表 ⭐</a>
+  <a href="#patterns">并发模式</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="07-异步编程.html">⬅ 上一章：07 异步编程</a>
+  <a href="09-并发容器.html">下一章：09 并发容器 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 08 章 · 并发工具类</h1>
+    <div class="sub">Semaphore · CountDownLatch · CyclicBarrier · Exchanger —— 建在 AQS 之上的四个"线程协作"工具，外加一张场景选型表和两个并发模式</div>
+    <div class="meta">
+      <span>⭐ 高频：CountDownLatch vs CyclicBarrier · Semaphore 限流</span>
+      <span>蓝本：AlgoMaster Concurrency · Synchronizers</span>
+      <span class="tag exist">已合并：Java/java 基础.md 高级并发工具节 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>CountDownLatch 和 CyclicBarrier 有什么区别？⭐（几乎必问，答不出对比表直接扣分）</li>
+      <li>Semaphore 是干什么的？怎么用它对下游接口做并发保护？公平和非公平有什么区别？</li>
+      <li>主线程要等 N 个并行任务全部完成再汇总，有几种写法？各自优劣？⭐</li>
+      <li>CyclicBarrier 的 barrierAction 是哪个线程执行的？</li>
+      <li>多线程分阶段迭代计算（每轮算完汇总再进下一轮）用什么同步？听说过 Phaser 吗？</li>
+      <li>两个线程之间要互相交换一批数据，用什么？</li>
+      <li>生产者-消费者模式的本质是什么？不用 BlockingQueue 手写一个要小心哪些坑？</li>
+      <li>工作密取（work stealing）是什么？Fork/Join 和普通线程池的区别？</li>
+    </ol>
+  </div>
+  <p>这一章的特点是：<strong>"会用"不难，难在"选型"和"边界"</strong>。四个工具的 API 五分钟就能学会，面试官真正考的是：给你一个场景（等任务、限并发、多轮同步、交换数据），你能不能立刻说对工具并讲清"为什么不用另外三个"。7 年经验的答法：先一句话给模型（比如"Semaphore 就是 N 个车位"），再讲自己的业务场景和踩过的坑（countDown 忘了放 finally、barrier 被中断全员失败），最后主动补一张对比表——把对比表说全，这道题就从"及格"变"加分"。</p>
+  <div class="box note"><p>四个工具全部建在 <a href="03-互斥与同步.html">第 03 章 的 AQS</a> 之上（latch 用共享模式、Semaphore 也用共享模式、barrier 用 ReentrantLock + Condition），底层没新东西——新的是"协作语义"。被追问底层时往 AQS 的 <code>state</code> 上引即可。</p></div>
+</section>
+
+<section id="semaphore">
+  <h2><span class="no">02</span>Semaphore：许可数模型</h2>
+  <p><strong>一句话模型：N 个许可证（permits），acquire() 拿走一个（没了就阻塞），release() 还回一个——像一座只有 N 个车位的车场。</strong>构造时指定许可数，不设置就是"同时最多 N 个线程通过这段代码"。</p>
+  <pre><code>Semaphore permits = new Semaphore(10);            // 默认非公平
+// Semaphore permits = new Semaphore(10, true);   // 公平：先到先得 FIFO
+
+if (permits.tryAcquire(500, TimeUnit.MILLISECONDS)) {  // ⭐ 超时版：等不到就快速失败
+    try {
+        callDownstream();          // 任意时刻最多 10 个线程同时执行到这里
+    } finally {
+        permits.release();         // ⭐ 必须与 acquire 严格配对，用完归还
+    }
+} else {
+    throw new BizException("系统繁忙，请稍后重试");   // 过载保护：不排队、不堆积
+}</code></pre>
+  <h3>两个核心用途</h3>
+  <ul>
+    <li><strong>限流（瞬时并发上限）</strong>：保护自身或下游——比如下游接口最多扛 10 个并发，超过就挡在门外。注意 <code>tryAcquire(timeout)</code> 的价值：等不到许可时<strong>快速失败</strong>而不是无限排队，请求堆积本身也是一种事故。</li>
+    <li><strong>资源池化</strong>：限制同时使用某个昂贵资源的线程数——数据库连接、文件句柄、License 数量，本质上连接池的"最大连接数"就是一个 Semaphore。</li>
+  </ul>
+  <h3>公平 vs 非公平</h3>
+  <ul>
+    <li>非公平（默认）：许可释放后被唤醒的线程和<strong>新来的线程直接抢</strong>——吞吐高（少了队列调度开销），但可能饥饿；语义与 <a href="04-锁策略.html">第 04 章 的非公平锁</a>完全一致。</li>
+    <li>公平（<code>new Semaphore(n, true)</code>）：严格 FIFO，先到先得；吞吐略低，适合对顺序敏感的场景（比如排队刷票）。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱一：Semaphore 限的是"并发数"，不是"速率"</strong>。10 个许可 = 最多 10 个<strong>同时在跑</strong>，每秒放进多少波无所谓；要限 QPS 得用令牌桶（Guava RateLimiter / Sentinel）。<strong>陷阱二：release 可以多调</strong>——Semaphore 不检查持有者，多 release 一次许可数就会超过初始值（许可超发），所以 acquire/release 必须像锁一样 try-finally 严格配对。</p></div>
+  <h3>实现走读：state 就是剩余许可（AQS 共享模式落地）</h3>
+  <p>Semaphore 的全部逻辑就是"把 CAS 的对象换成许可数"，公平 / 非公平只是获取前要不要查队列（模式约定见 <a href="03-互斥与同步.html#aqs">03 章 §06 · 独占 vs 共享</a>）：</p>
+  <pre><code>// Semaphore.Sync（AQS 子类）：公平与非公平共用这两个方法
+protected final int tryAcquireShared(int acquires) {      // acquire() 最终落到这
+    for (;;) {
+        int available = getState();
+        int remaining = available - acquires;             // ① 剩余 = 许可数 - 1
+        if (remaining &lt; 0 || compareAndSetState(available, remaining))
+            return remaining;                             // ② 负数 → AQS 让你入队 park；≥0 拿到
+    }                                                     // ③ CAS 失败（被别人抢了）→ 自旋重试
+}
+protected final boolean tryReleaseShared(int releases) {  // release() 落到这
+    for (;;) {
+        int current = getState();
+        int next = current + releases;                    // ④ 还许可：不校验持有者（超发陷阱的根源）
+        if (compareAndSetState(current, next))
+            return true;                                  // ⑤ true → AQS doReleaseShared 唤醒等待者
+    }
+}</code></pre>
+  <ul>
+    <li>②⑤ 正是共享模式的返回值约定：负数入队、true 触发<strong>传播唤醒</strong>——一次 release 还回多张许可时，多个等待者被接力放行，而不是每张许可醒一个轮一轮。</li>
+    <li><strong>追问：tryAcquire(timeout) 怎么实现？</strong>→ doAcquireSharedNanos：入队后 parkNanos 按 deadline 限时睡，醒来先看时间到没到再决定重试还是放弃。</li>
+    <li><strong>追问：公平版差在哪一行？</strong>→ 非公平的 tryAcquireShared 直接 CAS（上面的代码）；公平版先 <code>hasQueuedThreads()</code>——队列有人就 return -1 老实排队去，与 ReentrantLock 的 <code>hasQueuedPredecessors()</code> 同一思想（03 章 §06 答题口径）。</li>
+  </ul>
+</section>
+
+<section id="latch">
+  <h2><span class="no">03</span>CountDownLatch：一次性计数器 ⭐</h2>
+  <p><strong>模型：内部维护一个计数器，构造时指定 N；<code>countDown()</code> 使计数减 1（不阻塞，可重复调用到 0 以下无副作用）；<code>await()</code> 阻塞当前线程，直到计数减为 0（或超时/被中断）。</strong>计数到 0 后"门闩"永久打开，<strong>不可重置、不可重用</strong>——下一批任务要 new 一个新的。</p>
+  <p>角色语义上，latch 是<strong>"旁观者等事件"</strong>：await 的人通常不是 countDown 的人，各个任务数完数就各自走人，不互相等。</p>
+  <h3>场景 1：主线程等 N 个并行任务聚合 ⭐</h3>
+  <pre><code>int n = 5;
+List&lt;Price&gt; results = new CopyOnWriteArrayList&lt;&gt;();     // 聚合容器也要并发安全
+CountDownLatch latch = new CountDownLatch(n);
+for (int i = 0; i &lt; n; i++) {
+    final int idx = i;
+    pool.execute(() -&gt; {
+        try {
+            results.add(querySupplier(idx));            // 子任务
+        } catch (Exception e) {
+            results.add(FALLBACK_PRICE);                // 失败兜底：绝不能让 latch 卡住
+        } finally {
+            latch.countDown();                          // ⭐ 必须 finally：异常路径也要减计数
+        }
+    });
+}
+latch.await(3, TimeUnit.SECONDS);   // ⭐ 带超时：防止某个任务异常退出没 countDown，主线程永卡
+merge(results);</code></pre>
+  <div class="box tip"><p><strong>与 CompletableFuture.allOf 对比（追问率极高）</strong>：latch 是"纯等待"，拿结果要自己聚合容器，异常也要自己兜；<a href="07-异步编程.html">allOf（第 07 章）</a>直接编排 Future——有返回值、异常传播、超时、编排组合都是现成的。<strong>选型口径：新代码/要结果用 allOf；任务来自老代码或回调式 API（拿不到 Future）、只是简单等待时用 latch。</strong>能说出 allOf 异常会"提前穿透"而 latch 需要自己兜底，就是加分答案。</p></div>
+  <h3>场景 2：服务启动等依赖就绪</h3>
+  <pre><code>CountDownLatch ready = new CountDownLatch(3);   // 3 个依赖：DB、缓存、MQ
+new Thread(() -&gt; { initDb();   ready.countDown(); }).start();
+new Thread(() -&gt; { initRedis(); ready.countDown(); }).start();
+new Thread(() -&gt; { initMq();    ready.countDown(); }).start();
+ready.await();                                   // 阻塞到三个依赖全部就绪
+startServer();</code></pre>
+  <p>反过来把计数设为 1 就是<strong>"发令枪"</strong>：N 个 worker 先 await 等着，主线程一声 countDown 全体同时起跑——压测预热、并行任务的统一起跑线都这么写。</p>
+  <div class="box warn"><p><strong>两个必背事故点</strong>：① countDown 不放 finally——任务抛异常后计数永远到不了 0，await 全体永卡（所以 await 一定带超时兜底）；② latch 用完即弃，想"再来一轮"却复用旧实例——它不会报错，只是永远立即通过（计数已经是 0），看起来"代码正常跑"实则同步已失效，比报错更难排查。</p></div>
+  <h3>实现走读：AQS 共享模式最短的一份作业</h3>
+  <p>CountDownLatch 是 AQS 共享模式<strong>最精简的示范实现</strong>——tryAcquireShared 只有一行判断（模式约定见 <a href="03-互斥与同步.html#aqs">03 章 §06 · 独占 vs 共享</a>）：</p>
+  <pre><code>private static final class Sync extends AbstractQueuedSynchronizer {
+    Sync(int count) { setState(count); }               // ① state = 计数器初值
+    protected int tryAcquireShared(int acquires) {
+        return (getState() == 0) ? 1 : -1;             // ② 到 0 才放行（正数 = 继续传播）
+    }
+    protected boolean tryReleaseShared(int releases) {
+        for (;;) {
+            int c = getState();
+            if (c == 0) return false;                  // ③ 已归零：再 countDown 无副作用
+            int nextc = c - 1;
+            if (compareAndSetState(c, nextc))
+                return nextc == 0;                     // ④ 只有减到 0 那次返回 true → 触发级联唤醒
+        }
+    }
+}</code></pre>
+  <ul>
+    <li>方法对号：<strong>await()</strong> = acquireSharedInterruptibly → ②，state ≠ 0 返回负数 → 入队 park（响应中断版，超时版走 doAcquireSharedNanos）；<strong>countDown()</strong> = releaseShared → ④。</li>
+    <li>"减到 0 全员放行"就是<a href="03-互斥与同步.html#aqs">传播唤醒</a>的效果：归零那次 release 返回 true → AQS 唤醒队首 → 队首 tryAcquireShared 拿到 1 → setHeadAndPropagate 接力唤醒下一个，一条链放完全部 await。</li>
+    <li>"不可重置"在源码里一目了然：③④ 只会减、没有任何 setState(count) 的路径——复用要 new 新实例是 API 设计而非缺陷。</li>
+    <li><strong>追问：为什么用共享不用独占？</strong>→ 独占一次只放一个，等 N 个任务要被唤醒 N 轮；共享 + 传播唤醒，归零瞬间全员放行（03 章 §06 追问链）。</li>
+  </ul>
+</section>
+
+<section id="barrier">
+  <h2><span class="no">04</span>CyclicBarrier：可重用屏障（与 latch 对比 ⭐）</h2>
+  <p><strong>模型：N 个线程（parties）互相等待，每个调 <code>await()</code> 报到；最后一个到达的线程触发"到齐"，全体放行，屏障自动重置，进入下一代（generation）。</strong>构造时可传 <code>barrierAction</code>——<strong>由最后到达的那个线程在放行前执行</strong>，此时其他线程还阻塞在 await，正好用它做各分片结果的聚合。</p>
+  <h3>场景：分阶段计算（多轮迭代同步）</h3>
+  <pre><code>CyclicBarrier barrier = new CyclicBarrier(N, () -&gt; {
+    // barrierAction：最后到达的线程执行，其他 N-1 个还在 await —— 安全地聚合
+    combinePartialResults();               // 聚合各分片本轮的阶段性结果
+});
+
+for (int t = 0; t &lt; N; t++) {
+    final int id = t;
+    new Thread(() -&gt; {
+        for (int round = 0; round &lt; ROUNDS; round++) {
+            partials[id] = computeChunk(id, round);    // ① 各自算自己分片
+            try {
+                barrier.await();                        // ② 到齐放行，自动重置进入下一轮
+            } catch (Exception e) {
+                Thread.currentThread().interrupt(); return;
+            }
+            nextRoundInit(id);                          // ③ 用聚合后的结果开启下一轮
+        }
+    }).start();
+}</code></pre>
+  <p>这类"N 方多轮同步"（多线程各算各的分区，每轮末全员对齐一次再用全局结果开下一轮）正是 latch 做不到的：latch 一轮就废，barrier 一局可以玩 ROUNDS 轮。</p>
+  <h3>CountDownLatch vs CyclicBarrier 对比表 ⭐（背熟）</h3>
+  <table>
+    <tr><th>维度</th><th>CountDownLatch</th><th>CyclicBarrier</th></tr>
+    <tr><td><strong>角色语义</strong></td><td><strong>旁观者等事件</strong>：await 的人与 countDown 的人通常不是一批</td><td><strong>参与者互相等</strong>：每个线程既是等待者也是被等者，到齐一起走</td></tr>
+    <tr><td>计数机制</td><td>计数器只减不增，减到 0 门闩打开</td><td>等待"到达数"凑满 N，凑满即放行</td></tr>
+    <tr><td><strong>可重用</strong></td><td><strong>一次性</strong>，到 0 后无法复位</td><td><strong>可重用</strong>，放行后自动重置进入下一代</td></tr>
+    <tr><td>附加动作</td><td>无</td><td>barrierAction，由最后到达的线程执行</td></tr>
+    <tr><td>失败行为</td><td>忘 countDown 则 await 永卡，只能靠超时自救</td><td>一方中断/超时 → 屏障 broken，<strong>全员抛 BrokenBarrierException</strong>（快速失败，不留僵局）</td></tr>
+    <tr><td>底层实现</td><td>AQS 共享模式（state = 剩余计数）</td><td>ReentrantLock + Condition（generation 代际标记）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>一句话总结（面试官最爱听）</strong>：latch 是<strong>倒计时门闩</strong>——减到 0 永远开着，"等事件"；barrier 是<strong>人齐开闸</strong>——放行后复位，"互相等"，还能一轮接一轮。再补一句"barrier 一损俱损（broken 全员异常）、latch 一忘全卡"就是满分版。</p></div>
+  <div class="box warn"><p><strong>陷阱：BrokenBarrierException</strong>。任何一个参与线程在 await 时被中断/超时，屏障进入 broken 状态，其余所有等待线程立即抛 BrokenBarrierException——这是设计上的快速失败，但要接好异常处理：本轮作废后要么 <code>reset()</code> 重建屏障，要么直接终止任务，别让 N-1 个线程拿着旧代屏障继续等下一轮（等不齐，只会再 broken 一次）。</p></div>
+</section>
+
+<section id="exchanger">
+  <h2><span class="no">05</span>Exchanger：两线程交换数据</h2>
+  <p><strong>模型：一个"交换点"，两个线程各调 <code>exchange(v)</code>，先到的阻塞等后到的；两边都到了就互换数据，各自拿到对方给的东西继续走。</strong>只支持两方——这是它和前面三个最大的区别。</p>
+  <pre><code>Exchanger&lt;List&lt;Order&gt;&gt; exchanger = new Exchanger&lt;&gt;();
+
+// 线程 A：往缓冲区填数据，填满后换回一个"空"缓冲区继续填
+new Thread(() -&gt; {
+    List&lt;Order&gt; buffer = new ArrayList&lt;&gt;();
+    while (true) {
+        fill(buffer);                              // 生产
+        buffer = exchanger.exchange(buffer);       // 阻塞直到换回消费者的空缓冲区
+    }
+}).start();
+
+// 线程 B：拿到的永远是装满的缓冲区，排空后换回去 —— 双向管道
+new Thread(() -&gt; {
+    List&lt;Order&gt; buffer = new ArrayList&lt;&gt;();      // 一开始就是空的
+    while (true) {
+        buffer = exchanger.exchange(buffer);       // 换到满的
+        drain(buffer);                             // 消费、清空
+    }
+}).start();</code></pre>
+  <ul>
+    <li><strong>典型场景</strong>：① 双向管道/双缓冲——一个线程填缓冲区、另一个排空，交换缓冲区引用，免去了同一个缓冲区的同步开销；② 遗传算法——两个线程各持一组"基因"，两两配对交换后各自演化。</li>
+    <li><strong>超时版</strong>：<code>exchange(v, timeout, unit)</code>——对方失联（崩溃/逻辑漏调）时自己能脱身，否则永久阻塞。</li>
+    <li>多于两方就需要换工具：多方数据交换用队列或 <code>Phaser</code> 编排。</li>
+  </ul>
+</section>
+
+<section id="pick">
+  <h2><span class="no">06</span>场景选型表 ⭐</h2>
+  <table>
+    <tr><th>场景</th><th>首选</th><th>要点</th></tr>
+    <tr><td>等 N 个任务完成后聚合</td><td>CountDownLatch / <a href="07-异步编程.html">allOf</a></td><td>纯等待用 latch；要返回值/异常传播/超时编排用 allOf</td></tr>
+    <tr><td>服务启动等 N 个依赖就绪</td><td>CountDownLatch(N)</td><td>就绪一个 countDown 一个；count=1 反用作"发令枪"</td></tr>
+    <tr><td>多轮全员同步（分阶段迭代）</td><td>CyclicBarrier</td><td>自动重置；barrierAction 由最后到达者做聚合</td></tr>
+    <tr><td>多阶段 + 参与者动态增减</td><td>Phaser</td><td>加分项，见下方一句展开</td></tr>
+    <tr><td>限制瞬时并发（限流/资源池）</td><td>Semaphore</td><td>限并发 ≠ 限速率；tryAcquire 超时快速失败</td></tr>
+    <tr><td>两个线程交换数据</td><td>Exchanger</td><td>双缓冲管道、遗传算法；超过两方不适用</td></tr>
+    <tr><td>定时/周期调度</td><td><a href="06-线程池.html">ScheduledExecutorService</a></td><td>与上面互补——按"时间"触发而非按"到齐"触发</td></tr>
+  </table>
+  <div class="box tip"><p><strong>加分项：Phaser 一句话</strong>——Phaser 是 barrier 的泛化版：<strong>多阶段</strong>（一个 Phaser 管很多轮，不用像 barrier 那样一代代重复）+ <strong>动态参与者</strong>（<code>register()</code> / <code>arriveAndDeregister()</code> 中途加入退出）+ <code>onAdvance()</code> 钩子可编程控制每一阶段的推进与终止。低并发面试能说出这个名字和"动态 parties"就够用了。</p></div>
+</section>
+
+<section id="patterns">
+  <h2><span class="no">07</span>并发模式</h2>
+  <p>笔记里的三个模式（生产者-消费者、工作线程、Fork/Join）是这一节的骨架。面试考"模式"不是背名字，而是<strong>说清它解耦了什么、代价是什么、生产里用什么现成实现</strong>。</p>
+  <h3>生产者-消费者模式</h3>
+  <ul>
+    <li><strong>本质：用缓冲区解耦"生产速率"与"消费速率"</strong>。队列满则生产者阻塞（天然背压 backpressure），队列空则消费者阻塞——两边各跑各的速度，峰值由队列吸收。</li>
+    <li><strong>BlockingQueue 一句话版</strong>：阻塞队列把 wait/notify 的全部坑（虚假唤醒、锁对象配对、notify 随机唤醒、必须 while 判断）封装掉，生产环境直接用：</li>
+  </ul>
+  <pre><code>BlockingQueue&lt;Task&gt; queue = new LinkedBlockingQueue&lt;&gt;(1000);   // ⚠️ 必须显式给容量（第 09 章讲为什么）
+
+new Thread(() -&gt; { while (true) queue.put(produce()); }, "producer").start();  // 满则阻塞
+new Thread(() -&gt; { while (true) consume(queue.take()); }, "consumer").start(); // 空则阻塞</code></pre>
+  <ul>
+    <li>面试常要求<strong>手写 wait/notify 版</strong>（考察锁与条件语义），完整实现与三大陷阱在 <a href="12-经典同步题.html">第 12 章 经典同步题</a>。</li>
+    <li>追问"有界还是无界"：无界队列在消费变慢时无限堆积直至 OOM——这正是第 09 章 LinkedBlockingQueue 默认容量陷阱要展开的。</li>
+  </ul>
+  <h3>工作线程模式（Worker Thread）</h3>
+  <p>固定一组常驻 worker 反复从任务队列取活干——<strong>这就是线程池的全部</strong>：任务提交与任务执行解耦，线程复用削峰。生产实现、参数与拒绝策略在 <a href="06-线程池.html">第 06 章 线程池</a>。</p>
+  <h3>工作密取（Work Stealing）与 Fork/Join</h3>
+  <ul>
+    <li><strong>与共享队列的区别</strong>：线程池是"一个共享队列，所有 worker 抢同一把锁"；工作密取是<strong>每个线程一条自己的双端队列 deque</strong>——自己从<strong>头部</strong>取（LIFO，刚压栈的任务数据还在 CPU 缓存里），空闲线程去别人队列<strong>尾部</strong>偷（FIFO，偷最老的、也最不容易和主人撞车）。</li>
+    <li><strong>Fork/Join 框架</strong>：分治 + 工作密取——任务递归拆分（fork）再合并结果（join），适合可二分、子任务开销均衡的计算（大数组聚合、树的遍历、归并排序）。<code>parallelStream</code> 底层就是公共的 <code>ForkJoinPool.commonPool()</code>。</li>
+    <li>不适合的场景也要会说：子任务极轻（拆分开销大于计算）或严重不均（一个长任务没有可偷的），密取反而劣化——所以 parallelStream 的建议是"数据量大、单元素计算便宜才开并行"。</li>
+    <li>完整展开（commonPool 的坑、与 ThreadPoolExecutor 对比、手动用 ForkJoinPool）在 <a href="06-线程池.html">第 06 章 线程池</a>。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：latch vs barrier → 一句话区分</strong>→ "latch 是倒计时门闩，减到 0 永远开着，旁观者通过；barrier 是人齐开闸，放行后复位再来一轮，参与者互相等"——先语义再重用性再失败行为，三层递进。</li>
+    <li><strong>追问链：Semaphore → 公平与非公平 →</strong> 非公平吞吐高（免队列调度、唤醒即抢），可能饥饿；公平 FIFO 保序但慢。和 ReentrantLock 的公平性是同一套权衡（<a href="04-锁策略.html">第 04 章</a>）。</li>
+    <li><strong>追问链：等 N 个任务 → 为什么有了 allOf 还要 latch →</strong> allOf 需要任务是 CompletableFuture；老代码/回调式任务拿不到 Future，latch 是通用粘合剂。反向答"新代码优先 allOf"更显工程判断。</li>
+    <li><strong>陷阱：countDown 不在 finally</strong>→ 异常路径漏减，await 永卡；且 await 不带超时 = 双保险全失。两个都要修。</li>
+    <li><strong>陷阱：复用已经到 0 的 latch</strong>→ 不报错但同步失效（立即通过），比异常更隐蔽。</li>
+    <li><strong>陷阱：Semaphore 许可超发</strong>→ release 多于 acquire 不报错，许可数悄悄超过初始值；tryAcquire 失败后误走 finally 的 release 是典型写错姿势——只在成功分支里配对。</li>
+    <li><strong>陷阱：barrier 的 broken 传染</strong>→ 一方中断全员 BrokenBarrierException；barrierAction 里抛异常同样会把屏障 break 掉，action 里必须自己兜异常。</li>
+    <li><strong>陷阱：Exchanger 单方失联</strong>→ 另一方永久阻塞；一律用带超时的 exchange(v, timeout, unit)。</li>
+    <li><strong>陷阱：拿 Thread.sleep 伪造同步</strong>→ "睡 100ms 等它算完"是竞态不是同步；所有"等别人做完"的语义都该用本章工具表达——这本身就是一道面试题。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>四个同步器各自的"一句话模型 + 一句话场景"张口就来（许可/倒计时/屏障/交换）。</li>
+    <li>latch vs barrier 对比表六维背熟：角色语义（旁观者等事件 vs 参与者互相等）、计数方向、重用性、barrierAction、失败行为、底层。</li>
+    <li>countDown 必须放 finally、await 必须带超时——能各讲一个对应的事故形态。</li>
+    <li>Semaphore：tryAcquire 超时快速失败、公平参数、release 配对；分得清"限并发"与"限速率"。</li>
+    <li>能对照源码讲两个共享模式实现：Semaphore 的 state = 剩余许可（CAS 减、release 不校验持有者）、CountDownLatch 的 tryAcquireShared 一行（state==0 ? 1 : -1）；"归零全员放行"能挂到传播唤醒（链 03 章 §06）。</li>
+    <li>barrierAction 由最后到达的线程执行、BrokenBarrierException 何时全员抛、reset 的使用时机。</li>
+    <li>选型表：等 N 个 → latch/allOf；多轮同步 → barrier；动态多阶段 → Phaser（加分）；限并发 → Semaphore；两两交换 → Exchanger。</li>
+    <li>生产者-消费者能三行 BlockingQueue 写出，也能说清为什么手写 wait/notify 版容易错（链第 12 章对照）。</li>
+    <li>工作密取能讲出 deque 头 LIFO / 偷尾 FIFO 的原因，以及 parallelStream 与 commonPool 的关系（链第 06 章展开）。</li>
+  </ol>
+  <div class="pager">
+    <a href="07-异步编程.html">⬅ 上一章：异步编程 CompletableFuture</a>
+    <a class="next" href="09-并发容器.html">下一章：并发容器与 ThreadLocal →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；② <a href="https://javaguide.cn/java/concurrent/java-concurrent-questions-03.html">JavaGuide 并发常见题（下）</a>（工具类对比）；③ <a href="https://pdai.tech/md/java/thread/java-thread-x-overview.html">pdai.tech 并发系列</a>（J.U.C 工具类篇）；④ 美团 <a href="https://tech.meituan.com/2019/12/05/AQS.html">《从ReentrantLock的实现看AQS的原理及应用》</a>（共享模式：CountDownLatch/Semaphore 的 AQS 落地）；既有笔记 Java/java 基础.md 并发节。<br>§02/§03 实现走读（2026-11-04 补）：JDK 21 Semaphore / CountDownLatch 源码（Sync.tryAcquireShared / tryReleaseShared），模式约定链 <a href="03-互斥与同步.html#aqs">03 章 §06 · 独占 vs 共享</a>。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 08 章 并发工具类</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

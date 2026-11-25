@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 14 章 · 并发数据结构设计 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#intent">手写题的考察意图</a>
+  <a href="#chm">专题1 手写 ConcurrentHashMap ⭐</a>
+  <a href="#msq">专题2 无锁队列</a>
+  <a href="#pq">专题3 并发优先队列</a>
+  <a href="#trie">专题4 线程安全 Trie</a>
+  <a href="#bloom">专题5 并发布隆过滤器</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="13-并发设计题.html">上一章：13 并发设计题</a>
+  <a href="15-多线程算法.html">下一章：15 多线程算法 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 14 章 · 并发数据结构设计</h1>
+    <div class="sub">手写 ConcurrentHashMap · Michael-Scott 无锁队列 · 并发优先队列 · 线程安全 Trie · 并发布隆过滤器 —— 不背 API，把锁粒度与 CAS 组合成正确的结构</div>
+    <div class="meta">
+      <span>⭐ 高频：手写 ConcurrentHashMap · 无锁队列与 ABA</span>
+      <span>蓝本：AlgoMaster Concurrency · Concurrent Data Structures</span>
+      <span class="tag exist">已合并：Java/java 基础.md 分段锁→CAS+synchronized ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>不允许用 java.util.concurrent，手写一个线程安全的 HashMap，说说你的设计？⭐⭐</li>
+      <li>ConcurrentHashMap 从 JDK 7 到 JDK 8 锁机制怎么演进的？为什么放弃分段锁？⭐⭐</li>
+      <li>手写一个无锁队列，讲讲入队的两步 CAS；ABA 问题怎么解决？⭐</li>
+      <li>要一个并发的优先队列怎么办？为什么 JDK 至今没有 ConcurrentPriorityQueue？</li>
+      <li>设计线程安全的 Trie（敏感词库/路由表），读写比 1000:1 时你怎么选方案？</li>
+      <li>手写并发的布隆过滤器：位图怎么并发置位？误判率受什么影响？为什么不能删除？</li>
+      <li>你写的这些结构，get/size/迭代分别是什么一致性强度？</li>
+    </ol>
+  </div>
+  <p>这是 02 板块的"手写"章。前 13 章学的是<strong>怎么用</strong>锁、CAS、容器，这一章反过来：把工具收走，考你能不能<strong>从零造出正确的并发结构</strong>。容器的使用口径和原理细节在 <a href="09-并发容器.html">第 09 章 并发容器</a>，本章聚焦"手写与设计"，两章互补不重复。</p>
+</section>
+
+<section id="intent">
+  <h2><span class="no">02</span>手写题的考察意图</h2>
+  <p>面试官出"手写 XXX"不是为了听你背 API——是为了看三件事：<strong>①能不能先做设计决策而不是上来就写代码；②能不能把锁策略 / CAS / 队列这些积木拼成正确且高效的结构；③能不能主动讲清 trade-off 和边界</strong>。写对了但说不出为什么，和背答案没有区别。</p>
+  <h3>答题四步法</h3>
+  <ol>
+    <li><strong>复述目标与约束</strong>：要支持哪些操作（put/get、offer/poll、前缀查询…）、一致性要求（单键原子就够还是要全局快照）、读写比、并发量级——把模糊的题面问清楚，本身就是加分项。</li>
+    <li><strong>先给设计决策再动笔</strong>：锁粒度选多细、乐观还是悲观、要不要借助不可变性——三句话说清"为什么这样设计"（见下表）。</li>
+    <li><strong>只写并发正确性相关的核心代码</strong>：加锁位置、CAS 目标、volatile 字段这几行必须写并注释；CRUD 细节一句"略"没人关心。</li>
+    <li><strong>主动补边界</strong>：扩容怎么做、size 是精确值吗、什么场景下这个方案会退化——面试官正打算问的，你先说了。</li>
+  </ol>
+  <h3>设计决策三维度（所有手写题的选型表）</h3>
+  <table>
+    <tr><th>维度</th><th>选项谱系（粗 → 细）</th><th>选择依据</th></tr>
+    <tr><td>锁粒度</td><td>全局一把锁 → 分段锁 → 桶级/节点级锁 → 无锁（纯 CAS）</td><td>冲突概率 × 临界区大小；粒度越细吞吐越高，但代码复杂度陡增</td></tr>
+    <tr><td>乐观 vs 悲观</td><td>悲观：synchronized / Lock 阻塞等待<br>乐观：CAS 自旋重试</td><td>临界区短、冲突低 → CAS 赢；临界区长或逻辑复杂 → 锁保护更简单更对</td></tr>
+    <tr><td>可变性</td><td>可变共享（加锁保护修改）<br>不可变节点 + 写时复制（COW / 持久化结构）</td><td>读多写少 → 不可变性让读路径<strong>完全无锁</strong>，代价是写的复制开销</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题技巧</strong>：拿到题第一句话先说设计："这道题我会用桶级锁，读写比高的话再让 get 走 volatile 无锁读。"——这一句就把你和闷头写代码的人区分开了。写代码时把并发关键行注释出来，面试官扫的就是那几行。</p></div>
+</section>
+
+<section id="chm">
+  <h2><span class="no">03</span>专题 1 · 手写 ConcurrentHashMap 思路 ⭐</h2>
+  <h3>目标</h3>
+  <p>线程安全的 key-value 表：不同 key 的写操作互不阻塞，get 尽量无锁，put/get 单 key 操作原子。约束：不能用 <code>java.util.concurrent</code>。</p>
+  <h3>设计决策（先说这三句）</h3>
+  <ul>
+    <li><strong>数据结构</strong>：分桶数组（Node 数组 + 链表），key 哈希定位桶——冲突被分散到不同桶。</li>
+    <li><strong>锁粒度</strong>：每桶一把独立锁（细粒度）——只有哈希到同一个桶的线程才竞争，不同桶完全并行。</li>
+    <li><strong>读写路径</strong>：写走锁；读走 volatile 读不加锁——用 <code>AtomicReferenceArray</code> 承载桶数组，槽位读写天然带 volatile 语义。</li>
+  </ul>
+  <h3>核心代码（简化版：分桶数组 + 桶级锁 + 无锁读）</h3>
+  <pre><code>class MyConcurrentHashMap&lt;K, V&gt; {
+    private static final int CAPACITY = 16;                     // 桶数（示意，暂不扩容）
+    private final AtomicReferenceArray&lt;Node&lt;K,V&gt;&gt; buckets;     // 桶槽读写自带 volatile 语义
+    private final Object[] locks;                               // ⭐ 独立锁数组：只建一次，与数据分离
+
+    static class Node&lt;K,V&gt; {
+        final K key;
+        volatile V value;                                       // ⭐ value 必须 volatile：get 不加锁也要可见
+        Node&lt;K,V&gt; next;
+        Node(K key, V value) { this.key = key; this.value = value; }
+    }
+
+    public MyConcurrentHashMap() {
+        buckets = new AtomicReferenceArray&lt;&gt;(CAPACITY);
+        locks = new Object[CAPACITY];
+        for (int i = 0; i &lt; CAPACITY; i++) locks[i] = new Object();
+    }
+
+    private int hash(Object key) {                              // 高位扰动 + 位取模，减少碰撞
+        int h = key.hashCode();
+        return (h ^ (h &gt;&gt;&gt; 16)) &amp; (CAPACITY - 1);
+    }
+
+    public void put(K key, V value) {
+        int i = hash(key);
+        synchronized (locks[i]) {                               // ⭐ 只锁目标桶：不同桶完全并行
+            for (Node&lt;K,V&gt; n = buckets.get(i); n != null; n = n.next)
+                if (n.key.equals(key)) { n.value = value; return; }  // 命中：覆盖旧值
+            Node&lt;K,V&gt; node = new Node&lt;&gt;(key, value);
+            node.next = buckets.get(i);                         // 头插示意（JDK 8 实为尾插 + 链转树）
+            buckets.set(i, node);                               // volatile 写：立刻对无锁 get 可见
+        }
+    }
+
+    public V get(K key) {                                       // ⭐ 全程不加锁
+        Node&lt;K,V&gt; n = buckets.get(hash(key));                  // volatile 读：看到完整写入的最新桶头
+        for (; n != null; n = n.next)
+            if (n.key.equals(key)) return n.value;
+        return null;
+    }
+}</code></pre>
+  <div class="box note"><p>既有笔记（<code>Java/java 基础.md</code>）对此只记了一句话——"分段锁到 CAS + Synchronized 的演进"。下面把它展开成能过关的完整答案。</p></div>
+  <h3>JDK 7 → JDK 8 演进（把笔记一句话讲成三分钟）</h3>
+  <table>
+    <tr><th>维度</th><th>JDK 7：Segment 分段锁</th><th>JDK 8：CAS + synchronized</th></tr>
+    <tr><td>数据结构</td><td>Segment[] → HashEntry[]（两层，Segment 即"段"）</td><td>Node[] 一层（链表 / 红黑树）</td></tr>
+    <tr><td>锁对象</td><td>Segment 继承 ReentrantLock，锁住整段</td><td>空桶：CAS 直插；非空桶：synchronized 锁<strong>桶头节点</strong></td></tr>
+    <tr><td>锁粒度</td><td>段级：默认 16 段，并发度上限就是 16</td><td>桶级：并发度 ≈ 桶数，随扩容持续变细</td></tr>
+    <tr><td>get</td><td>Segment 内 volatile 读，不加锁</td><td>全程 volatile 读（table / val / next），无锁</td></tr>
+    <tr><td>内存</td><td>每个 Segment 一个完整 AQS 对象，偏重</td><td>去掉 Segment 层，省内存</td></tr>
+    <tr><td>size</td><td>先无锁加总试两次，再锁全部 Segment</td><td>baseCount + CounterCell[] 分散计数（LongAdder 思想）</td></tr>
+  </table>
+  <p><strong>为什么 JDK 8 敢把 ReentrantLock 换成 synchronized？</strong>粒度细到桶级后，同桶冲突概率极低，绝大多数竞争用 synchronized 的轻量级路径（CAS 自旋）就能解决，只有真冲突才膨胀为重量级锁；而 ReentrantLock 的优势（可中断、超时、公平、Condition）在桶级场景根本用不上，却要为每个桶背上 AQS 对象的内存与语义开销。这是"并发结构设计要跟着<strong>实际竞争强度</strong>选同步原语"的最佳教材。</p>
+  <h3>resize 与 get：两个一句话考点</h3>
+  <ul>
+    <li><strong>协助迁移</strong>：扩容时线程把迁完的旧桶头换成 <code>ForwardingNode</code>（hash=MOVED）；put 线程遇到它不傻等——先认领一段桶帮着迁移（transfer，最小步长 16），迁完再回来干自己的活。多线程扩容 = 分段认领 + 汇合。</li>
+    <li><strong>get 为什么无锁还正确</strong>：table 引用、Node.val、Node.next 全是 volatile，写线程的每次修改都 happens-before 读线程的 volatile 读；引用赋值本身原子，读到的要么是旧值要么是完整新值，绝不会是"半个"。这条直接连回 <a href="02-JMM.html">第 02 章 JMM 的 happens-before</a>。</li>
+  </ul>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：手写版怎么扩容？</strong>→ 简单版：拿全表锁（或依次锁所有桶）重新散列，全局停顿；JDK 版：协助迁移 + ForwardingNode——你能说出"简单版为什么不行"再引出协助迁移，就是完整答案。</li>
+    <li><strong>追问链：size() 是精确值吗？</strong>→ 不是，弱一致近似值：baseCount + CounterCell[] 分散热点再求和（<a href="05-无锁编程.html">LongAdder 思想见第 05 章</a>），口径详见 <a href="09-并发容器.html">第 09 章</a>。</li>
+    <li><strong>追问链：为什么不允许 null key / null value？</strong>→ get 返回 null 分不清"不存在"还是"存的就是 null"；单线程可用 containsKey 复核，并发下复核就是 check-then-act 竞态——所以干脆禁止。</li>
+  </ul>
+</section>
+
+<section id="msq">
+  <h2><span class="no">04</span>专题 2 · 无锁队列：Michael-Scott 算法</h2>
+  <h3>目标</h3>
+  <p>实现 lock-free 的 FIFO 队列：全程不用锁，任何线程在任意时刻被暂停，其余线程仍能完成入队/出队（系统级前进性）。JDK 的 <code>ConcurrentLinkedQueue</code> 就是这一算法（Michael &amp; Scott, 1996）的工程化版本。</p>
+  <h3>设计决策</h3>
+  <ul>
+    <li><strong>单链表 + 哑节点</strong>，head / tail 都是 <code>AtomicReference</code>——队列的全部状态压缩在两个引用和 next 指针上，<strong>每次状态变更只动一个位置</strong>，这是能用 CAS 的前提。</li>
+    <li><strong>入队两步 CAS</strong>：①CAS 把新节点链到 tail.next 上——这一步成功，数据就"逻辑上入队"了；②CAS 推进 tail。两步之间允许不一致（tail 暂时落后），由后来者"帮忙推进"自愈。</li>
+    <li><strong>允许中间态 + helping</strong>：无锁算法的通用哲学——不追求每步全局一致，而是让每个线程顺手修复看到的不一致；对比互斥锁：锁内不许任何中间态被看见。</li>
+  </ul>
+  <h3>核心代码</h3>
+  <pre><code>class LockFreeQueue&lt;T&gt; {
+    static class Node&lt;T&gt; {
+        final T value;
+        final AtomicReference&lt;Node&lt;T&gt;&gt; next = new AtomicReference&lt;&gt;();
+        Node(T v) { value = v; }
+    }
+
+    private final AtomicReference&lt;Node&lt;T&gt;&gt; head, tail;         // 队列状态全押在这两个引用上
+    LockFreeQueue() {                                           // 哑节点：head/tail 永不指空，边界简单
+        Node&lt;T&gt; dummy = new Node&lt;&gt;(null);
+        head = new AtomicReference&lt;&gt;(dummy);
+        tail = new AtomicReference&lt;&gt;(dummy);
+    }
+
+    public void offer(T value) {
+        Node&lt;T&gt; node = new Node&lt;&gt;(value);
+        while (true) {
+            Node&lt;T&gt; curTail = tail.get();
+            Node&lt;T&gt; next = curTail.next.get();
+            if (curTail != tail.get()) continue;                // 采样期间 tail 变了：重读
+            if (next == null) {                                 // tail 指向真正的最后节点
+                // 第一步 CAS：把新节点链上去 —— 成功即"数据已入队"
+                if (curTail.next.compareAndSet(null, node)) {
+                    tail.compareAndSet(curTail, node);          // 第二步 CAS：推进 tail
+                    return;                                     // ⭐ 失败也没关系：后来者帮忙推进
+                }
+            } else {
+                tail.compareAndSet(curTail, next);              // tail 落后了：先帮忙推进（helping）
+            }
+        }
+    }
+
+    public T poll() {
+        while (true) {
+            Node&lt;T&gt; curHead = head.get();
+            Node&lt;T&gt; curTail = tail.get();
+            Node&lt;T&gt; next = curHead.next.get();
+            if (curHead != head.get()) continue;
+            if (curHead == curTail) {                           // 空，或 tail 落后（哑节点后还有数据）
+                if (next == null) return null;                  // 真·空队列
+                tail.compareAndSet(curTail, next);              // 帮忙推进 tail 后重试
+            } else {
+                T v = next.value;
+                if (head.compareAndSet(curHead, next)) return v;// CAS 摘头；旧 head 成垃圾，GC 负责
+            }
+        }
+    }
+}</code></pre>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：第二步 CAS 失败为什么直接 return？</strong>→ 语义已由第一步建立：节点已经在链上，所有读者都能遍历到它；tail 只是"指向最后一个节点的缓存指针"，暂时落后不影响正确性，下一个线程的 helping 会把它推正。<strong>能识别"哪些状态是逻辑已定、哪些只是缓存滞后"，是手写无锁结构的核心功力。</strong></li>
+    <li><strong>追问链：ABA 问题？</strong>→ 同一地址被释放又复用，CAS 误判"没变过"。C/C++ 要靠 tag pointer / hazard pointer；Java 有 GC，节点不会被复用成同地址，天然免疫最坏情形——但面试标准答案仍是 <code>AtomicStampedReference</code>（引用+版本号一起 CAS），详见 <a href="05-无锁编程.html">第 05 章 无锁编程</a>。</li>
+    <li><strong>追问链：无锁一定比加锁快吗？</strong>→ 不。低竞争下锁版本往往更快（CAS 自旋空转烧 CPU）；无锁的赢面在<strong>高竞争下吞吐不悬崖式下降</strong>、没有死锁和优先级反转。ArrayBlockingQueue（双锁+Condition）与 ConcurrentLinkedQueue（无锁）的选型正是这组 trade-off——要不要阻塞语义才是第一问。</li>
+  </ul>
+</section>
+
+<section id="pq">
+  <h2><span class="no">05</span>专题 3 · 并发优先队列</h2>
+  <h3>目标</h3>
+  <p>支持并发 insert 与取最小值（delete-min）的优先队列。这题的关键不在写代码，在<strong>方案对比与选型论证</strong>——面试官想听的是"堆为什么难并发化"。</p>
+  <h3>设计决策：三方案对比</h3>
+  <table>
+    <tr><th>方案</th><th>思路</th><th>优点</th><th>缺点</th></tr>
+    <tr><td>全局单锁二叉堆</td><td>数组堆 + 一把 ReentrantLock 保护所有操作</td><td>简单、正确、单操作 O(log n)</td><td>所有线程竞争同一把锁，吞吐封顶——JDK 的 <code>PriorityBlockingQueue</code> 就是它</td></tr>
+    <tr><td>跳表（ConcurrentSkipListMap 思路）</td><td>概率层级索引 + 底层 CAS 拼接插入</td><td>天然有序、<strong>无全局 rebalance</strong>、读写可重叠</td><td>多级索引费空间；删除要两阶段标记</td></tr>
+    <tr><td>分片堆 + 合并</td><td>K 个小堆各配一把锁，取 min 时各堆 peek 后归并</td><td>并发度 = K，可水平扩展</td><td>代码复杂，K 的取值难调（一句带过即可）</td></tr>
+  </table>
+  <h3>为什么堆难无锁化（本题的灵魂）</h3>
+  <p>二叉堆的 sift-up / sift-down 沿路径<strong>连续改多个位置</strong>，一次操作牵动半棵树；而 CAS 只能原子地改一个位置——多点原子性做不到。这就是 <strong>JDK 至今没有 ConcurrentPriorityQueue 的原因</strong>：不是没写，是堆结构天生不适合 CAS 化。跳表绕开了这一点：插入只改路径上几个局部前驱指针，每处一个 CAS，树形结构的"全局再平衡"被概率层级替代了。</p>
+  <pre><code>record Task(long deadline) { }
+
+// 方案A：全局单锁二叉堆 —— JDK PriorityBlockingQueue 的做法
+class LockedHeap {
+    private final ReentrantLock lock = new ReentrantLock();
+    public void offer(Task t) {
+        lock.lock();                          // 所有线程排队过同一把闸门：正确但吞吐受限
+        try {
+            // sift-up 上滤插入，O(log n)（堆本体略）
+        } finally { lock.unlock(); }
+    }
+}
+
+// 方案B：跳表当并发优先队列用（按 deadline 取最小 = 最高优先级）
+ConcurrentSkipListMap&lt;Long, Task&gt; pq = new ConcurrentSkipListMap&lt;&gt;();
+Task task = new Task(1000L);
+pq.put(task.deadline(), task);               // 概率建索引层 + 底层 CAS 拼接，无全局 rebalance
+Task top = pq.pollFirstEntry().getValue();   // 取出并删除最小键，期望 O(log n)</code></pre>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：跳表插入怎么做到无锁？</strong>→ 自顶向下找各层前驱 → 先 CAS 拼进第 0 层（数据层，插入生效）→ 按概率（JDK 用 1/4）逐层补索引节点，每处独立 CAS；删除用标记节点分"逻辑删/物理摘"两阶段，避免把链摘断。</li>
+    <li><strong>追问链：需要"队列空就阻塞"的语义呢？</strong>→ 优先队列 + 阻塞 = <code>PriorityBlockingQueue</code>（单锁 + notEmpty Condition）；要按 key 有序遍历 = <code>ConcurrentSkipListMap</code>。选型先问语义，再谈性能。</li>
+  </ul>
+</section>
+
+<section id="trie">
+  <h2><span class="no">06</span>专题 4 · 线程安全 Trie</h2>
+  <h3>目标</h3>
+  <p>前缀树做敏感词库 / 路由表：读（search / startsWith）极高频，写（词库更新）低频。典型读多写少场景——<strong>方案按读写比选</strong>。</p>
+  <h3>设计决策：三方案</h3>
+  <table>
+    <tr><th>方案</th><th>做法</th><th>读路径</th><th>写路径</th><th>适用</th></tr>
+    <tr><td>整树读写锁</td><td>一把 ReentrantReadWriteLock 包住根</td><td>读锁共享，可并行</td><td>写锁独占，<strong>写时全树读都堵</strong></td><td>5 分钟写完；读写比 1000:1 且写毫秒级，完全够用</td></tr>
+    <tr><td>按子节点并发化</td><td>每个节点的 children 用 ConcurrentHashMap 装载</td><td>无锁（CHM.get）</td><td>computeIfAbsent 桶级原子</td><td>写相对频繁、要求读不阻塞</td></tr>
+    <tr><td>不可变节点 + 写时复制</td><td>节点字段全 final，改一个词只复制"根→叶"路径，最后 CAS 换根</td><td><strong>完全无锁</strong>：拿到旧根 = 拿到完整旧树快照</td><td>写放大 O(词长)；写写冲突在换根处 CAS 定胜负</td><td>读绝对不能阻塞（低延迟路由），读极多写极少</td></tr>
+  </table>
+  <h3>核心代码（方案二：子节点并发化，最实用的平衡点）</h3>
+  <pre><code>class ConcurrentTrie {
+    static class Node {
+        final ConcurrentHashMap&lt;Character, Node&gt; children
+                = new ConcurrentHashMap&lt;&gt;();             // 子节点表本身是并发结构
+        volatile boolean isWord;                          // volatile 写：立刻对读可见
+    }
+    private final Node root = new Node();
+
+    public void insert(String word) {
+        Node cur = root;
+        for (char c : word.toCharArray()) {
+            // computeIfAbsent 是复合原子操作：并发下每层恰好一个线程建节点成功
+            cur = cur.children.computeIfAbsent(c, k -&gt; new Node());
+        }
+        cur.isWord = true;                                // 最后一级打词尾标记
+    }
+
+    public boolean search(String word) {                  // 读路径完全无锁
+        Node cur = root;
+        for (char c : word.toCharArray()) {
+            cur = cur.children.get(c);
+            if (cur == null) return false;
+        }
+        return cur.isWord;
+    }
+}</code></pre>
+  <h3>方案三思路（不可变 + COW，示意）</h3>
+  <pre><code>// 不可变节点 + 写时复制路径（persistent trie）：
+//   1. insert 沿根到叶"只复制要改的节点"（写放大 = 词长），未触及的子树直接共享引用
+//   2. 构建出新根后，AtomicReference.compareAndSet(oldRoot, newRoot) 一次换根
+//   3. CAS 失败说明别的写者先换了根：基于最新根重试整个复制
+// 读侧：拿到哪个版本的根，就看到哪份完整快照，永远无锁无阻塞
+final class TNode {
+    final TNode[] child;          // 全 final：天生线程安全
+    final boolean isWord;
+    TNode(TNode[] child, boolean isWord) { this.child = child; this.isWord = isWord; }
+}</code></pre>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：COW 版为什么读可以零锁？</strong>→ 不可变性：所有可达节点永不修改，读者持有的根引用就是一份持久快照——与 <a href="09-并发容器.html">CopyOnWriteArrayList 同理（第 09 章 COW 思想）</a>；写者之间的竞争被压缩到"换根"一个 CAS 点上。</li>
+    <li><strong>追问链：insert 是原子的吗？</strong>→ 方案二的 insert 跨多层，中途 readers 能看到"半个词"（前缀已建、isWord 未置）——最终一致而非线性一致；单线程逐词更新、且 search 容忍瞬时旧值时没问题。要批量原子更新，用方案三：一批词全部构建完再一次性换根（版本化发布）。</li>
+  </ul>
+</section>
+
+<section id="bloom">
+  <h2><span class="no">07</span>专题 5 · 并发布隆过滤器</h2>
+  <h3>目标</h3>
+  <p>海量 key 的存在性判断：内存极省、高并发 add / 查询；语义上<strong>允许误判"存在"（false positive），绝不漏判"不存在"（no false negative）</strong>——所以适合放缓存穿透、黑名单的入口当闸门。</p>
+  <h3>设计决策</h3>
+  <ul>
+    <li><strong>位数组用 AtomicLongArray</strong>：每个 long 装 64 个位；"按位置 1"用"读整个字 → CAS 换整个字"实现——CAS 粒度是 64 位字，不是单个 bit（硬件也不支持位级 CAS）。</li>
+    <li><strong>k 个哈希函数</strong>不真的写 k 个：双重散列 <code>h_i = h1 + i·h2</code>，只算一次 64 位散列拆成两半（生产用 MurmurHash3 / xxHash）。</li>
+    <li><strong>contains 只读</strong>：不需要 CAS，get 即可。</li>
+  </ul>
+  <h3>核心代码</h3>
+  <pre><code>class ConcurrentBloomFilter {
+    private final AtomicLongArray bits;                   // 位数组：每个 long 装 64 位
+    private final int m;                                  // 总位数
+    private final int k;                                  // 哈希函数个数
+
+    ConcurrentBloomFilter(int m, int k) {                 // m、k 按误判率公式反推
+        this.m = m; this.k = k;
+        this.bits = new AtomicLongArray((m + 63) &gt;&gt;&gt; 6);   // 位数向上取整成 long 个数
+    }
+
+    public void add(String key) {
+        long h = hash64(key);                             // 只算一次 64 位散列
+        int h1 = (int) h, h2 = (int) (h &gt;&gt;&gt; 32);
+        for (int i = 0; i &lt; k; i++)
+            setBit(Math.floorMod(h1 + i * h2, m));        // 双重散列模拟 k 个哈希函数
+    }
+
+    private void setBit(int bitIdx) {
+        int word = bitIdx &gt;&gt;&gt; 6;                          // 除以 64：定位 long 下标
+        long mask = 1L &lt;&lt; (bitIdx &amp; 63);                  // 对 64 取模：定位具体位
+        while (true) {
+            long old = bits.get(word);
+            if ((old &amp; mask) != 0) return;                 // 已是 1：幂等返回
+            // ⭐ CAS 整字替换实现"按位置 1"：失败=别人并发改了同一字，重读重试
+            if (bits.compareAndSet(word, old, old | mask)) return;
+        }
+    }
+
+    public boolean mightContain(String key) {             // 只读：无 CAS
+        long h = hash64(key);
+        int h1 = (int) h, h2 = (int) (h &gt;&gt;&gt; 32);
+        for (int i = 0; i &lt; k; i++) {
+            int bitIdx = Math.floorMod(h1 + i * h2, m);
+            if ((bits.get(bitIdx &gt;&gt;&gt; 6) &amp; (1L &lt;&lt; (bitIdx &amp; 63))) == 0)
+                return false;                             // 任一位为 0 → 一定不存在（不漏判）
+        }
+        return true;                                      // 全为 1 → 可能存在（可能误判）
+    }
+
+    private long hash64(String key) {                     // 示意实现；生产换 MurmurHash3 128 位
+        long h = key.hashCode() * 0x9E3779B97F4A7C15L;    // 黄金分割散列常数
+        h ^= (h &gt;&gt;&gt; 32);                                  // 高低位混合
+        return h;
+    }
+}</code></pre>
+  <p><strong>误判率一句带过</strong>：p ≈ (1 − e^(−kn/m))^k，m 位、k 个哈希、n 个元素；最优哈希个数 k ≈ 0.7·(m/n)。面试一般只要这个公式 + "位数组越满误判越高"的直觉。</p>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：为什么不能删除？</strong>→ 位是多 key 共享的，清 0 会连带删掉别的 key 的位 → 误判方向翻转成漏判，语义崩塌。解法是<strong>计数布隆过滤器</strong>：每位换成 4bit 计数器，add 加一、remove 减一（一句带过）。</li>
+    <li><strong>追问链：Guava 的 BloomFilter 能直接并发用吗？</strong>→ 不能，它内部是普通 long[]，并发 add 会丢位；并发要么按本章 CAS 位图手写，要么分片加锁。Redis 里的 RedisBloom 靠 Redis 单线程把操作串行化——顺口带出"串行化也是一种并发控制"。</li>
+    <li><strong>追问链：元素数超过设计容量会怎样？</strong>→ 误判率随装载率持续上升；要么按业务峰值容量预留位数，要么用可扩容布隆（Scalable Bloom Filter：满了开新层，查询逐层问）。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：手写 CHM → 扩容怎么做？</strong>→ 简单版锁整表重散列（全局停顿，说得出缺点就行）→ JDK 版 ForwardingNode + 协助迁移（专题 1）。能对比"停顿版 vs 协助版"即满分。</li>
+    <li><strong>追问链：get 不加锁，会不会读到"写了一半"的数据？</strong>→ 不会：引用赋值原子 + volatile happens-before，读到的要么旧值要么完整新值——这题直接连回 <a href="02-JMM.html">第 02 章 happens-before</a>，答"会"就前功尽弃。</li>
+    <li><strong>陷阱：锁对象选错位置。</strong>→ 把锁加在桶头 Node 上：删除/扩容换头后，"锁"跟着换对象，互斥被击穿。手写版用<strong>独立锁数组</strong>最稳（JDK 靠 ForwardingNode 状态机保证换头安全）。同理，锁数组必须独立于桶数组创建、永不替换。</li>
+    <li><strong>陷阱：把"容器线程安全"当成"业务原子"。</strong>→ CHM 单 key put 原子 ≠ containsKey + put 复合原子（check-then-act 竞态），复合必须用 compute / merge——<a href="09-并发容器.html">第 09 章复合操作原子性</a>的考点在本章手写语境下会再问一遍。</li>
+    <li><strong>追问：你这些结构的一致性强度分层吗？</strong>→ 分：单键操作线性一致；size、遍历、迭代器弱一致（近似值、不抛 ConcurrentModificationException）。主动说出"一致性是分层的"是高级岗信号。</li>
+    <li><strong>追问：什么时候干脆不用并发结构？</strong>→ 数据能线程私有就不共享：局部变量 / 线程内累积、最后合并——"不共享是最高级的并发安全"，正是<a href="15-多线程算法.html">第 15 章词频统计"先局部后合并"</a>的思想。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>手写 CHM 能先讲三句设计决策（分桶、锁粒度、读写路径），再写出"桶级锁 + volatile 无锁读"代码。</li>
+    <li>JDK 7 Segment → JDK 8 CAS + synchronized 演进能对表讲：粒度、内存、get、size 四个维度。</li>
+    <li>能解释 get 无锁的依据（volatile 读 + happens-before + 引用赋值原子），一句话说清 ForwardingNode 协助迁移。</li>
+    <li>能白板 Michael-Scott 队列：两步 CAS、helping、ABA 对策（GC / AtomicStampedReference）。</li>
+    <li>能论证"堆为什么难无锁化"，并给出优先队列三方案与适用场景；知道 JDK 没有 ConcurrentPriorityQueue 的原因。</li>
+    <li>Trie 三方案按读写比选型；能解释 COW 版读零锁的原理与 insert 的弱一致语义。</li>
+    <li>布隆过滤器：CAS 整字置位、误判方向（只误判存在、不漏判）、公式 p ≈ (1−e^(−kn/m))^k、计数布隆一句话。</li>
+    <li>知道手写题答题四步法：问清约束 → 设计决策 → 关键行代码 → 主动讲 trade-off。</li>
+  </ol>
+  <div class="pager">
+    <a href="13-并发设计题.html">⬅ 上一章：并发设计题</a>
+    <a class="next" href="15-多线程算法.html">下一章：多线程算法 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；③ <a href="https://pdai.tech/md/java/thread/java-thread-x-overview.html">pdai.tech 并发系列</a>（并发集合篇：无锁队列/CHM 源码）；② JavaGuide AQS/容器口径已在各节内引用；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 14 章 并发数据结构设计</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

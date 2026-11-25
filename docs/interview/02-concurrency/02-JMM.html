@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 02 章 · Java 内存模型 JMM — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#jmm">主内存与工作内存</a>
+  <a href="#three">三大性质</a>
+  <a href="#hb">happens-before ⭐</a>
+  <a href="#volatile">volatile 深挖 ⭐⭐</a>
+  <a href="#reorder">指令重排与内存屏障</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="01-并发基础.html">⬅ 上一章：01 并发基础</a>
+  <a href="03-互斥与同步.html">下一章：03 互斥与同步 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 02 章 · Java 内存模型 JMM</h1>
+    <div class="sub">主内存与工作内存 · 原子性/可见性/有序性 · happens-before · volatile 深挖 —— 并发正确性的理论根基，volatile 是全章必考点</div>
+    <div class="meta">
+      <span>⭐ 必考：volatile 三连问 · happens-before · DCL 为什么加 volatile</span>
+      <span>蓝本：AlgoMaster Concurrency · Java Memory Model</span>
+      <span class="tag exist">已合并：Java/java 基础.md JMM 节（497-520 行）✅</span>
+      <span class="tag exist">三源合并：JavaGuide + pdai ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>什么是 JMM？它是 JVM 的一块内存区域，还是一套规范？⭐</li>
+      <li>主内存和工作内存分别指什么？和 JVM 的堆、虚拟机栈是一回事吗？（高频混淆）</li>
+      <li>原子性、可见性、有序性分别是什么？各举一个被破坏的例子。⭐⭐</li>
+      <li>synchronized、volatile、final 分别解决了三性中的哪些？⭐</li>
+      <li>说几条 happens-before 规则。"A happens-before B 就代表 A 先执行"对吗？⭐</li>
+      <li>volatile 的作用？能保证原子性吗？⭐⭐（几乎必问）</li>
+      <li>volatile 底层怎么实现可见性的？"写完立即刷回主内存"这个说法严谨吗？⭐</li>
+      <li>什么是指令重排？as-if-serial 和数据依赖是什么？</li>
+      <li>DCL 单例为什么必须加 volatile？不加会看到什么？⭐</li>
+    </ol>
+  </div>
+  <p>这一章是"背题重灾区"：很多人口头禅是"volatile 保证可见性、禁止指令重排"，但一追三连问就塌——<strong>怎么保证的？为什么不能保证原子性？DCL 到底怕什么？</strong>能答到 MESI、内存屏障、happens-before 推理链这一层，才是高级岗的区分度所在。</p>
+</section>
+
+<section id="jmm">
+  <h2><span class="no">02</span>JMM 是什么：主内存与工作内存</h2>
+  <h3>先给准确定义：JMM 是规范，不是实现</h3>
+  <ul>
+    <li><strong>JMM（Java Memory Model）</strong>是定义在 Java 语言规范（JLS 17.4，JSR-133）里的<strong>一套内存访问规范</strong>，不是 JVM 里的某块内存。它<strong>屏蔽了各种硬件和操作系统的内存访问差异</strong>，让同一份 Java 程序在 x86、ARM、单核、多核上都能得到<strong>一致的内存访问语义</strong>。</li>
+    <li>它规定了两样东西：<strong>内存抽象</strong>（主内存/工作内存）和<strong>可见性语义</strong>（happens-before 规则）。JVM 实现方在各 CPU 架构上用"插入内存屏障"等手段兑现这套语义。</li>
+  </ul>
+  <h3>主内存与工作内存</h3>
+  <ul>
+    <li><strong>主内存</strong>：所有共享变量（实例字段、静态字段）存放的地方，所有线程共享。</li>
+    <li><strong>工作内存</strong>：每个线程私有的一块抽象内存——是<strong>寄存器、CPU 缓存（L1/L2/L3）、写缓冲区（store buffer）等硬件的统一抽象</strong>，不是 JVM 的哪块区域。线程对变量的任何操作（读/写）都必须在自己的工作内存中进行，<strong>不能直接读写主内存</strong>。</li>
+    <li><strong>核心规则（笔记原文）</strong>：线程间传递变量值，<strong>必须通过主内存来完成</strong>——线程 A 把工作内存里的修改刷回主内存，线程 B 再从主内存读取，线程之间没有直接的数据通道。</li>
+  </ul>
+  <pre><code>                主内存（所有共享变量）
+               ↗      ↑      ↖
+     read/load        store/write
+        ↕                 ↕
+  线程A 工作内存     线程B 工作内存     ← CPU 缓存/寄存器/写缓冲的抽象
+  （拷贝了共享变量的副本）              ← 对变量的读写都发生在这里</code></pre>
+  <div class="box warn"><p><strong>高频混淆：JMM ≠ JVM 运行时数据区</strong>。堆/栈/方法区是 JVM 对<strong>内存的物理划分</strong>（哪里放对象、哪里放局部变量，见 <a href="../03-jvm/README.html">03-jvm</a>）；JMM 是<strong>并发语义的抽象模型</strong>（多线程读写共享变量时什么可见、什么有序）。一个讲"放哪"，一个讲"可见性"，被问"JMM 是不是就是堆和栈"时这正是送分点。</p></div>
+  <div class="box note"><p>旧版教材（如《深入理解 JVM》）把主/工作内存的数据流转拆成 read/load/use/assign/store/write/lock/unlock 八种原子操作；现行 JLS 已改用 <strong>action + happens-before</strong> 来描述同一件事。面试提一句"八操作是通俗化说法，JLS 的正式口径是 happens-before"，是明显加分项。</p></div>
+</section>
+
+<section id="three">
+  <h2><span class="no">03</span>三大性质：原子性 · 可见性 · 有序性</h2>
+  <p>JMM 要解决的就是多线程环境下的三大问题（合并笔记 505-520 行），每个性质都要能<strong>"定义 + 反例 + 解药"</strong>三连答：</p>
+  <table>
+    <tr><th>性质</th><th>定义</th><th>典型事故</th><th>保证手段</th></tr>
+    <tr><td><strong>原子性</strong></td><td>一个操作（或一组操作）不可分割——执行中不会被其他线程交错/打断，要么全做要么不做</td><td><code>count++</code> 是"读-改-写"三步，两线程交错执行丢更新</td><td>锁（synchronized / Lock）<strong>互斥</strong>保证临界区整体原子；原子类靠 CPU 的 <strong>CAS</strong> 实现无锁原子操作</td></tr>
+    <tr><td><strong>可见性</strong></td><td>一个线程对共享变量的修改，能被其他线程<strong>立即感知</strong>，而不是一直读自己工作内存里的旧副本</td><td>一个线程改了 <code>flag=false</code>，另一个线程的 <code>while(flag)</code> 永远不退出</td><td><code>volatile</code>（写立刻对其他核可见）；synchronized（进入时清空工作内存、退出前刷回主内存）；<code>final</code>（构造完成后对所有线程可见）</td></tr>
+    <tr><td><strong>有序性</strong></td><td>禁止指令重排导致的"代码顺序 ≠ 执行顺序"意外——单线程看似串行，多线程观察到乱序</td><td>DCL 单例读到"已分配内存但未初始化"的对象（本章第 06 节）</td><td><code>volatile</code> 禁止重排；synchronized 的监视器规则；<code>final</code> 字段语义</td></tr>
+  </table>
+  <ul>
+    <li><strong>synchronized 一把锁同时管三件事</strong>（笔记）：原子性靠<strong>互斥</strong>（同一时刻只有一个线程进临界区）；可见性靠 monitor 规则（解锁前把工作内存的修改刷回主内存，加锁时使本线程的工作内存失效重新读）；有序性也随之获得（临界区间无法交错观察）。</li>
+    <li><strong>volatile 只管两件</strong>：可见性 + 有序性，<strong>不保证原子性</strong>——下一节展开。</li>
+    <li><strong>final 管一件</strong>：正确构造的对象，其 final 字段对所有线程可见且可见正确值（JLS 17.5，见第 06 节）。</li>
+  </ul>
+  <h4>可见性被破坏的现场（先看反例再背定义）</h4>
+  <pre><code>static boolean flag = true;    // 不加任何同步手段的普通变量
+
+// 线程A（停机线程）           // 线程B（工作线程）
+flag = false;                  while (flag) {
+                                   doWork();    // JIT 可能把 flag 提升(hoist)到寄存器
+                               }               // 线程B 可能永远感知不到 false，死循环
+// 两个修法：flag 加 volatile（轻量，推荐）；或读写都进同一把锁（重）</code></pre>
+  <div class="box tip"><p><strong>答题技巧</strong>：先一句话定义三性，再主动给"解药矩阵"——原子性用锁/CAS、可见性用 volatile/synchronized/final、有序性用 volatile/synchronized。能把"哪个工具解决哪几性"说成矩阵而不是流水账，面试官就知道你成体系。</p></div>
+</section>
+
+<section id="hb">
+  <h2><span class="no">04</span>happens-before ⭐</h2>
+  <h3>定义：可见性的推理工具，不是时间顺序</h3>
+  <p><strong>happens-before（hb）</strong>是 JMM 判断"一个操作的结果对另一个操作是否可见"的规则：若 A happens-before B，则 <strong>A 的结果对 B 可见，且 A 的效果排在 B 之前</strong>。两个要点必须主动讲清：</p>
+  <ul>
+    <li><strong>hb 是逻辑上的可见性保证，不是物理时间先后</strong>：A hb B 不要求 A 在时钟上先发生；反过来说，没有 hb 关系的两个操作是"并发"的，谁先谁后、看不看得到，JMM 都不做保证。</li>
+    <li>它的价值是<strong>推理工具</strong>：拿到任意两行代码，沿 hb 规则连一条链，就能证明"这行的新值对那行可见"，而不用去想 CPU 缓存和屏障。</li>
+  </ul>
+  <h3>八条规则（JLS 17.4.5）</h3>
+  <table>
+    <tr><th>规则</th><th>内容</th><th>实用场景</th></tr>
+    <tr><td><strong>程序顺序规则</strong></td><td>单线程内，按程序顺序前面的操作 hb 后面的操作</td><td>同一线程里 <code>data=42; ready=true;</code> 前者 hb 后者</td></tr>
+    <tr><td><strong>监视器锁规则</strong></td><td>对同一个锁的 <strong>unlock</strong> hb 后续每一次对该锁的 <strong>lock</strong></td><td>上一个线程临界区里的写，对下一个进锁的线程可见</td></tr>
+    <tr><td><strong>volatile 规则</strong></td><td>对 volatile 变量的<strong>写</strong> hb 后续每一次对该变量的<strong>读</strong></td><td>volatile 是"跨线程可见性的传送门"</td></tr>
+    <tr><td><strong>线程 start 规则</strong></td><td>调用 <code>Thread.start()</code> 的操作 hb 新线程内的所有操作</td><td>start 之前主线程的准备数据，子线程一定看得到</td></tr>
+    <tr><td><strong>线程终止规则</strong></td><td>线程内的所有操作 hb 其他线程检测到它结束（<code>join()</code> 返回）</td><td>子线程算完的结果，join 之后主线程一定看得到</td></tr>
+    <tr><td><strong>中断规则</strong></td><td>一个线程调用 <code>interrupt()</code> hb 被中断线程检测到中断</td><td>取消标志 + isInterrupted 不需要额外同步</td></tr>
+    <tr><td><strong>对象终结规则</strong></td><td>构造器结束 hb finalize() 开始</td><td>了解即可</td></tr>
+    <tr><td><strong>传递性</strong></td><td>A hb B 且 B hb C，则 A hb C</td><td>把上面的规则串成链的关键胶水 ⭐</td></tr>
+  </table>
+  <h3>用传递链推理：普通变量怎么"蹭"到可见性</h3>
+  <pre><code>int data = 0;                    // 普通变量
+volatile boolean ready = false;  // volatile 变量
+
+// 线程A（写）                  // 线程B（读）
+data = 42;                      if (ready) {              // ③
+ready = true;   // ②               int r = data;          // ④ 保证读到 42
+                                }
+// 推理链：① hb ②（程序顺序规则）
+//         ② hb ③（volatile 规则：写 hb 后续读）
+//         ③ hb ④（程序顺序规则）
+// 传递性 ⇒ ① hb ④：data=42 对线程B可见，虽然 data 不是 volatile</code></pre>
+  <div class="box tip"><p><strong>答题口径</strong>：happens-before 是 JMM 提供给程序员的<strong>可见性契约</strong>——只要两个操作之间连得出 hb 链，JMM 就保证前者的结果对后者可见；连不出链且至少一方是写，就是<strong>数据竞争（data race）</strong>，程序行为未定义。上面这条例子能白板写出来，"hb 是推理工具"就不是空话。</p></div>
+  <h3>start / join 规则的实战：不用同步也能安全交接</h3>
+  <pre><code>int[] holder = new int[1];
+int base = 40;                                       // ① main 线程的准备
+
+Thread t = new Thread(() -&gt; holder[0] = base + 2);   // start 规则：① hb 子线程内所有操作
+t.start();                                           //   base=40 对子线程必然可见
+t.join();                                            // 终止规则：子线程的写 hb join 返回
+System.out.println(holder[0]);                       // 42 —— 无需 volatile、无需锁
+// 但注意：join 只保证"交接这一次"；线程跑起来后改普通变量仍要靠 volatile/锁</code></pre>
+</section>
+
+<section id="volatile">
+  <h2><span class="no">05</span>volatile 深挖 ⭐⭐</h2>
+  <h3>三板斧：可见性 + 有序性 + （不保证原子性）</h3>
+  <h4>① 可见性：靠缓存一致性协议，不是"刷回主内存"</h4>
+  <ul>
+    <li>线程写 volatile 变量时，通过 CPU 的<strong>缓存一致性协议（如 MESI）</strong>把其他核里该变量所在的<strong>缓存行置为无效（Invalidate）</strong>；其他线程随后读取时发现缓存行已失效，必须重新加载最新值。</li>
+    <li><strong>不严谨说法，别在面试里讲</strong>："volatile 写立即刷回主内存、读强制从主内存读"——主内存只是兜底，真正的主角是各核缓存间的<strong>一致性流量</strong>。HotSpot 在 x86 上对 volatile 写生成 <code>lock</code> 前缀指令，正是靠它触发缓存行回写并让其他核失效。</li>
+    <li>顺带的严谨结论：volatile 还保证 <strong>long/double 的 64 位读写原子</strong>（不加 volatile 时 JMM 允许 JVM 把 64 位读写拆成两次 32 位，这是著名的非原子协议漏洞）。</li>
+  </ul>
+  <h4>MESI 四态速查（被追"一致性协议是什么"时的底牌）</h4>
+  <table>
+    <tr><th>状态</th><th>含义</th><th>本核能干嘛</th></tr>
+    <tr><td><strong>M</strong>odified（已修改）</td><td>只有本核持有，且已被改过、与内存不一致</td><td>可读可写</td></tr>
+    <tr><td><strong>E</strong>xclusive（独占干净）</td><td>只有本核持有，与内存一致</td><td>可读可写（写它无需通知任何核）</td></tr>
+    <tr><td><strong>S</strong>hared（共享）</td><td>多核都持有，均与内存一致</td><td>可读；写之前必须先让其他核的副本失效</td></tr>
+    <tr><td><strong>I</strong>nvalid（无效）</td><td>本核缓存行已失效</td><td>不可用，读必须重新加载</td></tr>
+  </table>
+  <p>所以 volatile 写"让其他核看到最新值"的完整动作是：一致性消息把别核的 S 态行打回 <strong>I</strong>，别核再读时发现是 I，触发重新加载——全程主要发生在<strong>核间缓存一致性流量</strong>里，主内存只是兜底。这也是"伪共享"问题的机制源头（见本章追问链）。</p>
+  <h4>② 有序性：内存屏障禁止重排</h4>
+  <p>JMM 对 volatile 采用保守的屏障策略（JSR-133 Cookbook）：volatile 操作与普通操作的重排被按序隔开——</p>
+  <table>
+    <tr><th>位置</th><th>插入的屏障</th><th>作用</th></tr>
+    <tr><td>volatile 写<strong>之前</strong></td><td><code>StoreStore</code></td><td>保证前面的普通写先于 volatile 写对其他处理器可见</td></tr>
+    <tr><td>volatile 写<strong>之后</strong></td><td><code>StoreLoad</code></td><td>最重的屏障，保证 volatile 写对后续所有读/写有序（x86 上只有它能禁止写读乱序）</td></tr>
+    <tr><td>volatile 读<strong>之后</strong></td><td><code>LoadLoad</code> + <code>LoadStore</code></td><td>保证 volatile 读先于后续的普通读和普通写，防止读到旧数据配新标志</td></tr>
+  </table>
+  <h4>③ 不保证原子性：count++ 反例</h4>
+  <pre><code>private static volatile int count = 0;
+
+public static void main(String[] args) throws Exception {
+    Runnable r = () -&gt; {
+        for (int i = 0; i &lt; 1000; i++) count++;   // volatile 也救不了 count++
+    };
+    Thread[] ts = new Thread[10];
+    for (int i = 0; i &lt; 10; i++) { ts[i] = new Thread(r); ts[i].start(); }
+    for (Thread t : ts) t.join();
+    System.out.println(count);   // 10 线程 × 1000，结果大概率 &lt; 10000
+}
+// 原因：count++ 是 读→改→写 三步（getfield / iadd / putfield）
+// 两个线程都读到旧值 1000 → 各自 +1 → 都写回 1001，丢一次更新
+// volatile 只保证"每次读到最新值"，挡不住两步之间的交错</code></pre>
+  <h3>适用场景与不适用场景</h3>
+  <table>
+    <tr><th>场景</th><th>为什么行</th><th>示例</th></tr>
+    <tr><td><strong>状态标志位</strong></td><td>单写多读、单次赋值天然原子</td><td><code>volatile boolean running</code> 优雅停机</td></tr>
+    <tr><td><strong>单写多读</strong></td><td>一个写线程刷新，多个读线程可见，无读改写</td><td>配置热更新引用、上下文开关</td></tr>
+    <tr><td><strong>DCL 单例的字段</strong></td><td>禁止"分配→初始化→赋引用"重排（见第 06 节）</td><td><a href="../01-java/15-最佳实践.html">01-java/15 单例模式</a> ⭐</td></tr>
+    <tr><td><strong>计数器 / 累加器 ✗</strong></td><td>读改写不原子，必须用 AtomicLong / LongAdder</td><td><a href="05-无锁编程.html">05 无锁编程</a></td></tr>
+  </table>
+  <pre><code>// 状态标志位：volatile 最经典的正确用法
+private volatile boolean running = true;
+
+public void run() {
+    while (running) { doWork(); }     // volatile 读：能看到别的线程置 false
+}
+public void shutdown() { running = false; }</code></pre>
+</section>
+
+<section id="reorder">
+  <h2><span class="no">06</span>指令重排与内存屏障</h2>
+  <h3>重排发生在三个层面</h3>
+  <ul>
+    <li><strong>编译器重排</strong>：javac/JIT 在不改变单线程语义的前提下调整指令顺序（表达式重排、消除冗余）。</li>
+    <li><strong>CPU 乱序执行</strong>：现代 CPU 指令级并行（ILP），无依赖的指令可乱序发射、写回。</li>
+    <li><strong>内存系统重排</strong>：store buffer / invalidate queue 让"写"在其他核看来到达顺序与提交顺序不一致——即便 CPU 不乱序，多核观察仍可能乱序。</li>
+  </ul>
+  <h3>经典双线程乱序示例</h3>
+  <pre><code>int a = 0;
+boolean flag = false;
+
+// 线程A                 // 线程B
+a = 1;                   if (flag) {
+flag = true;                 int i = a * 2;   // a 可能是 1，也可能是 0！
+                         }
+// 意外①（有序性）：A 内两行无数据依赖，可能被重排为
+//   flag=true 先于 a=1 —— B 进了 if 却读到 a=0
+// 意外②（可见性）：即使不重排，B 的工作内存里 a 还是旧副本 0
+// 解法：flag 加 volatile —— 写读之间建立 hb，同时屏障挡住 a=1 溢出</code></pre>
+  <h3>两个豁免牌：as-if-serial 与数据依赖</h3>
+  <ul>
+    <li><strong>as-if-serial</strong>：无论怎么重排，<strong>单线程</strong>的执行结果不能被改变——所以单线程永远感觉不到重排，重排只在多线程观察下暴露问题。</li>
+    <li><strong>数据依赖</strong>：同一变量存在写后读/写后写/读后写依赖的两个操作，编译器与 CPU 不会重排它们（<code>a=1; b=a;</code> 不会被倒过来）。但<strong>跨线程、跨变量</strong>的依赖不在保护范围内——这正是 volatile 屏障要补的洞。</li>
+  </ul>
+  <h3>DCL 不加 volatile 的后果 ⭐</h3>
+  <pre><code>public class Singleton {
+    private static volatile Singleton instance;   // ⭐ 去掉 volatile = 半初始化陷阱
+
+    public static Singleton getInstance() {
+        if (instance == null) {                    // 第一次检查：无锁快速路径
+            synchronized (Singleton.class) {
+                if (instance == null) {            // 第二次检查：防重复创建
+                    instance = new Singleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+// instance = new Singleton() 实际是三步：
+//   ① 分配对象内存   ② 调用构造器初始化   ③ instance 指向该内存
+// ②③ 无数据依赖，可能被重排为 ①③②：
+//   线程A 执行到 ③（引用已非 null、还没执行 ②），
+//   线程B 第一次判 null 不成立，直接 return —— 拿到
+//   "已分配内存但字段还是默认值"的半成品对象
+// volatile 的写屏障保证 ③ 之前的 ② 对读到 ③ 的线程可见</code></pre>
+  <h3>final 字段的内存语义（一句话版）</h3>
+  <p>JLS 17.5：只要对象<strong>正确构造</strong>（构造器中 <code>this</code> 没有逃逸），final 字段的写入与构造器结束存在 hb 保证，<strong>所有线程无需任何同步就能看到 final 字段的正确值</strong>——这是不可变对象线程安全的基石，展开在 <a href="../01-java/05-封装与不可变.html">01-java/05 封装与不可变</a>。</p>
+  <h3>四种内存屏障速查</h3>
+  <table>
+    <tr><th>屏障</th><th>语义</th></tr>
+    <tr><td><code>LoadLoad</code></td><td>屏障前的读 先于 屏障后的读</td></tr>
+    <tr><td><code>StoreStore</code></td><td>屏障前的写 先于 屏障后的写</td></tr>
+    <tr><td><code>LoadStore</code></td><td>屏障前的读 先于 屏障后的写</td></tr>
+    <tr><td><code>StoreLoad</code></td><td>屏障前的写 先于 屏障后的读；<strong>开销最大</strong>，x86 上近似全能屏障（mfence / lock 指令）</td></tr>
+  </table>
+</section>
+
+<section id="followup">
+  <h2><span class="no">07</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：volatile 能保证可见性 → 那全用 volatile 行不行？</strong>→ 不行。读改写不原子（count++）；而且每个 volatile 读写都插屏障、破坏 JIT 优化，滥用有实打实的性能税。</li>
+    <li><strong>陷阱："volatile 写会立即刷回主内存"</strong>→ 严谨说法是"通过 MESI 等缓存一致性协议使其他核的缓存行失效，写线程与读线程经由缓存一致性流量看到最新值"，主内存只是抽象兜底。</li>
+    <li><strong>陷阱：volatile 修饰数组/引用</strong>→ 只保证<strong>引用本身</strong>的可见性与有序性，不保证数组元素、对象内部字段的写对其他线程可见（元素要 AtomicXxxArray，字段要逐个 volatile 或用不可变对象）。</li>
+    <li><strong>经典数字题：volatile int i，10 个线程各 i++ 100 次，i 是多少？</strong>→ 介于 100~1000 的不确定值（通常远小于 1000）。追问"为什么不是 1000"引回读改写三步；追问"怎么修"引到 AtomicLong/锁。</li>
+    <li><strong>追问：long/double 为什么要专门讲原子性？</strong>→ JMM 的 64 位非原子协议允许 32 位平台上拆两次读写，可能读到"高低位各一半"的脏值；volatile 强制 64 位原子，商用 64 位 JVM 的普通 long 读写实际也是原子的。</li>
+    <li><strong>追问：happens-before 和时间顺序什么关系？</strong>→ 无必然关系：A hb B 不代表 A 物理上先执行；有 hb 链 ⇒ 结果可见，无 hb 链 ⇒ 数据竞争、结果未定义。</li>
+    <li><strong>追问：final 一定安全吗？</strong>→ 构造器里 <code>this</code> 逃逸（如注册监听器、开线程），final 的初始化保证就破了——"正确构造"是前提。</li>
+    <li><strong>追问链：MESI → 那伪共享（false sharing）是什么？</strong>→ 两个无关变量挤在同一个缓存行（64B），一个核写自己的变量就把整行打回 I，另一个核的变量跟着"陪葬"，互相乒乓 → 解法？缓存行填充（padding）、<code>@Contended</code>（需 JVM 参数开启）、或像 LongAdder 那样把热点分散到多个 Cell（<a href="05-无锁编程.html">05 无锁编程</a>）。</li>
+    <li><strong>深挖方向（加分）</strong>：MESI 之下还有 store buffer/invalidate queue 带来的伪共享、缓存行填充问题，见 <a href="14-并发数据结构.html">14 并发数据结构</a> 与 <a href="04-锁策略.html">04 锁策略</a>。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">08</span>面试自查清单</h2>
+  <ol>
+    <li>能说清 JMM 是 JLS 里的规范而非内存区域，并讲出它"屏蔽硬件差异 + 定义可见性语义"两大职责。</li>
+    <li>主内存/工作内存的抽象能画出来，知道工作内存是缓存/寄存器/写缓冲的抽象、线程通信必须经主内存。</li>
+    <li>三性 = 定义 + 反例 + 解药三连答，能给出"synchronized 管三性、volatile 管两性、final 管一件"的矩阵。</li>
+    <li>能默写 happens-before 至少五条规则，并解释"hb 是可见性推理工具，不是时间顺序"。</li>
+    <li>能用程序顺序 × volatile × 传递性写出"data 蹭 ready 可见性"的白板推导。</li>
+    <li>volatile 可见性讲得出 MESI 口径（而非"刷回主内存"），有序性讲得出四类屏障的插入位置。</li>
+    <li>能写 count++ 反例并解释为什么 volatile 不救；知道状态标志位、单写多读、DCL 是它的正确场景。</li>
+    <li>能完整讲出 DCL 不加 volatile 时"分配→初始化→赋引用"被重排的后果。</li>
+    <li>知道 as-if-serial、数据依赖例外、final 字段语义（JLS 17.5）一句话口径。</li>
+    <li>MESI 四态（M/E/S/I）能各自一句话说清，能顺着 MESI 讲出伪共享的机制与三种解法。</li>
+  </ol>
+  <div class="pager">
+    <a href="01-并发基础.html">⬅ 上一章：并发基础</a>
+    <a class="next" href="03-互斥与同步.html">下一章：互斥与同步 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源合并）：① 蓝本 AlgoMaster Concurrency（Java Memory Model）；② <a href="https://javaguide.cn/java/concurrent/java-concurrent-questions-01.html">JavaGuide 并发常见题（上）</a> 及 <a href="https://javaguide.cn/java/concurrent">并发专题</a>（JMM / volatile 口径）；③ <a href="https://pdai.tech/md/java/thread/java-thread-x-theorty.html">pdai.tech 并发理论基础篇</a>（happens-before 八规则）；既有笔记 Java/java 基础.md JMM 节（497-520 行）。本章无美团文直接对应，工程场景视角见 <a href="06-线程池.html">06 线程池</a>章末来源。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 02 章 Java 内存模型 JMM</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 04 章 · 锁策略 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#pessimistic">悲观 vs 乐观 ⭐</a>
+  <a href="#fair">公平 vs 非公平</a>
+  <a href="#reentrant">可重入性 ⭐</a>
+  <a href="#trylock">tryLock 与超时锁</a>
+  <a href="#granularity">粗粒度 vs 细粒度 ⭐</a>
+  <a href="#optimize">锁优化手段</a>
+  <a href="#scene">场景题落点</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="03-互斥与同步.html">上一章：03 互斥与同步</a>
+  <a href="05-无锁编程.html">下一章：05 无锁编程 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 04 章 · 锁策略</h1>
+    <div class="sub">悲观 vs 乐观 · 公平 vs 非公平 · 可重入 · tryLock · 锁粒度权衡 —— 同步原语之上的"策略层"，决定并发系统的性能上限</div>
+    <div class="meta">
+      <span>⭐ 高频：悲观 vs 乐观 · 可重入 · 锁粒度</span>
+      <span>蓝本：AlgoMaster Concurrency · Lock Types &amp; Strategies</span>
+      <span class="tag exist">已合并：Java/java 基础.md 锁分类节 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>悲观锁和乐观锁的区别？各自适合什么场景？⭐（并发题第一问的高频变体）</li>
+      <li>乐观锁有没有代价？高并发写场景下乐观锁还会快吗？</li>
+      <li>公平锁和非公平锁的区别？为什么 ReentrantLock 默认非公平？⭐</li>
+      <li>什么是可重入锁？synchronized 是可重入的吗？可重入是怎么实现的？⭐</li>
+      <li>tryLock 能用来做什么？怎么用带超时的锁尝试预防死锁？</li>
+      <li>锁的粒度怎么权衡？把锁拆得越细越好吗？⭐</li>
+      <li>了解锁粗化、锁消除吗？JVM 帮你优化了什么？</li>
+    </ol>
+  </div>
+  <p>第 03 章回答"用哪个同步原语"，本章回答"<strong>按什么策略用它</strong>"。面试官问策略题的真实意图是看你有没有设计过真实的并发系统：只会说"synchronized 保证原子性"是应届答法，能讲"库存按 SKU 拆锁、扣减用乐观重试、拿不到锁就降级"才是 7 年经验的答法。</p>
+</section>
+
+<section id="pessimistic">
+  <h2><span class="no">02</span>悲观 vs 乐观 ⭐</h2>
+  <h3>先给能背的定义（已并入既有笔记口径）</h3>
+  <ul>
+    <li><strong>悲观锁（适合多写场景）</strong>：假设冲突一定会发生，<strong>操作前先独占资源</strong>，别的线程只能等。代表：synchronized、ReentrantLock、数据库的 <code>select ... for update</code>。</li>
+    <li><strong>乐观锁（适合多读场景）</strong>：假设冲突大概率不发生，<strong>操作时不加锁</strong>，提交时才校验"期间有没有人改过"（CAS 或版本号），失败则重试。代表：<code>java.util.concurrent.atomic</code> 原子类（AtomicInteger 等）、数据库的 version 字段。</li>
+  </ul>
+  <table>
+    <tr><th>维度</th><th>悲观锁</th><th>乐观锁</th></tr>
+    <tr><td>核心假设</td><td>冲突一定发生，先锁再说</td><td>冲突很少发生，事后校验</td></tr>
+    <tr><td>加锁时机</td><td>操作前独占，操作完释放</td><td>全程不加锁，提交时 CAS / 版本比对</td></tr>
+    <tr><td>冲突时行为</td><td>阻塞挂起（进等待队列），让出 CPU</td><td>失败重试（自旋），不挂起</td></tr>
+    <tr><td>代表实现</td><td>synchronized · ReentrantLock · DB <code>for update</code></td><td>原子类（CAS）· DB version 字段 · MVCC</td></tr>
+    <tr><td>适合场景</td><td><strong>多写</strong>、写冲突激烈</td><td><strong>多读</strong>、冲突概率低</td></tr>
+    <tr><td>主要代价</td><td>上下文切换 + 唤醒开销</td><td>高竞争下的<strong>重试风暴</strong>（见下）</td></tr>
+  </table>
+  <h3>乐观锁在数据库里长什么样</h3>
+  <pre><code>-- 悲观：先独占行锁，事务结束才释放，别的更新全部排队
+SELECT balance FROM account WHERE id = ? FOR UPDATE;
+UPDATE account SET balance = balance - 100 WHERE id = ?;
+
+-- 乐观：不带锁更新，靠 version 校验（CAS 思想的 SQL 版）
+UPDATE account SET balance = balance - 100, version = version + 1
+WHERE id = ? AND version = ?;   -- 影响行数 = 0 说明被人改过 -&gt; 读新值重试</code></pre>
+  <h3>乐观锁的隐藏成本：重试风暴</h3>
+  <ul>
+    <li>CAS 失败 → 自旋重试 → 再失败 → 再重试：<strong>竞争激烈时大量线程在空转烧 CPU，吞吐不升反降</strong>。写冲突密集的场景，乐观锁可能远差于悲观锁——悲观方案里抢不到的线程直接挂起，CPU 让给别人干活。</li>
+    <li>数据库侧同理：version 校验失败率一高，应用层重试风暴会放大数据库压力（重试也是一次请求）。</li>
+    <li>所以口径是"<strong>多写用悲观、多读用乐观</strong>"，而不是"乐观锁更先进"。选型看冲突概率，不看名字好不好听。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题技巧</strong>：先纠正概念——悲观/乐观不是某把具体的锁，而是<strong>并发控制策略</strong>；同一把 ReentrantLock 之上可以演化出不同策略。再补一刀加分项：synchronized 策略上是悲观的，但 JVM 的锁升级让它在低竞争时先以 CAS 自旋（轻量级锁）尝试，竞争升级才挂起线程——"悲观策略 + 分级实现"，细节在 <a href="03-互斥与同步.html">第 03 章 锁升级</a>。</p></div>
+</section>
+
+<section id="fair">
+  <h2><span class="no">03</span>公平 vs 非公平</h2>
+  <h3>定义：抢锁前看不看队伍</h3>
+  <ul>
+    <li><strong>公平锁（Fair）</strong>：获取锁前先检查 AQS 等待队列，有前辈在排队就乖乖排到队尾，严格 FIFO、先来先得。<code>new ReentrantLock(true)</code>。</li>
+    <li><strong>非公平锁（Nonfair，默认）</strong>：锁一释放就<strong>先 CAS 试一把</strong>，插队成功直接拿走，失败才去排队。<code>new ReentrantLock(false)</code> / synchronized 只能非公平。</li>
+  </ul>
+  <p>二者源码差异只有一行——<code>tryAcquire</code> 里是否先检查等待队列：</p>
+  <pre><code>// 非公平版 NonfairSync（简化）：锁空闲就直接 CAS 抢，不看队列
+final boolean tryAcquire(int acquires) {
+    int c = getState();
+    if (c == 0 &amp;&amp; compareAndSetState(0, acquires)) {   // 直接抢
+        setExclusiveOwnerThread(Thread.currentThread());
+        return true;
+    }
+    return false;
+}
+
+// 公平版 FairSync（简化）：抢之前多一个"有没有前辈"的检查
+final boolean tryAcquire(int acquires) {
+    int c = getState();
+    if (c == 0 &amp;&amp; !hasQueuedPredecessors()              // ⭐ 唯一差异：队列有人就不抢
+            &amp;&amp; compareAndSetState(0, acquires)) {
+        setExclusiveOwnerThread(Thread.currentThread());
+        return true;
+    }
+    return false;
+}</code></pre>
+  <h3>为什么非公平吞吐更高</h3>
+  <ul>
+    <li>释放锁时要<strong>唤醒队头线程</strong>：从 unpark 到它真正运行要经过内核调度、上下文恢复，这期间锁是空闲的。非公平锁允许<strong>恰好此时到达的新线程直接插队拿锁</strong>，锁不空转、省掉一次上下文切换。</li>
+    <li>代价是<strong>可能饥饿</strong>：运气差的排队线程可能一直被插队，长时间拿不到锁——排队越久越没有竞争力。</li>
+  </ul>
+  <table>
+    <tr><th>维度</th><th>公平锁</th><th>非公平锁（默认）</th></tr>
+    <tr><td>获取顺序</td><td>严格 FIFO，按到达顺序</td><td>可插队，先到不一定先得</td></tr>
+    <tr><td>吞吐</td><td>低（每次释放都要走队列唤醒）</td><td>高（减少上下文切换、锁不空闲等待）</td></tr>
+    <tr><td>饥饿风险</td><td>无</td><td>有（极端时某线程长期抢不到）</td></tr>
+    <tr><td>适用</td><td>业务要求严格排队：秒杀按到达顺序放行、公平调度</td><td>绝大多数场景：Web 请求、缓存更新、任务执行</td></tr>
+  </table>
+  <div class="box note"><p>判断口径：<strong>默认都该用非公平</strong>，除非业务语义本身就是"排队"（秒杀按到达顺序分配购买资格、审批工单按提交顺序处理）——此时公平性是业务需求，损失吞吐换语义正确。AQS 队列结构本身在 <a href="03-互斥与同步.html">第 03 章 ReentrantLock</a> 展开。</p></div>
+</section>
+
+<section id="reentrant">
+  <h2><span class="no">04</span>可重入性 ⭐</h2>
+  <h3>定义与实现原理</h3>
+  <ul>
+    <li><strong>可重入（Reentrant）</strong>：同一线程再次获取<strong>自己已持有的锁</strong>时直接成功（不死锁），而不是在自己持的锁上等自己。</li>
+    <li><strong>synchronized 与 ReentrantLock 都是可重入的</strong>——这是它们与自造轮子锁最关键的区别之一。</li>
+    <li>实现靠 <strong>state 计数 + 持有线程记录</strong>：重入一次 state+1，unlock 一次 state-1，<strong>减到 0 才真正释放</strong>。所以 unlock 次数必须与 lock 次数严格配对。</li>
+  </ul>
+  <pre><code>// synchronized 天生可重入：同步方法互调、递归都不会自己锁死自己
+public synchronized void a() { b(); }   // a 已持有 this，b 还要 this -&gt; 直接重入
+public synchronized void b() { /* ... */ }
+
+// 递归同理：每次进入 state+1，每次退出 state-1，归零才释放
+public synchronized int factorial(int n) {
+    return n &lt;= 1 ? 1 : n * factorial(n - 1);
+}</code></pre>
+  <h3>反例：不可重入锁会自己锁死自己</h3>
+  <pre><code>// 不可重入锁（示意）：如果 synchronized 不可重入，世界会怎样
+class NonReentrantMutex {
+    private boolean locked = false;
+    public synchronized void lock() throws InterruptedException {
+        while (locked) wait();      // 第二次 lock 时：locked=true
+        locked = true;              // 等待者恰恰是持锁线程自己 -&gt; 永远醒不来
+    }
+    public synchronized void unlock() { locked = false; notify(); }
+}
+
+// 同一线程连续 lock() 两次：
+mutex.lock();    // locked = true
+mutex.lock();    // 在等自己释放 -&gt; 死锁（自己等自己）</code></pre>
+  <ul>
+    <li><strong>追问：重入时 AQS 怎么认出"是自己"？</strong>——对比当前线程与 <code>exclusiveOwnerThread</code>，相等则 state+1 直接返回（ReentrantLock 的 nonfairTryAcquire 分支）。</li>
+    <li><strong>追问：重入的价值是什么？</strong>——锁的粒度可以按方法设计而不用担心嵌套调用死锁。若不可重入，a() 调 b() 这种最普通的代码结构都得绕开锁，同步方法几乎没法组合。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：可重入 ≢ 线程安全，更 ≢ 可嵌套释放。lock 两次只 unlock 一次 → state 不归零，锁永远不释放，其他线程全部卡死——这也是"unlock 必须放 finally"的原因之一。</p></div>
+</section>
+
+<section id="trylock">
+  <h2><span class="no">05</span>tryLock 与超时锁</h2>
+  <ul>
+    <li><code>tryLock()</code>：立即返回，拿到返回 true，拿不到返回 false——<strong>不等待、不阻塞</strong>。</li>
+    <li><code>tryLock(time, unit)</code>：限时等待，超时返回 false，等待期间<strong>响应中断</strong>（可中断的锁获取，笔记里 ReentrantLock 对比 synchronized 的核心优势之一）。</li>
+    <li>语义价值：拿到锁不是唯一出路——<strong>拿不到就走别的分支或放弃</strong>：降级读缓存、返回稍后重试、放弃本次合并写。线程从"无限期等人"变成"自己掌控命运"。</li>
+  </ul>
+  <h3>经典用途：破坏"循环等待"来预防死锁</h3>
+  <p>转账要同时拿两把账户锁，两个线程反向转账就可能互相持有对方要的锁（循环等待）。<strong>按固定顺序拿锁</strong>是首选解法；tryLock 是另一条路：<strong>第二把拿不到就放弃并释放已持有的第一把</strong>，循环等待根本形不成。</p>
+  <pre><code>// 任何一把拿不到就整体放弃、稍后重试 —— 两个反向转账线程也不会死锁
+boolean transfer(Account from, Account to, long amt) throws InterruptedException {
+    if (!from.lock.tryLock(1, TimeUnit.SECONDS)) return false;   // A 都没拿到
+    try {
+        if (!to.lock.tryLock(1, TimeUnit.SECONDS)) return false; // B 拿不到：放弃
+        try {
+            from.debit(amt);
+            to.credit(amt);
+            return true;
+        } finally { to.lock.unlock(); }
+    } finally {
+        from.lock.unlock();   // ⭐ 放弃路径也会执行：把 A 还回去，别人才能推进
+    }
+}</code></pre>
+  <ul>
+    <li>对照：synchronized 拿不到只能死等（BLOCKED，不可中断、不可超时）——这正是"高竞争场景要不要上 ReentrantLock"的主要判据。</li>
+    <li>死锁四条件、jstack 排查、活锁（tryLock+重试若退避不当会变活锁）在 <a href="11-并发挑战.html">第 11 章 并发挑战</a>展开。</li>
+  </ul>
+  <div class="box tip"><p><strong>加分项</strong>：tryLock 无参版本连中断都不响应（试一下就走），有参版本在等待期内响应 interrupt 抛 InterruptedException——"可中断、可超时、可放弃"三个能力是 ReentrantLock 相对 synchronized 的完整功能差集。</p></div>
+</section>
+
+<section id="granularity">
+  <h2><span class="no">06</span>粗粒度 vs 细粒度 ⭐</h2>
+  <h3>粒度光谱：从一把全局锁到一条记录</h3>
+  <p>锁保护的范围越大越安全也越慢，越小越快也越容易出事。同一个"扣库存"问题的粒度光谱：</p>
+  <ul>
+    <li>全局静态锁（整个服务一把）→ 实例锁 → <strong>按业务维度拆锁（按 SKU、按用户、按账户）</strong> → 数据库行锁（缩小到一行）——数据库"表锁 → 行锁"的演进是同一逻辑。</li>
+    <li>集合侧的标杆是 ConcurrentHashMap：<strong>JDK 7 分段锁（Segment）、JDK 8 桶级 CAS + synchronized</strong>，把锁粒度从"整个 Map"缩到"一个桶"——历史一句带过，深讲在 <a href="09-并发容器.html">第 09 章 并发容器</a>与 <a href="../01-java/08-集合框架.html">01-java/08 集合框架</a>。</li>
+  </ul>
+  <pre><code>// 粗：全局一把锁 —— 全站所有下单串行，锁竞争的极端
+private static final Object GLOBAL = new Object();
+void deduct(String skuId, int n) {
+    synchronized (GLOBAL) { doDeduct(skuId, n); }
+}
+
+// 细：按 SKU 维度拆锁 —— 不同商品互不阻塞，竞争面从"全站"缩到"单个 SKU"
+private static final ConcurrentHashMap&lt;String, Object&gt; SKU_LOCKS = new ConcurrentHashMap&lt;&gt;();
+void deductFine(String skuId, int n) {
+    Object lock = SKU_LOCKS.computeIfAbsent(skuId, k -&gt; new Object());
+    synchronized (lock) { doDeduct(skuId, n); }
+}</code></pre>
+  <h3>细粒度的代价（面试官等着你说这半句）</h3>
+  <ul>
+    <li><strong>管理复杂</strong>：锁对象生命周期、内存（Map 里的锁要不要清理）、粒度选错（按 userId 拆还是按 orderId 拆）都会变成设计负担。</li>
+    <li><strong>死锁概率上升</strong>：锁拆得越细，<strong>需要同时持有多把锁的操作越多，锁的组合数爆炸</strong>——单笔转账要拿 A、B 两把账户锁，拿锁顺序不一致就死锁。粗粒度一把锁反而"天然无死锁"（只有一把锁，循环等待无从谈起）。</li>
+    <li>口径：<strong>先粗后细，按测量数据驱动拆分</strong>——先一把锁保正确，压测发现热点在哪一行/哪个业务维度，再沿那个维度拆，同时约定好多锁场景的全局拿锁顺序。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：细粒度 ≠ 随手加锁。按错误维度拆（例如按"操作类型"而不是按"数据归属"拆）只会制造出更多互相交叉的锁，死锁排查变成噩梦。拆分维度必须是<strong>数据本身的隔离维度</strong>。</p></div>
+</section>
+
+<section id="optimize">
+  <h2><span class="no">07</span>锁优化手段（JIT / 编码层）</h2>
+  <h3>JIT 层：锁粗化与锁消除</h3>
+  <ul>
+    <li><strong>锁粗化（Coarsening）</strong>：连续的加锁/释放被 JIT 合并成一次——最典型是循环体内反复 synchronized 同一把锁。</li>
+    <li><strong>锁消除（Elimination）</strong>：<strong>逃逸分析</strong>证明对象不可能被其他线程访问（不逃逸出方法/线程），它上面的锁直接删掉。</li>
+  </ul>
+  <pre><code>// ① 锁粗化：100 次加解锁，中间又没有别的逻辑 -&gt; JIT 合并为一次
+for (int i = 0; i &lt; 100; i++) {
+    synchronized (lock) { count += i; }
+}
+// 粗化后等价于：
+synchronized (lock) { for (int i = 0; i &lt; 100; i++) { count += i; } }
+
+// ② 锁消除：sb 不逃出方法，StringBuffer 内部的 synchronized 全部被消掉
+String concat(String a, String b) {
+    StringBuffer sb = new StringBuffer();  // 方法内局部变量、线程封闭
+    sb.append(a);                          // append 里的锁 JIT 直接删除
+    return sb.append(b).toString();
+}</code></pre>
+  <h3>编码层：减小临界区</h3>
+  <p>JIT 帮不了"把不必要的代码关进锁里"——这是工程师自己的事。原则：<strong>临界区内只留真正访问共享状态的代码</strong>，IO、RPC、大计算全部挪出去。</p>
+  <pre><code>// 反例：一次几十毫秒的网络 IO 被关在锁里，锁的持有时间放大 1000 倍
+synchronized (this) {
+    String json = buildPayload();   // 纯计算、无共享 -&gt; 不该在锁内
+    String r = http.post(json);     // 网络 IO -&gt; 最不该在锁内
+    counter++;                      // 真正需要互斥保护的只有这一行
+}
+
+// 正解：锁内只留必须互斥的代码，临界区从几十毫秒缩到纳秒级
+String json = buildPayload();
+String r = http.post(json);
+synchronized (this) { counter++; }</code></pre>
+  <div class="box note"><p>三件事合起来的心智模型：<strong>加锁范围要小（减小临界区）、嵌套加锁要顺（避免粗化是 JIT 的事但别反向拆细）、无共享就别加（等逃逸分析救不了跨方法逃逸的对象）</strong>。偏向锁/轻量级锁/自适应自旋等 synchronized 内部的锁升级优化归 <a href="03-互斥与同步.html">第 03 章</a>，此处不重复。</p></div>
+</section>
+
+<section id="scene">
+  <h2><span class="no">08</span>场景题落点</h2>
+  <ul>
+    <li><strong>库存超卖</strong>：策略题的集大成者——悲观路线（DB <code>for update</code> 行锁 / 分布式锁串行扣减）vs 乐观路线（<code>WHERE stock &gt;= n</code> 条件更新 + 失败重试 / Redis 预扣），按竞争烈度与一致性要求选型，完整推演见 <a href="13-并发设计题.html">第 13 章 并发票务系统</a>。</li>
+    <li><strong>多实例部署</strong>：JVM 内的锁出了进程就失效——库存拆分、接口防重放这类"跨实例互斥"需要分布式锁（Redis SET NX / Redisson 看门狗 / ZooKeeper 临时顺序节点），展开在 <a href="../10-microservices/README.html">10-microservices 分布式锁</a>。</li>
+    <li><strong>答题收束句式</strong>：策略选型永远回答三个问题——<strong>读写比例（定悲观/乐观）、要不要排队（定公平/非公平）、竞争热点在哪个维度（定锁粒度）</strong>。把这三个判断说出来，比背十个锁名词管用。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">09</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：乐观锁 → 高并发写场景还会快吗？</strong>→ 不会。CAS 失败率飙升 → 自旋空转烧 CPU、DB version 失败率飙升 → 应用层重试风暴；吞吐可能反低于悲观（阻塞挂起至少让出 CPU）。所以多写用悲观。</li>
+    <li><strong>追问链：非公平锁 → 饥饿怎么解？</strong>→ 换公平锁（损吞吐）；或在业务层限流削峰，降低竞争烈度本身。</li>
+    <li><strong>追问链：可重入 → state 里存的是什么？</strong>→ 重入次数（配 exclusiveOwnerThread 记持有线程）；lock 两次 unlock 一次会怎样 → state 不归零、锁永不释放。</li>
+    <li><strong>陷阱：tryLock 返回 false 却去 unlock</strong>→ IllegalMonitorStateException；unlock 不在 finally → 异常路径锁泄漏，后续线程全部卡死。ReentrantLock 的标配写法是 lock 后紧跟 try-finally。</li>
+    <li><strong>陷阱：拆了细粒度锁却没定全局拿锁顺序</strong>→ 锁组合数变多，A→B 与 B→A 并存即死锁；多锁场景要么统一排序，要么 tryLock 放弃重试（本章第 05 节）。</li>
+    <li><strong>陷阱：把 CAS 当万能乐观锁</strong>→ 单变量、竞争烈度、ABA 三个坑，下一章 <a href="05-无锁编程.html">第 05 章 无锁编程</a> 逐一展开。</li>
+    <li><strong>选型对比预备</strong>："synchronized 和 ReentrantLock 怎么选"——功能差集（可中断 / 可超时 / 公平 / 多 Condition）在 <a href="03-互斥与同步.html">第 03 章对比表</a>，本章补策略视角：需要 tryLock 这类"拿不到就走"的弹性，才值得为 ReentrantLock 付手动 unlock 的成本。</li>
+      <li><strong>追问：悲观/乐观锁和 synchronized/CAS 是一一对应吗？</strong>→ 不是。悲观/乐观是<strong>策略</strong>（思想），synchronized/CAS 是<strong>实现</strong>（手段）；DB 的 select for update / version 条件更新是同一对策略的另一种实现——把"策略 × 实现"分层说清，这道题就答出了体系感。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">10</span>面试自查清单</h2>
+  <ol>
+    <li>能用一句话分别定义悲观/乐观锁，说清"多写悲观、多读乐观"的依据（冲突概率 × 失败代价）。</li>
+    <li>能主动讲出乐观锁的隐藏成本：高竞争下的重试风暴，以及为什么此时悲观锁反而快。</li>
+    <li>公平/非公平的定义落到 AQS 的 tryAcquire（hasQueuedPredecessors），能解释非公平吞吐高的机制（唤醒间隙插队、减少上下文切换）与饥饿代价。</li>
+    <li>可重入 = 同线程重复拿自己的锁不死锁；能写出自制不可重入锁"自己等自己"的死锁示例。</li>
+    <li>知道 state 计数 + 持有线程记录的实现原理，以及 unlock 次数不配对的后果。</li>
+    <li>能用 tryLock(time, unit) 写出"拿不到就放弃并释放已有锁"的死锁预防代码。</li>
+    <li>锁粒度题能给"表锁→行锁 / 全局锁→SKU 锁"的完整光谱，并说出细粒度的两大代价（管理复杂、死锁概率上升）。</li>
+    <li>能解释锁粗化（循环加锁合并）、锁消除（逃逸分析）、减小临界区三个优化各自解决什么问题。</li>
+    <li>场景收尾不慌：超卖引到乐观/悲观选型，跨实例引到分布式锁，并能说出"读写比例 / 要不要排队 / 竞争维度"三问。</li>
+  </ol>
+  <div class="pager">
+    <a href="03-互斥与同步.html">⬅ 上一章：互斥与同步</a>
+    <a class="next" href="05-无锁编程.html">下一章：无锁编程 CAS 与原子类 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；② JavaGuide 常见题（上/中）：乐观/悲观、公平/非公平口径；③ <a href="https://pdai.tech/md/java/thread/java-thread-x-overview.html">pdai.tech 并发系列</a>（Lock 框架综述篇）；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 04 章 锁策略</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

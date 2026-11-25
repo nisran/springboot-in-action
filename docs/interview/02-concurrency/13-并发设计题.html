@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 13 章 · 并发设计题 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#framework">设计题答法框架</a>
+  <a href="#cache">题1 TTL 缓存 ⭐</a>
+  <a href="#ratelimit">题2 线程安全限流器</a>
+  <a href="#delay">题3 延时回调执行器</a>
+  <a href="#ticket">题4 并发票务系统 ⭐⭐</a>
+  <a href="#crawler">题5 多线程爬虫</a>
+  <a href="#pubsub">题6 多线程 Pub-Sub</a>
+  <a href="#dag">题7 依赖任务调度器</a>
+  <a href="#pool">题8 简易连接池</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="12-经典同步题.html">上一章：12 经典同步题</a>
+  <a href="14-并发数据结构.html">下一章：14 并发数据结构 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 13 章 · 并发设计题（8 道）</h1>
+    <div class="sub">TTL 缓存 · 限流器 · 延时执行 · 库存不超卖 · 多线程爬虫 · Pub-Sub · DAG 调度 · 连接池 —— 从需求出发选并发原语，场景设计章</div>
+    <div class="meta">
+      <span>⭐ 场景设计高频：库存超卖 · 缓存击穿 · 优雅停止</span>
+      <span>蓝本：AlgoMaster Concurrency Design + Hello Interview</span>
+      <span class="tag exist">已合并：Java/java 基础.md 库存超卖笔记 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>设计一个带过期时间的线程安全缓存，怎么防止缓存击穿？⭐</li>
+      <li>手写一个单机限流器。固定窗口计数有什么问题？</li>
+      <li>设计一个延时任务执行器：下单 30 分钟未支付自动取消，怎么实现？</li>
+      <li>秒杀 / 售票系统怎么保证库存不超卖？⭐⭐（并发设计母题，几乎必问）</li>
+      <li>设计一个多线程爬虫：怎么去重、怎么限速、怎么优雅停止？</li>
+      <li>进程内实现一个发布订阅（Pub-Sub）组件，慢订阅者怎么办？</li>
+      <li>一批任务有依赖关系（DAG），怎么并发调度？怎么检测环？</li>
+      <li>手写一个简易数据库连接池，连接泄漏怎么检测？</li>
+    </ol>
+  </div>
+  <p>与 <a href="12-经典同步题.html">第 12 章经典同步题</a> 的分工：12 章"给定同步逻辑，写对"（考原语功力），本章"从业务需求出发，选型并搭结构"（考架构直觉），更接近小型系统设计。答法上少纠缠语法，多讲<strong>为什么选这个原语、失败了怎么办、量级上去怎么演进</strong>。</p>
+</section>
+
+<section id="framework">
+  <h2><span class="no">02</span>设计题答法框架</h2>
+  <p>设计题没有唯一正确实现，面试官评的是<strong>权衡与结构</strong>。固定五步走，答案不会散：</p>
+  <ol>
+    <li><strong>澄清需求</strong>：三件事必须先问清——并发度（峰值 QPS？单机还是集群？）、一致性要求（强一致还是最终一致？是"宁可少卖不能超卖"吗？）、失败语义（失败=拒绝、排队还是降级？调用方愿意等多久？）。</li>
+    <li><strong>定接口</strong>：先把 interface 写出来再写实现。接口决定线程边界：谁来调用、是否阻塞、超时参数怎么传、有没有关闭方法。</li>
+    <li><strong>选并发原语</strong>：按"要保护什么"选工具（下表），而不是上来就 synchronized 一把梭。</li>
+    <li><strong>定失败与降级路径</strong>：加载失败怎么办、队列满了丢什么、进程关闭时在途任务怎么处理、超时后返回什么。设计题的高分差异基本都在这一步。</li>
+    <li><strong>说清压测指标</strong>：吞吐（QPS/TPS）、P99 延迟、错误率、线程 BLOCKED 数、GC 表现。设计完主动说"这个结构我会压到多少验证"，立刻和背题的拉开差距。</li>
+  </ol>
+  <table>
+    <tr><th>原语</th><th>适用</th><th>本章出现</th></tr>
+    <tr><td>synchronized / ReentrantLock</td><td>临界区互斥，保护"读-判断-写"复合操作</td><td>票务单机锁、令牌桶</td></tr>
+    <tr><td>CAS / 原子类</td><td>低冲突的计数、状态位、引用更新</td><td>DAG 入度、爬虫判停</td></tr>
+    <tr><td>阻塞队列 BlockingQueue</td><td>生产者消费者解耦、削峰、优雅停止（毒丸）</td><td>爬虫、Pub-Sub 邮箱</td></tr>
+    <tr><td>Semaphore</td><td>资源上限、限流、按域名限并发</td><td>限流器、连接池、爬虫限速</td></tr>
+    <tr><td>DelayQueue</td><td>按时间调度，到期才能取走</td><td>延时回调执行器</td></tr>
+    <tr><td>线程池</td><td>执行与调度分离，统一治理</td><td>几乎所有题的"执行层"</td></tr>
+  </table>
+  <div class="box tip"><p><strong>7 年经验的答法</strong>：每个设计收尾主动补一句"生产里我们怎么用的 + 踩过什么坑"——例如"订单超时关闭最初就是 DelayQueue 版，量上来后换成延迟消息"。面试官要的不是玩具代码，是确认你真用过。</p></div>
+</section>
+
+<section id="cache">
+  <h2><span class="no">03</span>题 1 · 带 TTL 的线程安全缓存 ⭐</h2>
+  <h3>需求与接口</h3>
+  <p>进程内 KV 缓存，每个条目带存活时间（TTL），过期后不可见；并发读写安全；<strong>防缓存击穿</strong>（热点 key 过期瞬间，成千上万请求同时打到 DB 重新加载）。</p>
+  <pre><code>public interface TtlCache&lt;K, V&gt; {
+    V get(K key);                                   // 命中返回值；不存在或已过期返回 null
+    void put(K key, V value);                       // 写入，统一 TTL
+    V getOrLoad(K key, Function&lt;K, V&gt; loader);     // 未命中则装载 —— 防击穿的关键接口
+}</code></pre>
+  <h3>核心思路</h3>
+  <ul>
+    <li>底座 <code>ConcurrentHashMap&lt;K, Entry&lt;V&gt;&gt;</code>，Entry 里存<strong>值 + 绝对到期时间戳</strong>（不是剩余时间，避免每次读写都重算）。</li>
+    <li><strong>两级清理</strong>：读时懒删（保证正确性——过期 key 被读到即刻移除，返回 null）+ 守护线程周期扫描（保证内存回收——冷 key 永远没人读，只靠懒删会一直占内存）。</li>
+    <li><strong>防击穿</strong>：装载走 <code>computeIfAbsent</code>——同一 key 并发 miss 时，mapping 函数只执行一次，其余线程阻塞等结果（原理在 <a href="09-并发容器.html">09-并发容器</a>）。</li>
+  </ul>
+  <h3>核心实现</h3>
+  <pre><code>public class TtlCache&lt;K, V&gt; {
+    private record Entry&lt;V&gt;(V value, long expireAtMs) {      // 值 + 绝对到期时间
+        boolean expired() { return System.currentTimeMillis() &gt; expireAtMs; }
+    }
+
+    private final ConcurrentHashMap&lt;K, Entry&lt;V&gt;&gt; map = new ConcurrentHashMap&lt;&gt;();
+    private final long ttlMs;
+
+    public TtlCache(long ttlMs, long cleanIntervalMs) {
+        this.ttlMs = ttlMs;
+        Thread cleaner = new Thread(() -&gt; {
+            while (true) {
+                map.entrySet().removeIf(e -&gt; e.getValue().expired());  // 二级清理：周期全量扫
+                try { Thread.sleep(cleanIntervalMs); }
+                catch (InterruptedException ie) { return; }
+            }
+        }, "ttl-cache-cleaner");
+        cleaner.setDaemon(true);                             // 守护线程：不阻止 JVM 退出
+        cleaner.start();
+    }
+
+    public void put(K key, V value) {
+        map.put(key, new Entry&lt;&gt;(value, System.currentTimeMillis() + ttlMs));
+    }
+
+    // 一级清理：读时懒删 —— 过期数据读到即删，不依赖扫描线程的节奏
+    public V get(K key) {
+        Entry&lt;V&gt; e = map.get(key);
+        if (e == null) return null;
+        if (e.expired()) { map.remove(key); return null; }
+        return e.value();
+    }
+
+    // 原子装载：同一 key 并发 miss，loader 只执行一次 —— 防缓存击穿
+    public V getOrLoad(K key, Function&lt;K, V&gt; loader) {
+        Entry&lt;V&gt; e = map.get(key);
+        if (e != null &amp;&amp; !e.expired()) return e.value();     // 快路径：命中直接返回
+        map.remove(key, e);                                  // 条件删除：只删自己看到的旧值
+        return map.computeIfAbsent(key,                      // 慢路径：抢占装载权（阻塞同 key 的并发加载）
+                k -&gt; new Entry&lt;&gt;(loader.apply(k), System.currentTimeMillis() + ttlMs)).value();
+    }
+}</code></pre>
+  <div class="box warn"><p><strong>computeIfAbsent 的坑</strong>：mapping 函数执行期间会锁住该 bin——装载是慢 IO（查库 200ms）时，落到同一个桶的其他 key 的写全被拖住；且 Java 9+ 禁止在函数里再改本 map（可能死锁）。生产做法：值包装成 FutureTask（memcached 模式），或直接用 Caffeine 的 AsyncLoadingCache 异步加载。</p></div>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>内存上限？</strong>这套结构无上限，key 无穷多就 OOM。要加 LRU/LFU 淘汰——算法实现归 <a href="../05-dsa/README.html">05-dsa</a>，生产别自研，Caffeine（W-TinyLFU，<code>maximumSize + expireAfterWrite</code>）一行配好。</li>
+    <li><strong>击穿 / 穿透 / 雪崩分得清吗？</strong>击穿=热点 key 过期瞬间并发打库（本题 getOrLoad 解决）；穿透=查不存在的 key（缓存空值 / 布隆过滤器）；雪崩=大量 key 同时过期（TTL 加随机抖动）。</li>
+    <li><strong>单机 vs 分布式？</strong>本地缓存多实例各一份，不一致窗口=TTL；要求更快一致就上 Redis 集中缓存，或"本地短 TTL + 变更时广播失效"两级缓存。</li>
+    <li><strong>生产里怎么用的？</strong>配置中心元数据、数据字典用本地 Caffeine（TTL 5 分钟）；用户态数据走 Redis。盯两个指标：命中率（低说明 TTL 配错）和加载耗时（高说明该上预热）。</li>
+  </ul>
+</section>
+
+<section id="ratelimit">
+  <h2><span class="no">04</span>题 2 · 线程安全限流器</h2>
+  <h3>需求与接口</h3>
+  <p>保护下游：超过速率的请求被立即拒绝（或短暂等待）。接口一个方法：<code>boolean tryAcquire(int permits)</code>——放行 true / 拒绝 false，非阻塞。先讲清三个模型再动手：</p>
+  <table>
+    <tr><th>模型</th><th>做法</th><th>要点 / 问题</th></tr>
+    <tr><td>固定窗口计数</td><td>每分钟一个计数器，到窗口清零</td><td><strong>临界突刺</strong>：窗口边界两侧各打满，瞬间通过 2 倍限流值</td></tr>
+    <tr><td>滑动窗口</td><td>把窗口切成 6 个 10s 小格子滑动求和</td><td>平滑了边界问题，格子越多越准也越费内存</td></tr>
+    <tr><td>令牌桶</td><td>匀速往桶里放令牌，桶满则停；请求拿到令牌才放行</td><td><strong>允许突发</strong>（攒下的令牌一次用掉），主流选择</td></tr>
+  </table>
+  <p>补一句漏桶：恒定速率流出、完全不允许突发，适合"整流"保护极脆弱的下游；令牌桶 vs 漏桶的本质区别就是<strong>允不允许突发</strong>。</p>
+  <h3>核心实现一：Semaphore 补充线程版（直观，先讲它）</h3>
+  <pre><code>public class SemaphoreTokenBucket {
+    private final Semaphore tokens;
+    private final int capacity;
+
+    public SemaphoreTokenBucket(int capacity, int tokensPerSec) {
+        this.capacity = capacity;
+        this.tokens = new Semaphore(capacity);           // 满桶起步 = 允许开局突发
+        Thread refiller = new Thread(() -&gt; {
+            while (true) {
+                try { Thread.sleep(1000 / tokensPerSec); }  // 每隔一阵补一个令牌
+                catch (InterruptedException e) { return; }
+                if (tokens.availablePermits() &lt; capacity)  // 桶满不再补（查询+补充非原子，略超可接受）
+                    tokens.release();
+            }
+        }, "token-refiller");
+        refiller.setDaemon(true);
+        refiller.start();
+    }
+
+    public boolean tryAcquire() { return tokens.tryAcquire(); }  // 非阻塞扣令牌
+}</code></pre>
+  <h3>核心实现二：时间戳计算版（生产口径，无线程）</h3>
+  <pre><code>public class TokenBucket {
+    private final int capacity;
+    private final double tokensPerMs;      // 补充速率换算到毫秒，用浮点做平滑
+    private double tokens;                 // 当前令牌数（含小数）
+    private long lastRefillMs;
+
+    public TokenBucket(int capacity, int qps) {
+        this.capacity = capacity;
+        this.tokensPerMs = qps / 1000.0;
+        this.tokens = capacity;
+        this.lastRefillMs = System.currentTimeMillis();
+    }
+
+    public synchronized boolean tryAcquire(int n) {
+        long now = System.currentTimeMillis();
+        // 惰性补充：不靠线程，取用时按流逝的时间一次性补足（上限 = 桶容量）
+        tokens = Math.min(capacity, tokens + (now - lastRefillMs) * tokensPerMs);
+        lastRefillMs = now;
+        if (tokens &gt;= n) { tokens -= n; return true; }   // 够扣：放行
+        return false;                                     // 不够：拒绝（不等待）
+    }
+}</code></pre>
+  <p>与 Guava 对比一句：<code>RateLimiter.create(500) / acquire()</code> 正是时间戳版思想的生产实现——令牌按时间戳惰性计算 + CAS 更新，还支持预消费（先借后还）；单机限流直接用它，别自研。</p>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>固定窗口临界突刺</strong>能画图：限 100/min，第 1 分钟的最后 1 秒打满 100，第 2 分钟的第 1 秒又打满 100——1 秒内过了 200。</li>
+    <li><strong>Semaphore 版的坑</strong>：Semaphore 的 <code>release()</code> 可以把许可加到超过初始值（它没有"上限"概念），所以必须先 <code>availablePermits()</code> 判断；另外常驻补令牌线程白白占一个线程——这两条正是引出时间戳版的理由。</li>
+    <li><strong>synchronized 换 CAS？</strong>低冲突时用 <code>AtomicReference</code> 自旋替换（Guava 就这么干）；但限流器是热点，竞争激烈时自旋浪费 CPU，锁反而稳。</li>
+    <li><strong>多实例怎么办？</strong>每台限 N，全局就是 N×机器数；要全局精确就上集中式——Redis + Lua（INCR + EXPIRE 原子）或网关层限流（Sentinel），见 <a href="../10-microservices/README.html">10-microservices</a>。</li>
+  </ul>
+</section>
+
+<section id="delay">
+  <h2><span class="no">05</span>题 3 · 延时回调执行器</h2>
+  <h3>需求与接口</h3>
+  <p>提交一个任务和延迟时间，到点自动执行一次（订单 30 分钟未支付自动取消就是它）。要求：到期前不空转；关闭时明确剩余任务的去留。</p>
+  <pre><code>public interface DelayExecutor {
+    void schedule(Runnable task, long delayMs);   // delayMs 后执行一次
+    void shutdown(long graceMs);                  // 关闭：给在途任务一个宽限期
+}</code></pre>
+  <h3>核心思路</h3>
+  <ul>
+    <li><code>DelayQueue&lt;DelayedTask&gt;</code>：元素实现 <code>Delayed</code> 接口，到期才能被 <code>take()</code> 取走，没到期就阻塞——<strong>不轮询、不空转</strong>。</li>
+    <li>守护调度线程只做一件事：take 到到期任务 → 丢给工作线程池执行。调度和执行分离，长任务不堵后续任务的调度。</li>
+    <li>关闭语义三选一说清楚：未到期任务<strong>丢弃 / 跑完 / 持久化后重启重投递</strong>（生产必须第三种，进程内队列重启即丢）。</li>
+  </ul>
+  <h3>核心实现</h3>
+  <pre><code>public class DelayScheduler implements DelayExecutor {
+    private final DelayQueue&lt;DelayedTask&gt; queue = new DelayQueue&lt;&gt;();
+    private final ExecutorService workers = Executors.newFixedThreadPool(4);  // 真正执行
+    private final Thread scheduler;
+    private volatile boolean closed = false;
+
+    public DelayScheduler() {
+        scheduler = new Thread(this::dispatch, "delay-scheduler");
+        scheduler.setDaemon(true);
+        scheduler.start();
+    }
+
+    public void schedule(Runnable task, long delayMs) {
+        if (closed) throw new IllegalStateException("already closed");
+        queue.put(new DelayedTask(task, System.currentTimeMillis() + delayMs));
+    }
+
+    private void dispatch() {
+        try {
+            while (!closed) {
+                Runnable task = queue.take();     // 没有到期任务就阻塞 —— 零轮询
+                workers.execute(task);            // 交给工作线程，调度线程只负责取
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();   // 被中断 = 收到关闭信号，退出
+        }
+    }
+
+    public void shutdown(long graceMs) throws InterruptedException {
+        closed = true;                            // 1. 停止接收新任务
+        scheduler.interrupt();                    // 2. 唤醒可能阻塞在 take() 的调度线程
+        workers.shutdown();                       // 3. 在途任务给宽限期跑完；未到期的自然丢弃
+        workers.awaitTermination(graceMs, TimeUnit.MILLISECONDS);
+    }
+
+    // DelayQueue 的元素：两个方法的实现就是这道题的考点
+    private record DelayedTask(Runnable task, long executeAtMs) implements Delayed {
+        public long getDelay(TimeUnit unit) {     // 剩余等待时间，返回 &lt;= 0 即到期可取走
+            return unit.convert(executeAtMs - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
+        }
+        public int compareTo(Delayed other) {     // 按到期时间升序 —— 底层是优先队列（小顶堆）
+            return Long.compare(executeAtMs, ((DelayedTask) other).executeAtMs);
+        }
+    }
+}</code></pre>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>take 为什么不空转？</strong>DelayQueue 队头未到期时，take 会 timed park 到最早到期时刻，由 Condition 精确唤醒——"sleep 1 秒轮询一遍"是反面答案。</li>
+    <li><strong>百万级定时任务？</strong>堆的入队是 O(log n)，任务量巨大时用<strong>时间轮</strong>（Timing Wheel）O(1) 插入——Kafka 的延迟操作（purgatory）就是层级时间轮实现，见 <a href="../11-kafka/README.html">11-kafka</a>；单机库可用 Netty 的 HashedWheelTimer。</li>
+    <li><strong>怎么取消任务？</strong>schedule 返回任务句柄，cancel 时 <code>queue.remove(task)</code>（引用相等即移除）。</li>
+    <li><strong>生产里怎么用的？</strong>进程内 DelayScheduler 只适合"丢了能容忍"的任务（本地重试、提醒）。订单超时关闭这类不能丢的，用延迟消息（RocketMQ 延迟级别）或 Redis ZSet 定时轮询 + 落库兜底对账。</li>
+  </ul>
+</section>
+
+<section id="ticket">
+  <h2><span class="no">06</span>题 4 · 并发票务系统：库存不超卖 ⭐⭐</h2>
+  <h3>需求与接口</h3>
+  <p>并发设计母题：N 个并发请求抢 M 件库存（M 可能只有几百），硬约束<strong>绝不超卖</strong>（扣成负数）；"少卖"可接受（可回补、可重试）。动笔前先澄清三件事：部署形态（单体还是集群，决定 JVM 锁是否可行）、峰值 QPS（决定 DB 直扛还是缓存挡板）、用户能否接受"排队中"（决定能否用 MQ）。</p>
+  <pre><code>// 核心接口：扣减成功 true；余量不足 false（= 售罄，是正常业务结果不是异常）
+boolean deduct(String skuId, int count);</code></pre>
+  <h3>方案矩阵（先总后分，源自个人笔记"库存超卖"一节，逐个展开）</h3>
+  <table>
+    <tr><th>#</th><th>方案</th><th>一致性</th><th>性能</th><th>一句话定位</th></tr>
+    <tr><td>1</td><td>单机 JVM 锁</td><td>强（仅单实例内）</td><td>中</td><td>简单直接；应用一多实例部署就失效</td></tr>
+    <tr><td>2</td><td>Redis 分布式锁</td><td>强互斥</td><td>中高</td><td>集群可用的"全局锁"，代价是网络往返</td></tr>
+    <tr><td>3</td><td>DB 悲观锁 for update</td><td>强一致</td><td>低</td><td>行锁串行，并发一大连接池就打满</td></tr>
+    <tr><td>4</td><td>DB 乐观锁版本号</td><td>强一致</td><td>中</td><td>CAS 思想，冲突少时最好用</td></tr>
+    <tr><td>5</td><td>Redis 预扣库存</td><td>最终一致（配对账）</td><td>高</td><td>内存原子扣减，大流量抢购标配</td></tr>
+    <tr><td>6</td><td>MQ 异步削峰</td><td>最终一致</td><td>高（吞吐）</td><td>排队逐条扣，用户不能立刻知道结果</td></tr>
+  </table>
+  <h3>方案一：单机同步锁（synchronized / ReentrantLock，只适合单体）</h3>
+  <p>把"读余量-判断-扣减"三步锁成一个原子步，<strong>锁粒度按 SKU 分段</strong>，别锁整个方法：</p>
+  <pre><code>private static final ConcurrentHashMap&lt;String, Object&gt; LOCKS = new ConcurrentHashMap&lt;&gt;();
+
+public boolean deductJvm(String skuId, int count) {
+    Object lock = LOCKS.computeIfAbsent(skuId, k -&gt; new Object());  // 不同 SKU 不互斥
+    synchronized (lock) {                       // 锁策略细节见 04-锁策略
+        return dbDeduct(skuId, count);          // 读余量 - 判断 - 扣减，锁内看成一个原子步
+    }
+}</code></pre>
+  <p>致命限制：应用部署 2 个实例就各有一把 JVM 锁，互斥失效——<strong>只适合单体</strong>。锁的选择与优化（分段、tryLock 超时、读写锁）在 <a href="04-锁策略.html">04-锁策略</a>。</p>
+  <h3>方案二：Redis 分布式锁</h3>
+  <pre><code># 加锁：NX = 不存在才设置（互斥）；PX = 过期时间（防持锁方宕机死锁）；value = 加锁人唯一标识
+SET lock:sku:1001 7f3a9c  NX PX 10000</code></pre>
+  <ul>
+    <li><strong>互斥</strong>：SET NX 原子完成"检查+设置"，等价分布式 compareAndSet。</li>
+    <li><strong>过期时间 + 续期（看门狗）</strong>：业务没跑完锁先过期，别人就能进来——Redisson 的 watchdog 默认每 ttl/3 续期一次，锁持有期间自动保活。</li>
+    <li><strong>解锁必须校验加锁人</strong>：A 的锁过期后被 B 拿到，A 执行完直接 DEL 会误删 B 的锁。比对 value 再删，且"比对+删除"必须原子——Lua：</li>
+  </ul>
+  <pre><code>if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])     -- 是我加的锁才删
+else
+    return 0
+end</code></pre>
+  <p><strong>缺点</strong>：每次扣减两次网络往返（加锁+解锁），网络延迟放大响应时间；主从切换瞬间可能两个客户端同时持锁。Redlock 争议、 fencing token 等深水区归 <a href="../10-microservices/README.html">10-microservices</a>。</p>
+  <h3>方案三：DB 悲观锁（select ... for update）</h3>
+  <pre><code>begin;
+select num from stock where sku_id = ? for update;   -- 行锁：其余事务在此阻塞
+update stock set num = num - 1 where sku_id = ?;
+commit;</code></pre>
+  <p><strong>优点强一致</strong>：锁定期间绝对安全。<strong>缺点性能差、并发低</strong>：行锁持有时间 = 整个事务时长，高并发下大量线程堵在等锁，连接被占满，容易把连接池和 DB 一起拖垮。适合后台低频强一致操作（财务扣款），不适合抢购。</p>
+  <h3>方案四：DB 乐观锁（版本号，CAS 策略）</h3>
+  <pre><code>update stock set num = num - 1, version = version + 1
+ where sku_id = ? and num &gt;= 1 and version = ?;   -- ⭐ 余量条件放进 where 是本题要点
+
+// Java 侧：affected rows = 0 即失败（售罄或版本冲突）
+int affected = jdbc.update(sql, skuId, currentVersion);
+if (affected == 0) return retryOrFail();          // 冲突了：有限次重试（重新读版本再试）或直接失败</code></pre>
+  <p>要点：<strong>"检查余量"不必先 SELECT，把条件放 where，让检查+扣减一条 SQL 原子完成</strong>（DB 行锁天然保证），这就是数据库版的 CAS。缺点：高冲突时大量请求空转重试白白消耗 DB——适合冲突概率低的场景。</p>
+  <h3>方案五：Redis 预扣库存（大流量首选）</h3>
+  <pre><code>// Lua：校验 + 扣减在同一段脚本里原子执行（Redis 单线程执行脚本，天然无竞态）
+String lua =
+    "local n = tonumber(redis.call('GET', KEYS[1]) or -1) " +
+    "if n &lt; tonumber(ARGV[1]) then return -1 end " +     // 余量不足：直接失败，绝不会扣成负数
+    "return redis.call('DECRBY', KEYS[1], ARGV[1])";
+Long left = (Long) redis.eval(lua, List.of("stock:" + skuId), List.of(String.valueOf(count)));
+if (left == null || left &lt; 0) return false;             // 售罄，快速失败
+mqSender.send(new OrderMessage(orderId, skuId, count));  // 预扣成功 → MQ 异步落库 / 创建订单</code></pre>
+  <p>纯内存 + 单线程原子操作，性能最高。<strong>代价：Redis 与 DB 的一致性要自己做</strong>——预扣成功但后续建单失败要 <code>INCRBY</code> 回补；Redis 宕机丢数据要从 DB 重新加载余量；跑定时<strong>对账任务</strong>（Redis 余量 vs DB 账目）修平偏差。</p>
+  <h3>方案六：MQ 异步削峰</h3>
+  <p>请求校验后直接入队，立即返回"排队中"；消费者按 skuId 分区<strong>顺序消费</strong>（同一 SKU 串行，天然免竞争），逐条扣 DB，完成后推送/轮询出结果。吞吐最高（削峰 + 串行化），<strong>缺点实时性低</strong>：用户不能立刻确认是否抢到。消费必须幂等（消息可能重复投递），幂等主页在 <a href="../09-api-design/README.html">09-api-design</a>，顺序消费原理在 <a href="../11-kafka/README.html">11-kafka</a>。</p>
+  <h3>选型口径（背这段）</h3>
+  <div class="box tip"><p>"<strong>单体小量级用 JVM 分段锁；集群中等量用 Redis 分布式锁或 DB 乐观锁；真正大流量抢购 = Redis Lua 预扣挡在前面 + MQ 异步落库 + 定时对账回补</strong>——接受最终一致，但绝不超卖；强一致低并发的后台场景才用 for update。"</p><p>7 年经验补生产：大促抢购我们就是"Redis 预扣 + MQ 落库 + 对账"这套，上线前必须压测预扣链路、演练 Redis 宕机降级（降级到 DB 乐观锁，限流收紧）。</p></div>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>Redis 扣了 DB 没落上怎么办？</strong>预扣成功但消费失败 → 消息重试；重试到底还是失败 → 人工/自动对账回补库存（宁可短暂少卖，不能超卖）。</li>
+    <li><strong>Redis 宕机？</strong>内存数据丢失，余量从 DB 全量/增量重新加载，加载期间降级限流甚至熔断售卖。</li>
+    <li><strong>热点单 SKU？</strong>单 key 打满一个 Redis 分片——库存分桶（100 件拆 10 个子 key 各 10 件，随机路由+回补）。</li>
+    <li><strong>重复扣减？</strong>同一订单消息重复消费 → 扣减必须带 orderId 做幂等（唯一约束 / 状态机），见 <a href="../09-api-design/README.html">09-api-design</a>。</li>
+  </ul>
+</section>
+
+<section id="crawler">
+  <h2><span class="no">07</span>题 5 · 多线程爬虫</h2>
+  <h3>需求与接口</h3>
+  <p>从种子 URL 出发广度优先抓取：不重复抓（去重）、有深度和总量上限、对单个站点限速（礼貌性）、能优雅停止。</p>
+  <pre><code>public void crawl(String seed, int maxDepth, int maxPages) throws InterruptedException;
+// 从 seed 出发 BFS：URL 去重、深度 &lt;= maxDepth、总量 &lt;= maxPages、跑完自动停止</code></pre>
+  <h3>核心思路</h3>
+  <ul>
+    <li>任务队列 <code>BlockingQueue&lt;Task&gt;</code>，Task 携带 url + depth；N 个 worker 循环 take——生产者消费者模型。</li>
+    <li>去重用 <code>ConcurrentHashMap.newKeySet()</code>：<code>visited.add(url)</code> 返回 false 即已抓过，<strong>判重+登记一步原子</strong>（HashSet 的 contains+add 两步是 check-then-act 竞态）。</li>
+    <li>判停：在途计数器 <code>inFlight</code> 归零 = 爬完；到量/完成时给每个 worker 发<strong>毒丸（poison pill）</strong>退出。</li>
+    <li>限速：每域名一个 <code>Semaphore</code>，同一站点最多固定并发。</li>
+  </ul>
+  <h3>核心实现</h3>
+  <pre><code>public class WebCrawler {
+    private record Task(String url, int depth) {}
+    private static final Task POISON = new Task(null, -1);          // 毒丸：出队见到它就退出
+
+    private final int workers;
+    private final BlockingQueue&lt;Task&gt; queue = new LinkedBlockingQueue&lt;&gt;();
+    private final Set&lt;String&gt; visited = ConcurrentHashMap.newKeySet();  // add 原子判重
+    private final AtomicInteger inFlight = new AtomicInteger();     // 已入队未完成的任务数（判停）
+    private final AtomicInteger fetched = new AtomicInteger();
+    private final ConcurrentHashMap&lt;String, Semaphore&gt; hostLimits = new ConcurrentHashMap&lt;&gt;();
+
+    public WebCrawler(int workers) { this.workers = workers; }
+
+    public void crawl(String seed, int maxDepth, int maxPages) throws InterruptedException {
+        visited.add(seed);
+        inFlight.incrementAndGet();
+        queue.put(new Task(seed, 0));
+
+        List&lt;Thread&gt; ws = new ArrayList&lt;&gt;();
+        for (int i = 0; i &lt; workers; i++) {
+            Thread w = new Thread(this::worker, "crawler-" + i);
+            w.start();
+            ws.add(w);
+        }
+        for (Thread w : ws) w.join();          // 所有 worker 吃到毒丸退出后才返回
+    }
+
+    private void worker() {
+        while (true) {
+            try {
+                Task t = queue.take();
+                if (t == POISON) return;                             // 毒丸 = 优雅停止信号
+                try {
+                    if (fetched.incrementAndGet() &gt; maxPages) { stop(); return; }  // 到量收工
+                    for (String link : fetch(t.url())) {
+                        if (t.depth() &lt; maxDepth &amp;&amp; visited.add(link)) {  // add=false 即重复
+                            inFlight.incrementAndGet();               // 先计数再入队，顺序别反
+                            queue.put(new Task(link, t.depth() + 1));
+                        }
+                    }
+                } finally {
+                    if (inFlight.decrementAndGet() == 0) stop();     // 没有在途任务 = 爬完
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    private void stop() {
+        queue.clear();
+        for (int i = 0; i &lt; workers; i++) queue.add(POISON);         // 每个 worker 一颗毒丸
+    }
+
+    // 抓单页：每域名 Semaphore 限速 —— 同一站点最多 2 并发，别把对方打挂
+    private List&lt;String&gt; fetch(String url) throws InterruptedException {
+        Semaphore limit = hostLimits.computeIfAbsent(hostOf(url), h -&gt; new Semaphore(2));
+        limit.acquire();
+        try { return httpGetAndParseLinks(url); }  // IO：HTTP GET + 解析页面里的链接
+        finally { limit.release(); }
+    }
+}</code></pre>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>毒丸 vs shutdown+awaitTermination？</strong>自管理的 worker 循环用毒丸（控制权在自己手里，能先 clear 队列）；用线程池实现就 <code>shutdown()</code>（不收新任务）+ <code>awaitTermination()</code> 等在途跑完；<code>shutdownNow()</code> 会中断在途任务，不够"优雅"。</li>
+    <li><strong>为什么 visited 不能用 HashSet？</strong>两个线程同时 contains 返回 false，同一 URL 入队两次（重复抓+计数错乱）；<code>newKeySet</code> 底层是 ConcurrentHashMap 的 keySet，add 一招完成判重+登记。</li>
+    <li><strong>inFlight 先加还是先入队？</strong>先 increment 再 put。反了的话：任务在队列里但计数为 0，别的 worker 会误判"爬完了"提前发毒丸。</li>
+    <li><strong>规模化？</strong>URL 到亿级：去重换布隆过滤器（容忍误判=少抓不重复抓），队列换 Kafka，多机分工按域名哈希分片—— politely 说"单机结构不变，组件全换"。</li>
+  </ul>
+</section>
+
+<section id="pubsub">
+  <h2><span class="no">08</span>题 6 · 多线程发布订阅（Pub-Sub）</h2>
+  <h3>需求与接口</h3>
+  <p>进程内消息总线：订阅、退订、发布；发布不能被慢订阅者拖死；订阅关系在发布过程中可安全变更。</p>
+  <pre><code>public interface Broker {
+    void subscribe(String topic, Subscriber s);
+    void unsubscribe(String topic, Subscriber s);
+    void publish(String topic, String message);   // 尽力投递给当前所有订阅者
+    interface Subscriber { void onMessage(String message); }
+}</code></pre>
+  <h3>核心思路</h3>
+  <ul>
+    <li>注册表 <code>Map&lt;String, CopyOnWriteArrayList&lt;Subscriber&gt;&gt;</code>：发布高频（读多）、订阅变更低频（写少），正好是 COW 的主场——遍历的是快照，遍历中退订不抛 ConcurrentModificationException。</li>
+    <li><strong>慢消费者策略</strong>：订阅者不做慢回调，每个订阅者配一个有界队列邮箱 + 独立消费线程；邮箱满时丢最旧保最新（也可按业务丢最新或拒绝）。</li>
+  </ul>
+  <h3>核心实现</h3>
+  <pre><code>public class PubSubBroker implements Broker {
+    private final ConcurrentHashMap&lt;String, CopyOnWriteArrayList&lt;Subscriber&gt;&gt; topics
+            = new ConcurrentHashMap&lt;&gt;();
+
+    public void subscribe(String topic, Subscriber s) {
+        topics.computeIfAbsent(topic, k -&gt; new CopyOnWriteArrayList&lt;&gt;()).add(s);
+    }
+
+    public void unsubscribe(String topic, Subscriber s) {
+        CopyOnWriteArrayList&lt;Subscriber&gt; list = topics.get(topic);
+        if (list != null) list.remove(s);          // COW：写时复制，正在遍历发布的线程不受影响
+    }
+
+    public void publish(String topic, String message) {
+        CopyOnWriteArrayList&lt;Subscriber&gt; list = topics.get(topic);
+        if (list == null) return;
+        for (Subscriber s : list) s.onMessage(message);   // 这里只是投递进邮箱（见下），立即返回
+    }
+}
+
+// 慢消费者解法：订阅者包一层邮箱（有界队列 + 独立消费线程），发布者永不阻塞
+class Mailbox implements Broker.Subscriber, Runnable {
+    private final ArrayBlockingQueue&lt;String&gt; queue = new ArrayBlockingQueue&lt;&gt;(1024);
+    private volatile boolean running = true;
+
+    Mailbox(String name) { new Thread(this, "mailbox-" + name).start(); }
+
+    public void onMessage(String msg) { deliver(msg); }  // 订阅接口：只做入队，立即返回
+
+    private void deliver(String msg) {
+        if (!queue.offer(msg)) {     // 队列满 —— 慢消费者到了
+            queue.poll();            // 策略：丢最旧、保最新（行情/指标类合适；指令类应拒绝或落盘）
+            queue.offer(msg);
+        }
+    }
+
+    public void run() {
+        while (running) {
+            try { handle(queue.take()); }          // 自己的节奏消费
+            catch (InterruptedException e) { return; }
+        }
+    }
+}</code></pre>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>消息丢失？</strong>三个口子：投递瞬间订阅者刚退订（快照遍历）、邮箱满丢弃、进程崩溃队列即没。解法：重要消息换 Ack + 重投，或干脆上 MQ——组件本身只承诺 at-most-once。</li>
+    <li><strong>消息重复？</strong>重投必然带来重复（at-least-once），消费端幂等兜底，见 <a href="../09-api-design/README.html">09-api-design</a>。</li>
+    <li><strong>顺序性？</strong>同一 topic 单线程投递天然保序；订阅者邮箱是单线程消费也保序。一旦为吞吐开多线程并行消费，顺序就没了——按 key 分片（同 key 同线程）兼顾两者。</li>
+    <li><strong>订阅者百万级？</strong>每订阅者一线程不可扩展——线程换成共享线程池 + 队列，或直接用 Disruptor / MQ，这个组件就当 MQ 的进程内微缩版讲。</li>
+  </ul>
+</section>
+
+<section id="dag">
+  <h2><span class="no">09</span>题 7 · 带依赖关系的任务调度器（DAG）</h2>
+  <h3>需求与接口</h3>
+  <p>任务有依赖关系（B 要等 A、C 完成），把无依赖冲突的部分并发跑满；依赖成环要能发现并报错。这就是拓扑排序（Kahn 算法）的并发化。</p>
+  <pre><code>void addTask(String id, List&lt;String&gt; dependsOn, Runnable task);  // 声明任务与前置依赖
+void execute();   // 并发跑完所有任务；依赖成环抛 IllegalStateException</code></pre>
+  <h3>核心思路</h3>
+  <ul>
+    <li><strong>入度表</strong> <code>ConcurrentHashMap&lt;String, AtomicInteger&gt;</code>：依赖几个任务入度就是几；同时建反向边表（依赖完成 → 谁可以被通知）。</li>
+    <li>入度为 0 的任务先提交线程池；任务完成的回调里把所有后继的入度<strong>原子减一，减到 0 才提交执行</strong>。</li>
+    <li><strong>环检测</strong>：环上的任务入度永远无法归零、永远不被提交——全部跑完后 <strong>完成数 &lt; 任务总数即有环</strong>。</li>
+  </ul>
+  <h3>核心实现</h3>
+  <pre><code>public class DagScheduler {
+    private final ConcurrentHashMap&lt;String, AtomicInteger&gt; inDegree = new ConcurrentHashMap&lt;&gt;();
+    private final ConcurrentHashMap&lt;String, List&lt;String&gt;&gt; successors = new ConcurrentHashMap&lt;&gt;();
+    private final ConcurrentHashMap&lt;String, Runnable&gt; tasks = new ConcurrentHashMap&lt;&gt;();
+    private final AtomicInteger finished = new AtomicInteger();
+    private final ExecutorService pool = Executors.newWorkStealingPool();
+
+    public void addTask(String id, List&lt;String&gt; dependsOn, Runnable task) {
+        tasks.put(id, task);
+        inDegree.put(id, new AtomicInteger(dependsOn.size()));
+        for (String dep : dependsOn)                 // 反向边：依赖完成时通知后继
+            successors.computeIfAbsent(dep, k -&gt; new CopyOnWriteArrayList&lt;&gt;()).add(id);
+    }
+
+    public void execute() throws InterruptedException {
+        inDegree.forEach((id, deg) -&gt; { if (deg.get() == 0) submit(id); });  // 无依赖的先入队
+        pool.shutdown();
+        pool.awaitTermination(10, TimeUnit.SECONDS); // 等所有能跑的都跑完
+
+        if (finished.get() &lt; tasks.size())           // 有任务永远没被提交 = 入度没归零 = 有环
+            throw new IllegalStateException("依赖成环：存在入度无法归零的任务");
+    }
+
+    private void submit(String id) {
+        pool.execute(() -&gt; {
+            try {
+                tasks.get(id).run();                 // 任务本体（必须 try-finally，异常路径也要记账）
+            } finally {
+                finished.incrementAndGet();
+                for (String next : successors.getOrDefault(id, List.of())) {
+                    if (inDegree.get(next).decrementAndGet() == 0)  // ⭐ 归零才提交
+                        submit(next);
+                }
+            }
+        });
+    }
+}</code></pre>
+  <div class="box warn"><p><strong>失败语义要想清楚</strong>：上面 finally 里无条件减入度，意味着前置失败后继照样跑（适合"尽力执行"）。若需求是 fail-fast，就要传播失败标记、跳过整棵后代子树，且异常必须 catch 住记日志——否则 finished 少记、awaitTermination 后误报成"有环"。</p></div>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>能不能不等跑完就检环？</strong>能：addTask 时对依赖图做 DFS 三色标记（灰到灰即环），或先跑一遍 Kahn 拓扑排序，出队数 &lt; 节点数即有环——提交前校验比跑一半报错体验好。</li>
+    <li><strong>有没有更简单的实现？</strong>每个任务一个 <code>CompletableFuture</code>，依赖用 <code>thenApply/allOf</code> 串起来——JDK 自带，生产编排优先它，手写入度表是讲原理。</li>
+    <li><strong>为什么入度用 AtomicInteger 而不是 int？</strong>多个前置任务可能同时完成、同时来减同一个后继的入度，decrementAndGet 原子且返回新值，"减到 0"的判定不重不漏。</li>
+    <li><strong>生产里怎么用的？</strong>报表/风控的批处理编排：几十个计算节点带依赖，DAG 调度 + 失败节点重试；再大就上工作流引擎（Airflow/DolphinScheduler）或自研 DAG 框架。</li>
+  </ul>
+</section>
+
+<section id="pool">
+  <h2><span class="no">10</span>题 8 · 简易数据库连接池</h2>
+  <h3>需求与接口</h3>
+  <p>复用昂贵的连接（TCP 握手 + 认证）：借出（borrow）/归还（release），总上限 max，空闲缓存，借不到时等待并超时。</p>
+  <pre><code>Connection borrow(long timeoutMs) throws InterruptedException, SQLException;  // 借：优先复用空闲，否则新建，池满则等
+void release(Connection c);   // 还：有空闲位则回池，否则关掉</code></pre>
+  <h3>核心思路</h3>
+  <ul>
+    <li><code>Semaphore(max)</code> 当总闸门：一行拿到"限上界 + 排队 + 超时"三件事（<code>tryAcquire(timeout)</code>），比手写计数+wait/notify 干净得多。</li>
+    <li><code>Deque&lt;Connection&gt;</code> 缓存空闲连接（归还在头、借出从头——刚用过的最热连接优先复用）。</li>
+    <li>关键不变式：<strong>借出数 + 存活数 ≤ max，由 Semaphore 保证</strong>；拿不到名额就等，拿到名额但无空闲则新建——新建必然不超上限。</li>
+  </ul>
+  <h3>核心实现</h3>
+  <pre><code>public class SimpleConnectionPool {
+    private final Semaphore permits;                          // 总闸门：借出 + 存活 &lt;= max
+    private final Deque&lt;Connection&gt; idle = new ArrayDeque&lt;&gt;(); // 空闲缓存（非线程安全，配锁用）
+    private final int maxIdle;
+
+    public SimpleConnectionPool(int maxSize, int maxIdle) {
+        this.permits = new Semaphore(maxSize);
+        this.maxIdle = maxIdle;
+    }
+
+    public Connection borrow(long timeoutMs) throws InterruptedException, SQLException {
+        if (!permits.tryAcquire(timeoutMs, TimeUnit.MILLISECONDS))   // 先占名额：占不到 = 池满超时
+            throw new SQLException("borrow timeout: pool exhausted");
+        synchronized (idle) {
+            Connection c = idle.pollFirst();                        // 优先复用空闲连接
+            if (c != null) return c;
+        }
+        try {
+            return openConnection();      // 名额在手：新建必不超上限
+        } catch (SQLException e) {
+            permits.release();            // 新建失败必须还名额，否则额度泄漏越用越少
+            throw e;
+        }
+    }
+
+    public void release(Connection c) {
+        try {
+            synchronized (idle) {
+                if (idle.size() &lt; maxIdle) { idle.offerFirst(c); return; }  // 回队头：热的先被借走
+            }
+            closeQuietly(c);              // 空闲位满：直接关掉
+        } finally {
+            permits.release();            // 无论还回还是关闭，名额都要还
+        }
+    }
+}</code></pre>
+  <h3>高频追问</h3>
+  <ul>
+    <li><strong>连接失效怎么办？</strong>借到的可能是死连接（DB 重启、MySQL 默认 8 小时断开空闲连接）。三层：借出前检测（test-on-borrow，<code>isValid()</code> 一次往返，代价高）、空闲时后台检测 + 驱逐（test-while-idle）、连接最长生存时间强制换代（maxLifetime）。</li>
+    <li><strong>连接泄漏怎么检测？</strong>borrow 时记录<strong>借出时间戳 + 当时调用栈</strong>，后台守护线程周期扫描：超过阈值（如 60s）未归还的连接打 WARN 并带上借出点的栈——一眼看出哪行代码借了不还。HikariCP 的 <code>leakDetectionThreshold</code> 就是这个实现，默认 0 关闭。</li>
+    <li><strong>maxSize / maxIdle / maxLifetime 怎么配？</strong>maxSize 由 DB 能力和业务并发定（经验公式见 <a href="06-线程池.html">06-线程池</a> 同款思路）；maxIdle 留一部分暖连接避免高峰期重建风暴；maxLifetime 小于 DB/防火墙的空闲断开时长。</li>
+    <li><strong>为什么 Semaphore 不用 Lock+计数？</strong>需要的是"满则等待、限时失败"语义，<code>tryAcquire(timeout)</code> 原生支持；wait/notify 手写要处理虚假唤醒、超时、公平性，何必。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">11</span>面试自查清单</h2>
+  <ol>
+    <li>答法框架五步脱口而出：澄清需求（并发度/一致性/失败语义）→ 定接口 → 选原语 → 失败与降级路径 → 压测指标。</li>
+    <li>TTL 缓存：懒删保正确 + 周期扫保内存的分工讲得清；computeIfAbsent 防击穿，也知道它锁桶做慢 IO 的坑。</li>
+    <li>限流：固定窗口临界突刺能画图；令牌桶能手写时间戳版（惰性补充），一句对上 Guava RateLimiter。</li>
+    <li>延时执行器：Delayed 两方法、take() 阻塞不空转、关闭语义三选一；时间轮知道 Kafka 在用。</li>
+    <li>票务六方案矩阵 + 选型口径："JVM 锁 → Redis 锁/DB 乐观锁 → Redis Lua 预扣 + MQ 落库 + 对账"。</li>
+    <li>分布式锁三件套：NX 互斥、PX 过期 + 看门狗续期、Lua 比对加锁人再 del；缺点是网络往返。</li>
+    <li>DB 乐观锁要点："余量条件放 where"，检查+扣减一条 SQL 原子；高冲突重试是它的短板。</li>
+    <li>爬虫：newKeySet 原子判重、毒丸优雅停止、每域名 Semaphore 限速、先计数再入队。</li>
+    <li>Pub-Sub：CopyOnWriteArrayList 注册表 + 慢消费者邮箱丢弃策略；丢失/重复/顺序三问各有解。</li>
+    <li>DAG：入度表 + 归零提交；完成数 &lt; 任务总数 = 有环；失败传播语义主动说。</li>
+    <li>连接池：Semaphore 名额 + 空闲双端队列；有效性三层防护、泄漏检测（时间戳+调用栈+后台扫描）能落到 HikariCP 参数。</li>
+    <li>每个设计都能补一句"生产里怎么用的 + 踩过什么坑"。</li>
+  </ol>
+  <div class="pager">
+    <a href="12-经典同步题.html">⬅ 上一章：经典同步题</a>
+    <a class="next" href="14-并发数据结构.html">下一章：并发数据结构 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；本章以蓝本 AlgoMaster + 自研题解为主（库存超卖节并入自 java 基础.md 笔记）；JavaGuide/pdai 无整页对应，②③仅作口径参照；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 13 章 并发设计题</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

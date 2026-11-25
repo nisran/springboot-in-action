@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 10 章 · 虚拟线程 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#why">背景与定位：Project Loom</a>
+  <a href="#how">原理：挂载与卸载 ⭐</a>
+  <a href="#sched">调度器与 M:N 模型</a>
+  <a href="#commonpool">commonPool：前后的变与不变 ⭐</a>
+  <a href="#create">三种创建方式</a>
+  <a href="#usage">使用原则：主场与禁区 ⭐</a>
+  <a href="#pin">pin（钉住）问题 ⭐</a>
+  <a href="#cmp">对比：线程池与响应式</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="09-并发容器.html">⬅ 上一章：09 并发容器</a>
+  <a href="11-并发挑战.html">下一章：11 并发挑战 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 10 章 · 虚拟线程</h1>
+    <div class="sub">Project Loom · 挂载/卸载 · M:N 调度 · pin 的演进史 · 与线程池、响应式三分天下 —— JDK 21 后面试的新热点，7 年经验必须会</div>
+    <div class="meta">
+      <span class="tag exist">口径对齐：JavaGuide 虚拟线程 ✅</span>
+      <span>⭐ 2023 后新热点必会</span>
+      <span>蓝本：AlgoMaster Concurrency · Virtual Threads</span>
+      <span>笔记仅一行 todo · 本章全新补齐</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>虚拟线程是什么？解决什么问题？和平台线程的本质区别？⭐</li>
+      <li>讲讲它的实现原理：栈放哪？谁来调度？阻塞的时候发生了什么？⭐</li>
+      <li>虚拟线程能创建百万个，为什么平台线程几千个就到瓶颈了？</li>
+      <li>有了虚拟线程还要线程池吗？虚拟线程为什么不该池化？⭐</li>
+      <li>听说过 pin（钉住）问题吗？synchronized 在 JDK 21 和 JDK 24 里行为有什么不同？⭐</li>
+      <li>虚拟线程出来后，并行流 / CompletableFuture 默认的 commonPool 变了吗？在虚拟线程里跑 parallelStream 有意义吗？⭐</li>
+      <li>虚拟线程能替代 WebFlux / 响应式吗？Spring Boot 怎么开启？</li>
+      <li>你们生产打算（或已经）怎么迁移？老代码里哪些点要先排查？</li>
+      <li>和 Go 的 goroutine 有什么区别？模型像在哪，差在哪？</li>
+    </ol>
+  </div>
+  <p>这是 <strong>2023 之后才进入面试圈的新题</strong>，区分度极高：背概念的人答"轻量级线程"，理解的人能画出 mount/unmount、说清 ForkJoinPool 调度和 pin 的版本演进。答题策略：先一句话定位（"JVM 调度的、栈在堆上的 M:N 轻量线程"），再讲原理，最后主动带出演进史（JEP 444 → 491 → 506），基本能把面试官镇住。</p>
+</section>
+
+<section id="why">
+  <h2><span class="no">02</span>背景与定位：Project Loom</h2>
+  <ul>
+    <li><strong>项目来源</strong>：OpenJDK <strong>Project Loom</strong>，孵化多年后随 <strong>JDK 21（2023.9）由 JEP 444 正式交付</strong>（JDK 19/20 曾两轮预览）。目标不是"更快的线程"，而是<strong>让"每任务一线程"（thread-per-task）这个最自然的编程模型重新可用</strong>。</li>
+    <li><strong>它要解决的痛点</strong>：平台线程（platform thread）采用 <strong>1:1 模型</strong>——每个 <code>new Thread()</code> 背后是一个内核线程，创建走系统调用、<strong>栈默认预留约 1MB</strong>（按 -Xss，且一出生就占住），可运行全靠 OS 内核调度。于是"线程数 ≈ 并发度"被锁死在<strong>千级</strong>：1 万线程就是约 10GB 栈内存 + 内核调度器不堪重负。</li>
+    <li><strong>追问预备：Java 1.1 不是有过绿色线程吗，为什么失败？</strong>当年的绿色线程是纯用户态实现，<strong>没有任何内核线程可用</strong>：用不上多核，一个线程的阻塞系统调用会把整个进程拖住。Loom 的关键创新正是加了"载体线程"这一层——平时借内核线程执行，阻塞时还回去，两条路都不耽误。</li>
+    <li><strong>此前的两条歪路</strong>：① 线程池 + 异步任务（回调地狱，<a href="07-异步编程.html">第 07 章</a>）；② 响应式框架（Flux/Mono 链，复杂度转嫁给代码）。Loom 的思路：复杂度交给 JVM——<strong>把线程做便宜，让同步代码拿到异步的吞吐</strong>。</li>
+  </ul>
+  <div class="box note"><p>历史脉络一句话：Go 的 goroutine、Kotlin 的 coroutine 先证明了"廉价并发单元"可行，Java 直到 21 才交出自己的答案，且选择<strong>不改语法、不动内存模型</strong>——虚拟线程就是 <code>java.lang.Thread</code> 的另一种实现，现有代码几乎零改造。</p></div>
+  <h3>版本演进时间线（答题素材）</h3>
+  <table>
+    <tr><th>版本</th><th>JEP</th><th>里程碑</th></tr>
+    <tr><td>JDK 19 / 20</td><td>JEP 425 / 436</td><td>两轮预览，API 调整期</td></tr>
+    <tr><td><strong>JDK 21（2023.9）</strong></td><td><strong>JEP 444 正式</strong></td><td>虚拟线程 GA；synchronized 内阻塞仍会 pin</td></tr>
+    <tr><td>JDK 24（2025.3）</td><td>JEP 491</td><td>synchronized 不再 pin 载体线程（见第 08 节）</td></tr>
+    <tr><td>JDK 25（2025.9，LTS）</td><td>JEP 506 / 505</td><td>ScopedValue 转正；结构化 concurrency 第五轮预览</td></tr>
+  </table>
+</section>
+
+<section id="how">
+  <h2><span class="no">03</span>原理：挂载与卸载 ⭐</h2>
+  <p>先背下来的一段话：<strong>虚拟线程是由 JVM 调度、而不是内核调度的轻量线程；它的栈帧存在堆上、按需增长；运行时"挂载（mount）"到某个载体线程上执行，一旦阻塞就"卸载（unmount）"，载体线程立刻去跑别的虚拟线程。</strong></p>
+  <h3>三个关键机制</h3>
+  <ul>
+    <li><strong>栈在堆上</strong>：平台线程的栈是连续内存、出生即预留约 1MB；虚拟线程的栈是堆上的对象（由栈帧串成的块链），<strong>初始只有几百字节，调用加深才增长，返回即收缩</strong>——这就是"百万个也不爆内存"的根源（百万级大约对应 GB 以下的堆开销）。</li>
+    <li><strong>挂载与卸载</strong>：虚拟线程自己不是 CPU 调度单元，必须搭载体线程（carrier thread，本质是平台线程）的"车"。挂载 = 载体线程执行这个虚拟线程的栈帧；当虚拟线程<strong>阻塞在受支持的操作上</strong>（网络 IO、<code>sleep</code>、<code>LockSupport.park</code>、<code>ReentrantLock</code>/<code>Semaphore</code> 等 <code>java.util.concurrent</code> 阻塞点），JDK 内部把阻塞调用改写为"挂起虚拟线程 + 注册唤醒回调"，栈帧拷回堆，<strong>载体线程当场还回调度器</strong>去执行下一个虚拟线程；IO 完成后虚拟线程重新排队，<strong>可能挂载到另一个载体上</strong>。</li>
+    <li><strong>阻塞成本被重定义</strong>：平台线程阻塞 = 白白占住一个内核线程等 IO；虚拟线程阻塞 = 只是一个堆对象在等事件，<strong>内核线程零浪费</strong>。这就是"每个阻塞调用自动变非阻塞"的含义——不是调用不阻塞了，是阻塞不再昂贵。</li>
+    <li><strong>线程身份跟虚拟线程走，不跟载体</strong>：换载体不换 <code>currentThread()</code>，ThreadLocal 也始终挂在虚拟线程上——这同时解释了为什么 ThreadLocal 副本数 = 虚拟线程数（第 07 节的隐患根源）。</li>
+  </ul>
+  <pre><code>虚拟线程 vt-42                     载体线程 worker-1（平台线程，ForkJoinPool）
+    │   ──── mount（挂载）────▶      正在执行 vt-42 的栈帧（帧本体在堆上）
+    │
+    │  vt-42 调 socket.read() 阻塞
+    │   ◀─── unmount（卸载）────     worker-1 立刻切去跑 vt-43、vt-44…
+    │
+    └── IO 完成 → 重新进入调度队列 → mount 到任意空闲载体（未必是 worker-1）</code></pre>
+  <div class="box tip"><p><strong>答题技巧</strong>：面试官问"原理"时，把"栈在堆、按需增长"和"mount/unmount"两个词说出来，再补一句"阻塞的实现被 JDK 内部改写成 park + 回调，载体线程不跟着等"，基本就是满分结构。</p></div>
+</section>
+
+<section id="sched">
+  <h2><span class="no">04</span>调度器与 M:N 模型</h2>
+  <ul>
+    <li><strong>M:N 模型</strong>：M 个虚拟线程映射到 N 个载体线程。载体线程住在<strong>一个专用的 ForkJoinPool</strong> 里（和并行流的 commonPool <strong>不是同一个</strong>），<strong>FIFO 模式</strong>（commonPool 是递归任务为主的模式）、<strong>默认并行度 = CPU 核数</strong>。可用 <code>-Djdk.virtualThreadScheduler.parallelism</code> / <code>maxPoolSize</code>（默认 256）调节，但绝大多数场景不动它。</li>
+    <li><strong>非抢占式</strong>：调度器<strong>不做时间片抢占</strong>——虚拟线程只有阻塞或结束时才让出载体。所以一个虚拟线程里跑长 CPU 循环，会把同载体的其他虚拟线程饿到没人管（对应"CPU 密集无收益"）。</li>
+    <li><strong>公平排队</strong>：卸载后重新入队是 FIFO，新任务不会永远插队——与响应式框架里"回调饿了没人管"形成对比。</li>
+    <li>身份细节（可当加分点）：虚拟线程<strong>永远是守护线程、优先级恒为 NORM_PRIORITY</strong>，<code>setDaemon/setPriority</code> 调了也没效果；<code>Thread.currentThread()</code> 照常可用。</li>
+    <li><strong>pin 时调度器不补偿 ⚠</strong>：JEP 444 原文明确——"<strong>调度器不会为 pin 扩容</strong>"（does not compensate for pinning）。载体被钉住就是实打实被占住，钉满 N 个载体就全体排队，极端情况直接死锁（官方 bug <a href="https://bugs.openjdk.org/browse/JDK-8334304">JDK-8334304</a> 案例：pin 线程数 ≥ 载体数；JDK 24 JEP 491 消掉了 synchronized 这一最大 pin 来源）。<code>-Djdk.virtualThreadScheduler.maxPoolSize</code>（默认 256）只是池上限参数，<strong>不是 pin 的解药</strong>。另注意 <code>ForkJoinPool.managedBlock</code> 的"补偿线程"机制是给平台线程池用的老设计，<strong>在虚拟线程上不触发补偿</strong>（JDK 21 Javadoc 明确），别把它和虚拟线程调度混为一谈。</li>
+  </ul>
+  <div class="box note"><p>把调度记忆成一句话：<strong>"用户态的 ForkJoinPool 当 CPU 调度器，虚拟线程当任务，载体线程当 CPU"——OS 调度 N 个载体，JVM 调度 M 个虚拟线程，两层各管各的。</strong></p></div>
+</section>
+
+<section id="commonpool">
+  <h2><span class="no">05</span>commonPool：虚拟线程前后的变与不变 ⭐</h2>
+  <p>06/07 章讲过：<strong>并行流和 CompletableFuture 默认共用 <code>ForkJoinPool.commonPool()</code></strong>（大小 = 核数 − 1、守护线程、全 JVM 共享）。学完虚拟线程，面试官极爱顺手追一句：<strong>"虚拟线程出来之后，commonPool / 并行流 / CF 的默认池变了吗？"</strong>——考的是你有没有把新旧两套机制装进同一张地图。答案骨架两层：<strong>库的默认行为一个没变；变的是 ForkJoinPool 多了一个新身份，以及 pin 的规则书</strong>。</p>
+
+  <h3>前后对照表</h3>
+  <table>
+    <tr><th>维度</th><th>虚拟线程之前（JDK 8 ~ 20）</th><th>虚拟线程之后（JDK 21 ~ 25）</th></tr>
+    <tr><td><code>parallelStream()</code></td><td>提交到 commonPool</td><td><strong>不变</strong>：仍是 commonPool 平台线程，不会因为在虚拟线程里调用就"变虚"</td></tr>
+    <tr><td><code>CF.supplyAsync</code> 不传池</td><td>默认 commonPool</td><td><strong>不变</strong>：没有切成 <code>newVirtualThreadPerTaskExecutor</code></td></tr>
+    <tr><td>commonPool 本体</td><td>核数 − 1、守护线程、CPU 分治定位</td><td><strong>不变</strong>：老坑原样存在（IO 占满 → 全应用并行流饿死）</td></tr>
+    <tr><td>ForkJoinPool 的角色</td><td>只做分治 / 并行流 / CF 的执行池</td><td><strong>新增身份</strong>：另起一个专用实例当虚拟线程调度器（FIFO、并行度 = 核数）</td></tr>
+    <tr><td>阻塞的代价</td><td>阻塞 = 占住一个平台线程</td><td>虚拟线程里阻塞 = 卸载、载体复用；<strong>但 commonPool 里的阻塞照旧占线程</strong></td></tr>
+    <tr><td>pin 规则</td><td>无此概念</td><td>21：synchronized 内阻塞 pin、调度器不补偿 → 24（JEP 491）解除 synchronized pin；native 始终 pin</td></tr>
+  </table>
+  <div class="box tip"><p>一句话口径背下来：<strong>"虚拟线程改的是 Thread 的实现和阻塞的成本，不改任何库的默认线程池选择。"</strong>——凡是"虚拟线程来了所以 XX 自动变快 / 自动切换"的说法，先打个问号。</p></div>
+
+  <h3>变了的三处（区分度所在）</h3>
+  <ul>
+    <li><strong>同一个类，两个实例</strong>：调度器和 commonPool 都是 ForkJoinPool，但<strong>互不相干</strong>——调度器是 FIFO（asyncMode，保证卸载后重新入队的公平性），commonPool 是 LIFO 本地队列（递归分治的缓存友好）；参数也分家：调度器走 <code>jdk.virtualThreadScheduler.*</code>，commonPool 走 <code>java.util.concurrent.ForkJoinPool.common.*</code>；两边线程互不借用（见 <a href="#sched">第 04 节</a>）。</li>
+    <li><strong>为什么调度器选 ForkJoinPool</strong>（加分点）：每载体一个工作队列 + work-stealing，天然贴合"M 个任务抢 N 个 CPU"。虚拟线程在调度器眼里就是一个任务（runContinuation）：<strong>卸载 = 任务暂时返回、载体回池接下一个；唤醒（unpark）= 把 continuation 重新提交入队</strong>。ThreadPoolExecutor 那种单共享队列，百万级任务下锁竞争扛不住。</li>
+    <li><strong>补偿机制的分野</strong>：<code>ForkJoinPool.managedBlock</code> 原本让平台 FJP 在 worker 阻塞时补一个 spare 线程；<strong>在虚拟线程上不触发补偿</strong>（JDK 21 Javadoc 明确）——虚拟线程阻塞靠卸载解决，用不着补线程；而真正卸载不了的 pin，调度器也<strong>不补偿</strong>（JEP 444），这正是 21 里"pin 满载体即死锁"的根源（<a href="#pin">第 08 节</a>）。</li>
+  </ul>
+
+  <h3>组合坑：虚拟线程里嵌套 commonPool 任务</h3>
+  <pre><code>// ⚠️ 坑：海量虚拟线程里各跑一段 parallelStream
+try (var ex = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (Order o : orders) {
+        // fork 出的子任务全挤进 commonPool 的 7 个 worker（8 核机器）；
+        // RPC 一阻塞 worker 就占满 → 并行段塌缩 + 全应用并行流陪葬
+        ex.submit(() -&gt; o.items().parallelStream().forEach(item -&gt; rpc(item)));
+    }
+}
+
+// ✅ 对：IO 段显式交给虚拟线程 executor，CPU 段才落 commonPool
+var vexec = Executors.newVirtualThreadPerTaskExecutor();
+CompletableFuture.supplyAsync(() -&gt; callRpc(), vexec)     // IO → 虚拟线程，阻塞即卸载
+                 .thenApplyAsync(this::heavyCompute)      // CPU → 不传池仍落 commonPool（合理）
+                 .join();                                 // 在虚拟线程里 join：park 卸载，不 pin</code></pre>
+  <ul>
+    <li><strong>退化但不 pin</strong>：嵌套时调用方虚拟线程会亲自执行一份子任务（阻塞照常卸载），fork 出去的份额则挤在 commonPool 平台线程上；等结果的 <code>CF.join()/get()</code> 底层走 park（Signaller），<strong>正常卸载不钉载体</strong>——不会因此死锁，但并行段的虚拟化收益归零。</li>
+    <li><strong>真正要防的是饿死</strong>：把 RPC / DB 这类阻塞调用塞进 commonPool（不论发起方是不是虚拟线程），核数 − 1 个 worker 一占满，全应用的并行流和默认 CF 一起瘫——<strong>老坑在新时代原样复发</strong>，虚拟线程救不了它。</li>
+    <li><strong>迁移口径</strong>：升 JDK 21 后并行流不用改、也不该改；要改的只有"IO 任务默认丢 commonPool"这一类 CF 代码——显式传池：<strong>IO 用虚拟线程 executor，CPU 用 commonPool 或自定义有界池</strong>（<a href="07-异步编程.html">07 章 CF 默认池的坑</a>）。</li>
+  </ul>
+  <div class="box warn"><p><strong>追问链</strong>：①"虚拟线程调度器就是 commonPool 吧？"→ 不是，同类不同实例：FIFO vs LIFO、参数分家、线程不互借。②"那并行流在虚拟线程里跑会更快吗？"→ 不会，fork 出去的活还是 commonPool 平台线程在干，虚拟线程只是个壳。③"老服务升了 21，并行流 / CF 代码要动吗？"→ 并行流不动；只改默认池上跑 IO 的 CF，显式传虚拟线程 executor。④"能不能让 commonPool 直接用虚拟线程？"→ 不能：FJP 的 worker 必须是 <code>ForkJoinWorkerThread</code>（平台 Thread 的子类），threadFactory 造不出虚拟线程；也不该换——commonPool 定位是 CPU 分治，虚拟线程对 CPU 密集零收益（<a href="#usage">第 07 节</a>）。</p></div>
+</section>
+
+<section id="create">
+  <h2><span class="no">06</span>三种创建方式</h2>
+  <pre><code>// ① 构建器：最灵活，可命名、可先不启动（unstarted）
+Thread vt = Thread.ofVirtual().name("vt-", 0).start(() -> handleRequest(socket));
+
+// ② 静态快捷方法：一行起一个
+Thread.startVirtualThread(() -&gt; System.out.println("hello from " + Thread.currentThread()));
+
+// ③ 每任务一线程的 Executor：生产推荐写法（try-with-resources 自动等待收尾）
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+    for (int i = 0; i &lt; 1_000_000; i++) {          // 百万任务 = 百万虚拟线程，平台线程池早已 OOM
+        executor.submit(() -&gt; {
+            var resp = httpClient.send(req, BodyHandlers.ofString()); // 阻塞 IO：自动卸载
+            return process(resp.body());
+        });
+    }
+}   // close() 隐式 awaitTermination：所有任务结束后才继续</code></pre>
+  <ul>
+    <li>三者关系：<code>startVirtualThread</code> 是 ② 的极简版；<strong>③ 是服务端主入口</strong>——Tomcat/Jetty 每个请求就是一个虚拟线程（见 <a href="#cmp">第 09 节 Spring 开关</a>）。</li>
+    <li><strong>注意它不叫 newVirtualThreadPool</strong>：名字就在告诉你"每任务新建一个，不复用"。继续用 <code>newFixedThreadPool</code> 跑虚拟线程是方向性错误。</li>
+    <li>经典搭配：外部由虚拟线程承接收并大并发，内部用 <code>StructuredTaskScope</code> 做结构化并发——父子任务同生共死，取消不泄漏（JDK 21 起预览，<strong>JDK 25 的 JEP 505 仍是第五轮预览、API 尚在演进</strong>，生产慎用）。被追问"虚拟线程怎么管理生命周期"时甩这个。</li>
+  </ul>
+  <div class="box note"><p><strong>命名与观测</strong>：海量线程下逐个命名没意义，<code>.name("vt-", i)</code> 只在低量调试时用；生产观测靠 trace-id 贯穿日志 + Micrometer 埋 executor 指标，别指望线程名。</p></div>
+</section>
+
+<section id="usage">
+  <h2><span class="no">07</span>使用原则：主场与禁区 ⭐</h2>
+  <h3>主场：IO 密集 + 高并发</h3>
+  <ul>
+    <li>典型场景：<strong>百万长连接、每请求一线程的 Web 服务、调一堆下游 RPC/DB 的聚合接口</strong>。并发度不再受线程数限制，而受下游与带宽限制——瓶颈回归到它该在的地方。</li>
+    <li>最大红利是<strong>代码风格回归同步直写</strong>：阻塞 JDBC、阻塞 HTTP client 直接用，不需要 R2DBC/WebClient 全链路非阻塞，可读性和调试体验全面回潮。</li>
+  </ul>
+  <h3>禁区与原则</h3>
+  <ul>
+    <li><strong>CPU 密集无收益</strong>：核数才是上限，虚拟线程不增加并行度，反而白吃调度开销（还可能因非抢占互相拖累）。CPU 密集继续用固定大小平台线程池（<a href="06-线程池.html">第 06 章</a>）。</li>
+    <li><strong>内存仍要算总账</strong>：单个栈虽是 KB 级，百万线程每人挂上任务对象、ThreadLocal 上下文就是 GB 级——"廉价"是相对的，容量仍靠压测说话，不是无中生有。</li>
+    <li><strong>不要池化虚拟线程</strong> ⭐：池化的意义是"复用贵的资源"，虚拟线程便宜到没有复用价值，池化反而把它的优势（廉价、海量）锁死。限并发用 <code>Semaphore</code>：</li>
+  </ul>
+  <pre><code>// 限并发的正确姿势：不池化线程，池化"许可"
+private static final Semaphore DB_PERMITS = new Semaphore(50);   // 最多 50 并发打 DB
+
+exec.submit(() -&gt; {
+    DB_PERMITS.acquire();                        // 阻塞在信号量上同样会卸载，不占载体线程
+    try (var conn = dataSource.getConnection()) {
+        return query(conn, req);                 // 保护的是下游 DB，不是线程
+    } finally {
+        DB_PERMITS.release();
+    }
+});</code></pre>
+  <ul>
+    <li><strong>不要滥用 ThreadLocal</strong> ⭐：百万虚拟线程 = 百万份 ThreadLocal 副本，里面再放缓冲区、格式化器这类重对象就是内存事故；而且虚拟线程海量短命，"每线程一份缓存"的假设失效。正解是 <strong>JDK 25 的 ScopedValue（JEP 506 正式）</strong>：不可变、按作用域绑定、作用域结束自动还原，天生适配"一次请求一份上下文"：</li>
+  </ul>
+  <pre><code>// JDK 25：ScopedValue 替代 ThreadLocal 传上下文（不可变 + 自动作用域）
+private static final ScopedValue&lt;UserContext&gt; CTX = ScopedValue.newInstance();
+
+ScopedValue.where(CTX, currentUser)              // 绑定
+           .run(() -&gt; service.handle());         // 绑定期内任意调用深度读 CTX.get()，出作用域自动失效</code></pre>
+  <h3>迁移清单：老服务上虚拟线程前扫五件事</h3>
+  <ol>
+    <li><strong>synchronized 热点</strong>：高并发路径先换 ReentrantLock，或直接升 JDK 24+（<a href="#pin">第 08 节</a>）。</li>
+    <li><strong>ThreadLocal 重对象</strong>：Formatter/缓冲区类改共享不可变对象，上下文传递换 ScopedValue。</li>
+    <li><strong>依赖里的 native 阻塞</strong>：老 SDK 的 JNI 调用会 pin 载体，隔离到独立平台线程池跑。</li>
+    <li><strong>隐性依赖线程池限流的代码</strong>：池化一撤限流就没了，补 Semaphore / 熔断器（<a href="#followup">第 10 节</a>）。</li>
+    <li><strong>监控与排障体系</strong>：thread dump 换 <code>jcmd Thread.dump_to_file -format=json</code>，executor 指标重新埋点。</li>
+  </ol>
+  <div class="box warn"><p><strong>陷阱</strong>：虚拟线程<strong>不改变 Java 内存模型</strong>——共享可变状态照样要加锁/CAS（<a href="02-JMM.html">第 02 章</a>）；它也<strong>不让单个任务变快</strong>，提升的是吞吐和容量。答"有了虚拟线程还需要并发安全吗"时，答案是斩钉截铁的"需要"。</p></div>
+</section>
+
+<section id="pin">
+  <h2><span class="no">08</span>pin（钉住）问题 ⭐</h2>
+  <p><strong>pin = 虚拟线程阻塞时无法卸载，只能连着载体线程一起等</strong>——退回平台线程的老问题：载体被占住，调度池被抽干，吞吐突然掉回千级并发。这段版本演进史是本章最强加分项：</p>
+  <table>
+    <tr><th>版本</th><th>synchronized 内阻塞</th><th>说明</th></tr>
+    <tr><td>JDK 21（JEP 444）</td><td><strong>会 pin 住载体</strong></td><td>monitor 实现当时无法在挂起时释放载体；官方建议热点路径把 synchronized 换成 <code>ReentrantLock</code></td></tr>
+    <tr><td>JDK 24（JEP 491）</td><td><strong>已修复，可正常卸载</strong></td><td>重写了 monitor 挂起机制，synchronized 内阻塞/wait 不再 pin——历史包袱正式清除</td></tr>
+    <tr><td>任何版本</td><td>native 帧（JNI 调用中阻塞）仍 pin</td><td>老依赖里 native 方法内阻塞，载体照样被占；只能隔离到独立平台线程池</td></tr>
+  </table>
+  <ul>
+    <li><strong>JDK 21 时代怎么排查</strong>：JVM 参数 <code>-Djdk.tracePinnedThreads=full</code> 打印 pin 发生的位置；<code>jcmd &lt;pid&gt; Thread.dump_to_file -format=json</code> 能看到虚拟线程（普通 jstack 看不到，见<a href="#followup">追问节</a>）。</li>
+    <li><strong>为什么 ReentrantLock 没事</strong>：它基于 AQS/<code>LockSupport.park</code>，park 是 JDK 自己实现的阻塞点，天然支持卸载；synchronized 的 monitor 依赖 JVM 内部的旧挂起路径——所以 JDK 21 的建议本质是"避开 JVM 还没改造完的那部分"。</li>
+    <li><strong>面试口径</strong>：先说结论（"21 里 synchronized 内阻塞会 pin，24 已修"），再给证据（JEP 491），最后补 native 例外——三层递进，比背结论高一档。</li>
+  </ul>
+  <div class="box tip"><p><strong>实战话术</strong>："我们评估 JDK 21 迁移时专门扫过 synchronized 热点，QPS 高的路径先换 ReentrantLock 或升 24；JNI 阻塞的旧 SDK 隔离到单独的平台线程池。"——一句话证明你真评估过，不是看文章背的。</p></div>
+</section>
+
+<section id="cmp">
+  <h2><span class="no">09</span>对比：线程池与响应式</h2>
+  <h3>平台线程 vs 虚拟线程</h3>
+  <table>
+    <tr><th>维度</th><th>平台线程</th><th>虚拟线程</th></tr>
+    <tr><td>映射模型</td><td>1:1（一个内核线程）</td><td>M:N（M 个虚拟线程共享 N 个载体）</td></tr>
+    <tr><td>栈</td><td>独立内存，预留约 1MB，固定</td><td><strong>堆上</strong>，初始几百字节，按需增长</td></tr>
+    <tr><td>调度者</td><td>OS 内核调度器</td><td>JVM（专用 ForkJoinPool，FIFO，并行度=核数）</td></tr>
+    <tr><td>创建成本</td><td>高：系统调用 + MB 级内存</td><td>极低：微秒级、KB 级以内</td></tr>
+    <tr><td>舒适数量级</td><td>数百 ~ 数千</td><td>百万级</td></tr>
+    <tr><td>阻塞的代价</td><td>浪费一个内核线程干等</td><td>卸载，载体还回调度器</td></tr>
+    <tr><td>适用负载</td><td>CPU 密集、常驻后台任务</td><td>IO 密集、高并发短任务</td></tr>
+  </table>
+  <h3>虚拟线程 vs WebFlux / 响应式</h3>
+  <table>
+    <tr><th>维度</th><th>响应式（WebFlux/Reactor）</th><th>虚拟线程</th></tr>
+    <tr><td>编程模型</td><td>Flux/Mono 链 + lambda 套 lambda</td><td><strong>同步直写</strong>，阻塞调用随便用</td></tr>
+    <tr><td>复杂度去向</td><td>转嫁给业务代码</td><td>转嫁给 JVM</td></tr>
+    <tr><td>调试/栈</td><td>堆栈被 operator 切碎，排障痛苦</td><td>完整同步调用栈</td></tr>
+    <tr><td>生态要求</td><td>全链路非阻塞（R2DBC、WebClient）</td><td>直接用 JDBC 等阻塞库</td></tr>
+    <tr><td>背压/流控</td><td><strong>原生优势</strong>（bounded demand）</td><td>没有背压语义，需自己限流</td></tr>
+  </table>
+  <ul>
+    <li><strong>Spring Boot 3.2+ 一键切换</strong>：<code>spring.threads.virtual.enabled=true</code>——Tomcat/Jetty 请求处理、<code>@Async</code>、任务调度改走虚拟线程，同步 MVC 直接吃满。框架层细节见 <a href="../04-spring/README.html">04-spring</a>。</li>
+    <li><strong>公道话</strong>：响应式没死——需要流式聚合、背压、复杂事件组合的中间件场景仍是它的主场；但对绝大多数 CRUD/聚合型服务，虚拟线程用 1/10 的心智成本拿到同等的吞吐，这就是"回归"的含义。</li>
+    <li><strong>别忘了我方短板</strong>：虚拟线程只放大了"接得住"，<strong>打不打得动还看资源池</strong>——Hikari 连接池 50 个连接，前面挂一百万虚拟线程也没用（第 07 节的 Semaphore 保护的正是它）。答"虚拟线程能扛多少 QPS"时，先反问下游容量，这是架构师视角。</li>
+  </ul>
+  <div class="box note"><p>一句总结口径：<strong>响应式把"等 IO"翻译成一串回调让你自己串，虚拟线程让 JVM 替你串——前者考验团队，后者只考验 JDK 版本。</strong></p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">10</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：有了虚拟线程，线程池还有用吗？→</strong> 三类保留：① CPU 密集的固定池；② 隔离专用（如 JNI 阻塞依赖放独立平台线程池防 pin 传染）；③ <strong>线程池原来的三大治理语义怎么替代</strong>——隔离：按业务拆多个 <code>newVirtualThreadPerTaskExecutor</code>；限流：Semaphore；监控：Micrometer 对 executor 的指标照常埋。这套"语义平移"答案是新热点的标准追问。</li>
+    <li><strong>追问链：百万虚拟线程打下游 → 下游怎么办？→</strong> 线程不设限后压力直给 DB/RPC，必须自己上闸门：Semaphore、Bulkhead、Sentinel 任选——"线程便宜了，限流反而更重要"是体现架构思维的一句。</li>
+    <li><strong>陷阱：jstack 看不到虚拟线程 →</strong> 默认 thread dump 只含载体线程；要看虚拟线程用 <code>jcmd &lt;pid&gt; Thread.dump_to_file -format=json</code>（新格式专用转储）。</li>
+    <li><strong>陷阱：长 CPU 循环占住载体 →</strong> 调度不抢占，同载体其他虚拟线程被拖住；重计算请交回平台线程池，别混进来。</li>
+    <li><strong>陷阱：ThreadLocal 重对象 →</strong> 百万副本内存爆炸 + 短命线程缓存失效；上下文传递换 ScopedValue（JDK 25 正式，JEP 506），与 <a href="09-并发容器.html">第 09 章 ThreadLocal 泄漏</a>连起来答。</li>
+    <li><strong>陷阱：把虚拟线程当"更快的线程" →</strong> 它优化的是<strong>吞吐/容量</strong>（阻塞不再占线程），单任务延迟没有任何改善，甚至略增调度开销。方向答反这题就零分。</li>
+    <li><strong>陷阱：Executors 混用 →</strong> <code>newFixedThreadPool</code> 装虚拟线程 = 用池锁死海量优势；正确入口只有 <code>newVirtualThreadPerTaskExecutor</code>（或 StructuredTaskScope）。</li>
+    <li><strong>追问链：虚拟线程会取代 CompletableFuture 吗？→</strong> 不会取代"编排"这一层：<strong>并发扇出</strong>（同时调 3 个下游取最快）用虚拟线程 + StructuredTaskScope 更直白，但<strong>异步流水线、超时组合、跨线程结果传递</strong>仍是 CF 的主场——大批量任务提交到虚拟线程 executor 后拿 Future，也天然衔接 CF。二者是分工不是替代（<a href="07-异步编程.html">第 07 章</a>；CF 默认池在虚拟线程时代为何没变，见 <a href="#commonpool">第 05 节</a>）。</li>
+    <li><strong>追问链：虚拟线程抛异常谁接？→</strong> 和平台线程一样：未捕获异常走 <code>Thread.UncaughtExceptionHandler</code>，线程直接终结（不复存在"重试"）；所以业务方要自己在任务体内 try-catch，或用 <code>executor.submit</code> 让异常留在 Future 里——这一问考察"虚拟线程仍是线程"的本体感。</li>
+    <li><strong>追问链：和 Go 的 goroutine 有什么区别？→</strong> 模型同源（都是 M:N + 用户态调度 + 栈在堆/可增长），差异在四点：① 调度——goroutine 自 Go 1.14 起有<strong>异步抢占</strong>（signal 打断长 CPU 循环），Java 虚拟线程<strong>纯协作式</strong>，只在阻塞点让出载体；② 栈——goroutine 用<strong>连续栈整体拷贝</strong>扩容，Java 用堆上栈块链按需增长；③ 通信——Go 主张 channel/CSP 分享内存，Java 刻意<strong>不改共享内存模型 + JMM 原样</strong>；④ 兼容——Java 的杀手锏是"零改造跑全部现有生态（Thread API、JDBC、调试器）"。能答到这层基本是追问天花板。</li>
+    <li><strong>追问：Thread.sleep 会 pin 吗？Object.wait 呢？→</strong> <code>sleep</code>、<code>BlockingQueue.take</code>、<code>LockSupport.park</code> 这些纯 JDK 阻塞点走 park 路径，正常卸载<strong>不 pin</strong>；JDK 21 里会 pin 的是 <strong>synchronized 块内阻塞（含 Object.wait——它必须持有 monitor 才能等）</strong>和 native 调用。前者 JDK 24（JEP 491）已修，后者永远只能隔离到平台线程池。"sleep 不 pin、wait 在 21 pin、24 都不 pin、native 永远 pin"这组对比是细节识别题，答对了直接拉开档次。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">11</span>面试自查清单</h2>
+  <ol>
+    <li>能一句话定位：JDK 21 / JEP 444 / Project Loom，解决"平台线程 1:1 内核线程、栈预留 1MB、千级即瓶颈"。</li>
+    <li>能画出 mount/unmount：栈帧在堆上按需增长，阻塞在受支持操作上就卸载，载体线程立刻复用。</li>
+    <li>知道调度细节：专用 ForkJoinPool、FIFO、并行度=核数、M:N、非抢占（长 CPU 任务占载体）。</li>
+    <li>能答 commonPool 的"变与不变"：并行流 / CF 默认池<strong>都没变</strong>；调度器是 ForkJoinPool 的另一个实例（FIFO vs LIFO、参数分家）；虚拟线程里嵌套并行流 = fork 段塌缩回 commonPool，IO 链路要显式传虚拟线程 executor。</li>
+    <li>三种创建方式手写得出，知道生产主入口是 newVirtualThreadPerTaskExecutor。</li>
+    <li>能答"主场与禁区"：IO 密集高并发为主场；CPU 密集无收益；不池化，限并发用 Semaphore。</li>
+    <li>能完整讲 pin 的演进：21 里 synchronized 阻塞 pin（热点换 ReentrantLock）→ 24 JEP 491 修复 → native 帧始终 pin。</li>
+    <li>平台 vs 虚拟对比表至少背五维：映射、栈、调度者、成本、数量级。</li>
+    <li>能对比响应式（复杂度去向、栈、生态、背压），知道 Spring Boot 3.2 的开关与局限。</li>
+    <li>能答"线程池语义怎么平移"：隔离拆 executor、限流 Semaphore、监控 Micrometer。</li>
+    <li>知道 pin 时调度器<strong>不补偿</strong>（JEP 444 原文；钉满载体即死锁，JDK-8334304），maxPoolSize 不是解药；以及"吞吐靠虚拟线程、容量瓶颈看下游连接池"的边界感。</li>
+    <li>知道 ThreadLocal 在百万线程下的问题与 ScopedValue（JEP 506 / JDK 25）的替代逻辑。</li>
+  </ol>
+  <div class="pager">
+    <a href="09-并发容器.html">⬅ 上一章：并发容器</a>
+    <a class="next" href="11-并发挑战.html">下一章：并发挑战 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；② <a href="https://javaguide.cn/java/concurrent">JavaGuide 并发专题</a>（虚拟线程常见问题：创建方式、池化误区、ThreadLocal 取舍——本章机制深度已对齐并超出）；既有笔记 Java/java 基础.md 并发节。<strong>2026-11-06 增补</strong>：§05 commonPool 前后对照与 §04 "pin 不补偿"修正，依据 <a href="https://openjdk.org/jeps/444">JEP 444</a>（Pinning 一节原文）、<a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/concurrent/ForkJoinPool.html#managedBlock(java.util.concurrent.ForkJoinPool.ManagedBlocker)">JDK 21 ForkJoinPool.managedBlock Javadoc</a>、<a href="https://bugs.openjdk.org/browse/JDK-8334304">JDK-8334304</a>。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 10 章 虚拟线程</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

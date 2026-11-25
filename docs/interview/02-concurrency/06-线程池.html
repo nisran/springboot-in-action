@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 06 章 · 线程池与 Executor — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#why">为什么池化 ⭐</a>
+  <a href="#params">七大参数 ⭐⭐</a>
+  <a href="#flow">执行流程 ⭐⭐</a>
+  <a href="#reject">拒绝策略</a>
+  <a href="#executors">Executors 的坑 ⭐</a>
+  <a href="#size">线程数怎么定 ⭐</a>
+  <a href="#queuesize">队列容量怎么定 ⭐</a>
+  <a href="#govern">运行时治理</a>
+  <a href="#internal">源码：Worker 与 execute</a>
+  <a href="#forkjoin">Fork/Join 与 commonPool</a>
+  <a href="#shutdown">优雅关闭</a>
+  <a href="#monitor">监控与水位告警</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="05-无锁编程.html">⬅ 上一章：05 无锁编程</a>
+  <a href="07-异步编程.html">下一章：07 异步编程 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 06 章 · 线程池与 Executor</h1>
+    <div class="sub">为什么池化 · 七大参数 · 执行流程 · 拒绝策略 · 线程数怎么定 · 队列容量怎么定 · Worker 源码 · 动态治理与监控 —— 并发板块分量最重的一章，面试与生产的双重 C 位</div>
+    <div class="meta">
+      <span>⭐⭐ 必考：七大参数 · 执行流程 · 拒绝策略 · 线程数</span>
+      <span>蓝本：Concurrency Interview · 97 讲（Executors &amp; Thread Pools）</span>
+      <span class="tag exist">已合并：Java/java 基础.md 线程池节 ✅</span>
+      <span class="tag exist">三源合并：JavaGuide + pdai + 美团实践 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>为什么要用线程池，直接 new Thread() 不行吗？说出池化的三个收益。⭐</li>
+      <li>ThreadPoolExecutor 的七大参数逐个讲一遍。⭐⭐（硬性必背）</li>
+      <li>一个任务提交进来之后的执行流程？是先扩到最大线程数还是先入队？⭐⭐（反直觉，答错直接露馅）</li>
+      <li>四种内置拒绝策略？CallerRunsPolicy 的好处和风险？怎么自定义？⭐</li>
+      <li>为什么阿里巴巴 Java 开发手册禁止用 Executors 创建线程池？⭐</li>
+      <li>CPU 密集型和 IO 密集型分别开多少线程？有严谨公式吗？⭐</li>
+      <li>workQueue 的容量给多少？队列是不是越大越稳？⭐（Little's Law 算例）</li>
+      <li>核心线程能回收吗？能预热吗？线程数能运行时改吗？（治理三连）</li>
+      <li>shutdown 和 shutdownNow 的区别？生产上怎么优雅关闭？</li>
+      <li>讲讲 Worker 的实现——线程是怎么"复用"和"回收"的？（高级岗分水岭）</li>
+      <li>Fork/Join 是什么？work-stealing 呢？commonPool 有什么坑？</li>
+    </ol>
+  </div>
+  <p>这一章的答题结构是<strong>"必背骨架 + 反直觉细节 + 治理经验"三层</strong>：七大参数、五步流程是骨架，人人都会；"队列满了才创建非核心线程"这种细节是拉开差距的地方；7 年经验的答法还要主动带一层生产治理——动态调参、队列水位告警、按业务隔离分池——让面试官看到你不只是背题，是真的管过线程池。</p>
+</section>
+
+<section id="why">
+  <h2><span class="no">02</span>为什么池化 ⭐</h2>
+  <h3>三大收益（背诵骨架）</h3>
+  <ul>
+    <li><strong>降低资源消耗</strong>：通过线程复用减少线程的创建和销毁。Java 平台线程是 1:1 内核线程（见 <a href="01-并发基础.html">第 01 章</a>），创建走系统调用、默认约 1MB 栈——池化后这些成本只付一次。</li>
+    <li><strong>提高响应速度</strong>：任务到达时无需等待线程创建，直接交给空闲线程立刻执行。</li>
+    <li><strong>提高线程可管理性</strong>：线程是稀缺资源，统一分配、统一命名、统一监控、统一限流，避免无限制创建把内存和 CPU 拖垮。</li>
+  </ul>
+  <p>对应 <code>new Thread()</code> 的三大问题：无复用（创建销毁开销大）、无命名无治理（排查时一堆 thread-1）、无队列缓冲（瞬时流量直接打满）。池化思想与数据库连接池、内存池同源：<strong>贵的资源提前建、反复用、封顶管</strong>。</p>
+  <h3>Executor 框架一览</h3>
+  <pre><code>Executor                        // 最简接口：void execute(Runnable)
+ └─ ExecutorService             // submit（有返回值）/ invokeAll / shutdown 生命周期
+     ├─ ThreadPoolExecutor            // 本章主角：普通线程池
+     ├─ ScheduledThreadPoolExecutor   // 定时 / 周期任务（继承自 ThreadPoolExecutor）
+     └─ ForkJoinPool                  // 分治 + work-stealing（本章第 11 节）
+Executors                       // 静态工厂工具类 —— 有坑，第 06 节细说</code></pre>
+  <div class="box tip"><p><strong>业务实践（笔记并入）</strong>：池要按业务隔离——核心业务与非核心业务分开、IO 密集与非 IO 密集分开，各用独立的线程池。否则非核心任务把池占满，核心接口跟着一起挂（舱壁隔离 Bulkhead 的思路）。追问"为什么要多个线程池"时，答这个比答"性能"更对。</p></div>
+</section>
+
+<section id="params">
+  <h2><span class="no">03</span>七大参数 ⭐⭐</h2>
+  <p>手动 <code>new ThreadPoolExecutor(...)</code> 的完整构造参数，<strong>面试要求逐个报出并解释</strong>：</p>
+  <table>
+    <tr><th>#</th><th>参数</th><th>含义</th><th>怎么给（要点）</th></tr>
+    <tr><td>1</td><td><code>corePoolSize</code></td><td>核心线程数：池常驻线程，默认不回收</td><td>按业务定（第 07 节）；可 <code>allowCoreThreadTimeOut(true)</code> 改为可回收</td></tr>
+    <tr><td>2</td><td><code>maximumPoolSize</code></td><td>最大线程数：池的线程上限 = 核心 + 非核心</td><td>核心数的 2~5 倍（笔记经验值）；无界队列时它永远不生效</td></tr>
+    <tr><td>3</td><td><code>keepAliveTime</code></td><td>空闲存活时间：非核心线程空闲多久被回收</td><td>配合业务峰值间隔定；只管非核心线程</td></tr>
+    <tr><td>4</td><td><code>unit</code></td><td>keepAliveTime 的时间单位</td><td>通常 <code>TimeUnit.SECONDS</code>，与参数 3 成对出现</td></tr>
+    <tr><td>5</td><td><code>workQueue</code></td><td>任务队列：核心线程都在忙时新任务排队</td><td><strong>必须有界</strong>（<code>ArrayBlockingQueue(capacity)</code>）；无界 = OOM 隐患</td></tr>
+    <tr><td>6</td><td><code>threadFactory</code></td><td>线程工厂：定制线程名、优先级、守护标记</td><td>自定义线程名是排查刚需（出事时 jstack 一眼定位）</td></tr>
+    <tr><td>7</td><td><code>handler</code></td><td>拒绝策略：队列满且线程到 max 时怎么处理</td><td>四种内置 + 自定义（第 05 节）</td></tr>
+  </table>
+  <pre><code>// 手动创建线程池（笔记示例并入，threadFactory 升级为自定义线程名版）
+ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    2,                                  // corePoolSize：核心线程数
+    5,                                  // maximumPoolSize：最大线程数
+    60L, TimeUnit.SECONDS,              // keepAliveTime + unit：非核心线程空闲 60s 回收
+    new ArrayBlockingQueue&lt;&gt;(100),      // workQueue：有界队列，容量 100（必须给容量！）
+    new ThreadFactory() {               // threadFactory：自定义线程名，排查刚需
+        private final AtomicInteger seq = new AtomicInteger(1);
+        @Override public Thread newThread(Runnable r) {
+            Thread t = new Thread(r, "order-pool-" + seq.getAndIncrement());
+            t.setUncaughtExceptionHandler((th, e) -&gt;
+                log.error("线程 {} 未捕获异常", th.getName(), e));
+            return t;
+        }
+    },
+    new ThreadPoolExecutor.CallerRunsPolicy()  // handler：拒绝策略
+);</code></pre>
+  <div class="box tip"><p><strong>答题技巧</strong>：报参数时带上"为什么这么给"——比如队列说"有界，容量按可承受的堆积量定"，threadFactory 说"自定义线程名，方便 jstack 排查"——每个参数都能落到实战，这就是 7 年经验和背书的区别。</p></div>
+  <h3>任务队列怎么选（笔记 675 行并入）</h3>
+  <table>
+    <tr><th>队列</th><th>特点</th><th>用在哪</th></tr>
+    <tr><td><code>ArrayBlockingQueue(capacity)</code></td><td><strong>有界</strong>，数组实现，单锁</td><td>手动建池默认首选：容量显式、背压可控（笔记示例即此）</td></tr>
+    <tr><td><code>LinkedBlockingQueue(capacity)</code></td><td>可选有界——<strong>不给容量就是无界</strong>（Integer.MAX_VALUE），双锁吞吐略高</td><td>给足容量可用；不给容量 = Executors 坑同款</td></tr>
+    <tr><td><code>SynchronousQueue</code></td><td>零容量，offer 必须等一个线程同时 take，否则失败</td><td>CachedThreadPool 用它：任务不排队、直接触发建线程</td></tr>
+    <tr><td><code>PriorityBlockingQueue</code></td><td>无界 + 按优先级出队</td><td>任务分优先级时；注意无界堆积风险</td></tr>
+    <tr><td><code>DelayedWorkQueue</code></td><td>无界延迟队列</td><td>ScheduledThreadPoolExecutor 专用（定时取到期任务）</td></tr>
+  </table>
+  <div class="box note"><p>追问"队列容量给多少"：先答兜底三件套——<strong>有界 + 监控水位 + 拒绝策略</strong>缺一不可，再给推导链"容量 = λ × 可接受排队秒数，且它是扩容时机的开关"——完整推导与算例见<a href="#queuesize">第 08 节</a>。</p></div>
+</section>
+
+<section id="flow">
+  <h2><span class="no">04</span>执行流程 ⭐⭐（五步）</h2>
+  <p>任务提交（<code>execute</code>）后的完整流程，<strong>笔记五步并入</strong>：</p>
+  <pre><code>execute(task)
+   │
+   ├─ ① 线程数 &lt; corePoolSize？──是──► 创建【核心线程】直接执行
+   │            否
+   ├─ ② 队列能放得下？───是──► 任务【入队】排队等待
+   │            否                （⚠️ 队列满了才走下一步，不是先扩线程！）
+   ├─ ③ 线程数 &lt; maximumPoolSize？──是──► 创建【非核心线程】立即执行
+   │            否
+   ├─ ④ 执行【拒绝策略】handler.rejectedExecution()
+   │
+   └─ ⑤【线程回收】非核心线程空闲超过 keepAliveTime 且线程数 &gt; 核心
+              → 回收；核心线程默认不回收，除非 allowCoreThreadTimeOut(true)</code></pre>
+  <ul>
+    <li><strong>① 任务提交</strong>：调用 execute 提交任务时，如果当前线程数少于 corePoolSize，即使有空闲线程也直接创建新的核心线程执行。</li>
+    <li><strong>② 任务入队</strong>：核心线程都在忙，线程池尝试把任务放入 workQueue 排队。</li>
+    <li><strong>③ 创建非核心线程</strong>：<strong>队列已满</strong>才继续创建线程直到 maximumPoolSize——注意新建线程执行的是刚提交的这个任务（"插队"立即跑），不是队尾那个。</li>
+    <li><strong>④ 拒绝任务</strong>：队列满且线程数已达 max，执行拒绝策略。</li>
+    <li><strong>⑤ 线程回收</strong>：线程空闲超过 keepAliveTime 且线程数超过核心数则被回收；核心线程默认常驻，除非 <code>allowCoreThreadTimeOut(true)</code>。</li>
+  </ul>
+  <div class="box warn"><p><strong>反直觉必考点</strong>：很多人以为流程是"先扩到最大线程数，满了再入队"——<strong>错了，是队列满了才创建非核心线程</strong>。这是故意设计：入队只是往数组/链表放一个元素，而建线程要走系统调用 + 分配约 1MB 栈，<strong>入队比建线程便宜得多</strong>，所以先让便宜的队列顶住，实在顶不住才扩线程。追问"那 maximumPoolSize 什么时候有用"——队列有界且被填满之后。顺带记住：无界队列下 maximumPoolSize、keepAliveTime、拒绝策略全部形同虚设。</p></div>
+  <div class="box tip"><p>口诀：<strong>一核心、二入队、三扩容、四拒绝、五回收</strong>。</p></div>
+</section>
+
+<section id="reject">
+  <h2><span class="no">05</span>拒绝策略：四种内置 + 自定义</h2>
+  <p><strong>触发时机先钉死</strong>：拒绝只发生在两处——① <strong>有界队列满 且 线程数已达 maximumPoolSize</strong>；② 池已 shutdown 后再提交。推论：<strong>无界队列</strong>（Executors 三坑的根源）下，拒绝策略、max、keepAliveTime <strong>全部形同虚设</strong>——过载不表现为异常，表现为延迟暴涨 + 队列无限堆积。另一种隐性事故形态同源：队列配得太大，拒绝永远不触发，catch 写了也是死代码，过载全变成延迟。</p>
+  <div class="box tip"><p><strong>验证口径</strong>（本地实测，代码在 java-learning 项目 <code>org.esmile.concurrent.threadpool.reject</code> 包）：core=2、max=3、queue=2 → 总容量 = core(2) + queue(2) + (max-core)(1) = <strong>5</strong>，一口气提交 8 个任务，第 6 个起触发拒绝。四策略实测：Abort 拒 6/7/8、完成 5；CallerRuns 全部完成（main 代跑 1~2 个）；Discard 无声无息丢 3 个；DiscardOldest 执行的是 <strong>1/2/5/7/8</strong>——丢 3/4/6，新任务逐个顶掉最老的。</p></div>
+  <table>
+    <tr><th>策略</th><th>行为</th><th>适用与风险</th></tr>
+    <tr><td><code>AbortPolicy</code>（默认）</td><td>抛 <code>RejectedExecutionException</code>，快速失败</td><td>让调用方感知；调用方 catch 后自行降级——同步处理或落 MQ 补偿（笔记口径）</td></tr>
+    <tr><td><code>CallerRunsPolicy</code></td><td>谁提交谁执行：任务直接在调用者线程里跑</td><td><strong>天然负反馈背压</strong>——调用者线程被占用，提交速率自动降下来；<strong>风险</strong>：调用者若是 Tomcat 工作线程，会被慢任务拖住，拖垮上游吞吐，慢 IO/RPC 场景慎用</td></tr>
+    <tr><td><code>DiscardPolicy</code></td><td>静默丢弃新任务，不抛异常不通知</td><td>最危险：任务丢了却无感知，重要业务禁用</td></tr>
+    <tr><td><code>DiscardOldestPolicy</code></td><td>丢弃队列头部最老的任务，再重试提交</td><td>牺牲旧任务保新任务；丢的也无感知，同样要配监控</td></tr>
+    <tr><td>自定义 <code>RejectedExecutionHandler</code></td><td>想干嘛干嘛</td><td>生产标配：记日志 + 告警 + 落 MQ/持久化后补偿</td></tr>
+  </table>
+
+  <h3>① AbortPolicy（默认）——快速失败，把决策权交回调用方</h3>
+  <p>方法体就一行：<code>throw new RejectedExecutionException("Task " + r + " rejected from " + e);</code>。它是默认值的原因：<strong>绝不掩盖问题</strong>，过载要让人第一时间看见。</p>
+  <p><strong>调用方怎么"接住"</strong>（高频追问）：<code>rejectedExecution()</code> 不是异步回调，是 execute() <strong>内联同步调用</strong>的——异常就抛在提交者线程的调用栈上，普通 try-catch 即可接住：</p>
+  <pre><code>try {
+    pool.execute(task);
+} catch (RejectedExecutionException e) {   // RuntimeException：不强制 catch，忘了就炸穿调用栈（Web 场景 = 500）
+    // 降级决策按"任务值多少钱"挑一条，别贪多：
+    // ① 任务轻 → 同步兜底执行（自己当 CallerRuns，但要清楚会拖住当前请求）
+    // ② 偶发尖峰 → 退避后重试一次（带上限；池还满着原样重提 = 忙循环自旋风暴）
+    // ③ 任务重、不能丢 → 落库/落 MQ，返回"处理中"，由补偿 job 异步处理（见下文闭环）
+    // ④ 无所谓 → 返回降级结果（推荐位给默认列表、报表给旧缓存值）
+    log.warn("order-pool 拒绝, orderId={}", orderId, e);   // 带业务上下文，别只打 e
+}</code></pre>
+  <div class="box warn"><p><strong>两个易混点</strong>：a) 四种内置里<strong>只有 Abort 会抛</strong>——CallerRuns/Discard/DiscardOldest 都是静默处理，调用方想接也没东西可接，"接得住"是 Abort 的独有优点；b) <strong>拒绝异常</strong> execute/submit 都同步抛（都接得住），但<strong>任务自身的异常</strong> submit 会被 FutureTask 吞进 Future，不调 get() 永远看不见——两个"异常在哪"的考点别混。</p></div>
+
+  <h3>② CallerRunsPolicy——谁提交谁执行，温和背压</h3>
+  <p>源码：<code>if (!e.isShutdown()) r.run();</code>——注意是 <strong>run() 不是 start()</strong>，就是要在调用者线程里同步跑。占用提交方 → 提交速率自动降下来（负反馈）。实测现象：main 被拖住几百 ms 的工夫，队列已被工人腾空，后续任务反而又能入队——<strong>背压不是"丢了"，是"提交慢下来了"</strong>。</p>
+  <ul>
+    <li><strong>场景</strong>：任务轻量、允许提交方变慢——本地缓存刷新、日志批量 flush、低优先级批处理。</li>
+    <li><strong>坑 1</strong>：调用者若是 Tomcat 工作线程，慢任务拖住整个上游请求——慢 IO/RPC 场景慎用（说出这条才算懂背压的代价）。</li>
+    <li><strong>坑 2</strong>：池已 shutdown 时任务被<strong>静默丢弃</strong>——else 分支什么都不做，连异常都没有，优雅关停期间提交的任务会漏。</li>
+    <li><strong>坑 3</strong>：调用者线程代跑的任务<strong>不进 completedTaskCount</strong>——监控口径存在偏差，知道这种偏差本身就是考点。</li>
+  </ul>
+
+  <h3>③ DiscardPolicy——静默丢弃，丢了零感知</h3>
+  <p><code>rejectedExecution</code> 方法体是<strong>空的</strong>：不抛、不通知、不留痕。唯一合理场景是可丢的旁路任务——metrics 上报、埋点、推荐位补充内容（新值覆盖旧值无所谓）。配了它就必须上"丢弃量"监控；重要业务禁用。</p>
+
+  <h3>④ DiscardOldestPolicy——丢老保新</h3>
+  <p>源码：<code>e.getQueue().poll(); e.execute(r);</code>——丢队首最老的腾位置，再重试提交新任务。实测"丢老保新链"：任务 6 顶掉 3、7 顶掉 4、8 又顶掉 6——最终执行 1/2/5/7/8，新的活下来，老的连环死。</p>
+  <ul>
+    <li><strong>场景</strong>：新鲜度优先——行情快照、监控采样、UI 状态刷新，新的比老的值钱。</li>
+    <li><strong>坑</strong>：workQueue 若是 <code>PriorityBlockingQueue</code>，队首是优先级<strong>最高</strong>的任务——"丢最老"实际变成"丢最重要"，这个组合是经典反直觉 bug。</li>
+  </ul>
+
+  <h3>⑤ 自定义：从"最小版"到生产级"分级降级链"</h3>
+  <p>最小版（日志 + 打点 + 落 MQ 三行）有一个隐患：send 失败任务照样丢——只是把丢弃点从线程池挪到 MQ 客户端，<strong>换了个地方丢不叫补偿</strong>。生产级思路是一条分级降级链：<strong>拒绝不是终点，是降级的起点；宁可抛异常，绝不静默丢</strong>。</p>
+  <pre><code>public class LogAndMqPolicy implements RejectedExecutionHandler {   // 最小版（原笔记）
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+        log.warn("线程池拒绝: queue={}, active={}, pool={}",   // ① 打日志带上下文
+                 e.getQueue().size(), e.getActiveCount(), e.getPoolSize());
+        metrics.counter("tp.rejected").increment();            // ② 打点告警
+        mqProducer.send(toMessage(r));                          // ③ 任务落 MQ，异步补偿
+    }
+}</code></pre>
+  <pre>拒绝发生（queue 满 &amp;&amp; 线程数 = max）
+  ├─ ⓪ 无条件先做：日志带现场 + LongAdder 打点    ← 监控/告警规则的数据源
+  ├─ ① 限时回塞原队列（100ms）                     ← 吸收瞬时尖峰；等不到 = 不是尖峰是真过载
+  ├─ ② 落 MQ（死信通道），补偿消费者异步重放        ← 最终一致
+  └─ ③ 兜底抛 RejectedExecutionException           ← 连 MQ 都投不进去（MQ 挂了/满了）就快速失败</pre>
+  <pre><code>// 生产级简化实现（完整版见 RobustRejectHandler.java，本地实测：
+// 突发 12 个任务 → 拒绝=7，尖峰吸收=3，落MQ=4，硬失败=0 → 12/12 全部执行，0 丢失）
+public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+    rejected.increment();                                     // ⓪ 先打点，后面每步都可能 return
+    log.warn("[{}] 拒绝 #{} | queue={}, active={}/{}", ...);  // ⓪ 日志带现场（异步 appender + 告警）
+    if (!e.isShutdown()) {                                    // ① 限时回塞：温和背压，最多拖住提交方 100ms
+        try {
+            if (e.getQueue().offer(r, 100, TimeUnit.MILLISECONDS)) {
+                spikeAbsorbed.increment(); return;
+            }
+        } catch (InterruptedException ie) { Thread.currentThread().interrupt(); } // 不吞中断
+    }
+    if (deadLetter.offer(new TaskEnvelope(r, System.currentTimeMillis()))) {
+        toDeadLetter.increment(); return;                     // ② 落 MQ，交给补偿消费者
+    }
+    throw new RejectedExecutionException(poolName + " 降级链全部失败");  // ③ 绝不静默丢
+}</code></pre>
+  <table>
+    <tr><th>设计决策</th><th>为什么</th></tr>
+    <tr><td>handler 必须快</td><td><code>rejectedExecution</code> 跑在<strong>提交者线程</strong>上：日志走异步 appender；打点用 <code>LongAdder</code>（写多读少，比 AtomicLong 省竞争，本身是考点）</td></tr>
+    <tr><td>任务打包成"信封"</td><td>落 MQ 要带上下文（提交时间、业务键、traceId）；真实项目必须<strong>可序列化——存参数/消息体，不存 Runnable 引用</strong>，消费端重建任务</td></tr>
+    <tr><td>限时回塞要可配置</td><td>100ms 是权衡：太短吸收不了尖峰，太长拖垮提交方——本质是温和背压</td></tr>
+    <tr><td>重放端限流退避</td><td>主池没恢复就猛灌 = <strong>二次拒绝风暴</strong></td></tr>
+    <tr><td>最后一级必须抛异常</td><td>降级链全挂说明系统真出事了，静默吞掉等于把 Abort 的优点也丢了</td></tr>
+  </table>
+
+  <h3>补偿闭环：落 MQ 之后的事（高级岗分水岭）</h3>
+  <pre>①拒绝发生                            ⑥告警/人工
+   │                                      ↑
+   ▼                                      │ 死信(DLQ)
+②任务 → 消息体（序列化信封）             │
+   ▼                                      │
+③可靠落地（MQ / 本地消息表）──→ ④补偿消费者重放 ──→ ⑤幂等去重
+                                       ↑        │
+                                       └──失败──┘（重试 N 次，指数退避）</pre>
+  <table>
+    <tr><th>demo（内存版）</th><th>生产对应</th></tr>
+    <tr><td><code>TaskEnvelope</code>（存 Runnable 引用）</td><td>JSON 消息体：存参数不存 Runnable——可序列化、跨进程、重启不丢</td></tr>
+    <tr><td><code>ArrayBlockingQueue</code> 模拟 MQ</td><td>RocketMQ / Kafka：自带持久化、重试主题、死信主题</td></tr>
+    <tr><td>mq-compensator 线程</td><td>独立消费者组（消费补偿 topic）</td></tr>
+    <tr><td><code>sleep(200)</code> 退避</td><td>MQ 原生重试（RocketMQ %RETRY% 默认 16 次指数退避）</td></tr>
+    <tr><td><code>LongAdder</code> stats()</td><td>Prometheus counter + 堆积量告警</td></tr>
+  </table>
+  <ul>
+    <li><strong>可靠落地是最易漏的一环</strong>：handler 里直接 send MQ 也可能失败（MQ 挂/网络抖）。生产标配是<strong>本地消息表（Outbox）</strong>：与业务数据<strong>同一个数据库事务</strong>里 INSERT 消息记录（status=PENDING），后台定时任务扫描 PENDING → 发 MQ → 改 SENT——同事务消灭"业务成功消息没发 / 消息发了业务没提交"两种尴尬（分布式事务本地消息表的复用，主动提这个词加分）。</li>
+    <li><strong>重放三纪律</strong>：限流退避（防二次拒绝风暴）；顺序性（Kafka 按业务键分区 / RocketMQ 顺序消息——同订单的扣库存和发通知不能乱序）；堆积监控（补偿队列堆积持续上涨 = 池长期过载——<strong>补偿是止血不是治病</strong>，根因在容量，不解决就是堰塞湖）。</li>
+    <li><strong>幂等是模型不是 bug</strong>：MQ 是至少一次投递（at-least-once）——消费端处理完没提交位点就宕机重启，消息会重投。三件套：DB 唯一约束/去重表（最硬兜底）、业务状态机（PENDING→PAID 只能走一次，第二次 update 影响 0 行）、Redis setnx + 过期（高频第一道闸）。</li>
+    <li><strong>死信要有告警</strong>：重试 N 次仍失败 → %DLQ% → 告警 + 人工处理。没有告警的死信 = 换个地方静默丢弃，绕回 DiscardPolicy 的老问题。</li>
+  </ul>
+  <div class="box note"><p><strong>两条边界认知</strong>：① 补偿的本质是<strong>把同步失败转成异步成功</strong>，适合"可以晚一点"的事（短信、积分、报表、缓存刷新）；强同步语义（下单返回前必须扣完库存）走补偿等于欺骗用户，该直接 fail fast 返回"系统繁忙"。② shutdownNow 返回的 leftover 列表"落库补偿"（见第 12 节）与拒绝补偿是<strong>同一个闭环</strong>——问题同源：手上拿不到执行机会的任务，得有个地方安放。</p></div>
+  <div class="box note"><p><strong>怎么选</strong>：能丢（日志、埋点类）→ Discard 系但要监控丢弃量；不能丢 → Abort/自定义 + MQ 补偿；想要背压且任务轻 → CallerRuns，但说得出 Tomcat 线程被拖慢的风险，才是高级岗的答案。</p></div>
+</section>
+
+<section id="executors">
+  <h2><span class="no">06</span>Executors 四工厂的坑 ⭐</h2>
+  <p>Executors 是便捷工厂，但阿里规约<strong>【强制】禁止用它创建线程池，要求手动 new ThreadPoolExecutor</strong>（笔记同款结论：推荐 ThreadPoolExecutor）。坑全在一个词：<strong>无界</strong>。</p>
+  <table>
+    <tr><th>工厂方法</th><th>内部参数</th><th>坑</th></tr>
+    <tr><td><code>newFixedThreadPool(n)</code></td><td>core = max = n，<strong>无界 LinkedBlockingQueue</strong>（Integer.MAX_VALUE）</td><td>线程数固定、队列无限 → 任务持续堆积，<strong>堆内存 OOM</strong></td></tr>
+    <tr><td><code>newSingleThreadExecutor()</code></td><td>core = max = 1，无界队列</td><td>同上：单线程消化不过来就无限堆积</td></tr>
+    <tr><td><code>newCachedThreadPool()</code></td><td>core = 0，max = <strong>Integer.MAX_VALUE</strong>，SynchronousQueue</td><td>来一个任务建一个线程 → 瞬时流量<strong>线程爆炸</strong>（native 内存耗尽 / unable to create new native thread）</td></tr>
+    <tr><td><code>newScheduledThreadPool(n)</code></td><td>max = Integer.MAX_VALUE，无界 DelayedWorkQueue</td><td>线程数无上限 + 任务无限堆积双重隐患</td></tr>
+  </table>
+  <div class="box warn"><p><strong>两种 OOM 要分清</strong>：fixed/single 是<strong>堆 OOM</strong>（任务对象在队列里堆积，jmap 看到 LinkedBlockingQueue 巨大）；cached 是<strong>创建线程失败</strong>（每线程约 1MB 栈，属 native 内存）。面试能主动区分这两类，说明真排查过。<br>本质：无界的要么是队列要么是线程数；手动创建 = 把容量显式写在配置里，风险前置可见。</p></div>
+</section>
+
+<section id="size">
+  <h2><span class="no">07</span>线程数怎么定 ⭐</h2>
+  <h3>经验值（笔记并入，面试先答这个）</h3>
+  <ul>
+    <li><strong>CPU 密集型</strong>（计算、加密、序列化）：线程数 = <strong>CPU 核数 + 1</strong>（+1 是防偶发缺页/暂停时 CPU 空转）。</li>
+    <li><strong>IO 密集型</strong>（存储、网络 RPC、DB）：线程数 = <strong>CPU 核数 × 2</strong>。</li>
+    <li><strong>最大线程数</strong> = 核心线程数 × <strong>2~5</strong>。</li>
+  </ul>
+  <h3>严谨公式（加分项）</h3>
+  <pre><code>N = Ncpu × Ucpu × (1 + W/C)     // Brian Goetz《Java Concurrency in Practice》
+// Ncpu = 核数；Ucpu = 目标 CPU 利用率；W/C = 等待时间 / 计算时间
+// 例：8 核、目标利用率 100%、任务 90% 时间在等 IO（W/C = 9）
+//     N = 8 × 1 × (1 + 9) = 80 个线程</code></pre>
+  <ul>
+    <li>公式的直觉：<strong>线程数 = 每核同时养几个"等 IO 的 + 算的"</strong>——等待比越高，需要的线程越多，与经验值口径一致。</li>
+    <li>W/C 不是拍出来的：靠压测和链路追踪（APM 里看每段的耗时分布）测出来——指标定义与完整压测方法论见 <a href="../08-HLD/19-性能指标与压测.html">08-HLD/19</a>。</li>
+  </ul>
+  <div class="box tip"><p><strong>标准口径</strong>："经验值起步 → 压测调整 → 线上监控 + 动态调参收尾"。公式给理论起点，真实值压测定。同时别只盯线程数：<strong>队列必须有界且容量显式</strong>——容量 = λ × 可接受排队秒数（Little's Law），完整推导与算例见<a href="#queuesize">第 08 节</a>；线上靠监控（第 13 节）和 setCorePoolSize（第 09 节）闭环。</p></div>
+</section>
+
+<section id="queuesize">
+  <h2><span class="no">08</span>队列容量怎么定 ⭐</h2>
+  <p>上一节定了线程数，七大参数还剩最后一个数字没给推导：<code>ArrayBlockingQueue(capacity)</code> 的容量。<strong>没有银弹数字，但有一条可复用的推导链</strong>——先想清楚容量的真实身份：它不是"缓冲区越大越稳"的保险栓，而是<strong>扩容时机的触发开关</strong>，同时决定着排队延迟。</p>
+  <h3>容量卡在扩容链路的哪一环</h3>
+  <pre><code>core 满 → 任务入队 → 队列满！→ 开非核心线程到 max → max 满且队列满 → 拒绝策略
+                    ▲
+          容量卡在这一环：它决定"第 core+1 个线程何时出生"</code></pre>
+  <p>拿第 03 节的示例池（core=2, max=5, queue=100）算笔账：<strong>第 3 个线程要等"2 核心 + 100 队列"全满、即 103 个在途任务时才出生</strong>——容量实际上把池的"并发容忍量"放大到了 105。由此看两个极端：</p>
+  <ul>
+    <li><strong>容量太大</strong>（如 10000）：队列几乎永远不满 → 扩容条件永远凑不齐 → <code>maximumPoolSize</code> 形同虚设 → <strong>等效无界队列</strong>，绕回第 06 节 Executors 的坑；</li>
+    <li><strong>容量太小</strong>（如 5）：稍有波动就开满非核心线程、频繁触发拒绝 / CallerRuns，调用方线程被反复拖住。</li>
+  </ul>
+  <div class="box note"><p><strong>类比：餐厅门口的等位区</strong>。等位区该装的是"高峰几十秒"的客流，不是"常态性满员"的客流——队列长期接近满，说明厨房（线程数 + 下游耗时）产能不足，加椅子（调大容量）解决不了问题。</p></div>
+  <h3>定量推导：两条公式接力</h3>
+  <p><strong>第一步定线程数</strong>：Goetz 公式（上一节）；<strong>第二步定队列容量</strong>：Little's Law（利特尔法则，排队论）：</p>
+  <pre><code>容量 L = λ × W_queue
+// λ       = 任务到达速率（个/秒）—— 压测 / 监控得到
+// W_queue = 可接受的排队秒数，从 SLA 倒推：
+//           W_queue = RT 预算 − 单任务执行时间</code></pre>
+  <h3>算例一：从 SLA 一路算到 ArrayBlockingQueue(30)</h3>
+  <p>背景：订单支付成功后，线程池异步发通知（推送 + 积分 RPC）。全链路预算 200ms，峰值到达速率 200 个/秒，压测得 W/C ≈ 3：</p>
+  <pre><code>// ① 线程数先定（Goetz 公式，第 07 节）
+//    8 核、IO 密集：N = 8 × 1 × (1 + 3) = 32
+//    → core = 32，max = 64（经验值 core × 2）
+//
+// ② 排队预算从 SLA 倒推
+//    单任务执行约 50ms，RT 预算 200ms
+//    W_queue = 200 − 50 = 150ms = 0.15s
+//
+// ③ 容量 = 到达速率 × 排队预算（Little's Law）
+//    L = λ × W_queue = 200 × 0.15 = 30
+//    → new ArrayBlockingQueue&lt;&gt;(30)
+//
+// ④ 校验扩容链路是否还"有感觉"
+//    第 33 个线程的出生条件 = 32 核心 + 30 队列 = 62 个在途任务
+//    池的最大在途容忍 = 64(max) + 30(queue) = 94，第 95 个触发拒绝策略
+//    反着验：若容量给 10000，62 这个条件几乎永远凑不齐
+//    → max=64 形同虚设，"有界"名存实亡，回到无界队列的老问题</code></pre>
+  <div class="box tip"><p><strong>面试口径</strong>：容量 = λ × 可接受排队秒数（Little's Law），定位是<strong>吸收秒级突发 + 控制扩容时机</strong>；持续性超载应该被拒绝策略和告警暴露出来，而不是靠加大队列藏起来。追问"为什么不用大队列把请求都攒着"——答下面三个隐性代价；追问"λ 和 W_queue 从哪来"——压测与监控，完整方法论（P99/拐点/压测六型/开环闭环）见 <a href="../08-HLD/19-性能指标与压测.html">08-HLD/19</a>。</p></div>
+  <h3>算例二：WMS 库存同步池——完整实战版（含消化验算与三档推演）⭐</h3>
+  <p>背景换成真实业务系统（仓库管理系统 Spring Boot WMS）：库存变更（入库上架、拣货扣减、盘点调整）要异步推送给 ERP。面试官问"具体给多少"，考的不是数字，是<strong>数字有没有出处、链路有没有出口</strong>。第一步先摆三个输入：</p>
+  <table>
+    <tr><th>输入</th><th>值</th><th>出处（这列比数字本身值钱）</th></tr>
+    <tr><td>单任务耗时</td><td>100ms（75ms 等 ERP 响应 + 25ms 组报文）→ W/C ≈ 3</td><td>压测 / APM 链路追踪</td></tr>
+    <tr><td>峰值到达速率 λ</td><td>500 条/秒</td><td>监控看大促波次拣货高峰</td></tr>
+    <tr><td>SLA</td><td>ERP 同步允许延迟 ≤ 1 秒，不能丢</td><td>业务方确认（最终一致任务）</td></tr>
+  </table>
+  <p>同时框定前提：<strong>WMS 核心链路（扣库存、拣货、出库单流转）是同步事务，不走线程池</strong>；走池的全是旁路异步任务（库存同步 / 流水记录 / 快照报表 / 消息通知），按业务分池——开口先问"您问哪个池"，这句话就把你和背题的人分开了。</p>
+  <pre><code>// ① 定线程数（Goetz 公式，8 核 16 线程机器）
+//    N = 16 × 1 × (1 + 3) = 64
+//    消化能力验算：单任务 100ms → 每线程每秒 10 个
+//    → 消化 500/s 至少需要 500 ÷ 10 = 50 个线程
+//    → core = 50（顶住峰值均值），max = 64（公式值，防抖动）
+//
+// ② 定队列容量（Little's Law）
+//    W_queue = SLA − 任务耗时 = 1s − 0.1s = 0.9s ≈ 1s
+//    L = λ × W_queue = 500 × 1 = 500
+//    → new ArrayBlockingQueue&lt;&gt;(500)
+//
+// ③ 校验扩容链路（数字对不对，跑一遍三档故事）
+//    常态 500/s：50 线程 × 10/s = 500/s 刚好消化 → 队列近乎空
+//    突发 600/s：50 线程只吃 500/s，多出 100/s 入队
+//      → 队列 500 容量约 5 秒填满 → 开第 51 个线程到 64
+//      → 64 × 10 = 640/s &gt; 600/s → 追上并排空 ✓
+//    极端 700/s：最大在途 = 64(max) + 500(queue) = 564，第 565 个触发拒绝
+//      → 拒绝不能丢 → handler 落 MQ 补偿（最终一致任务正好复用补偿闭环）
+//    每一档都有出口，没有"攒着没人管"的状态 = 校验通过
+//
+// ④ 内存顺带核一眼：500 个任务引用 ≈ ABQ 数组 2KB + 任务对象零点几 MB，无感</code></pre>
+  <pre><code>// 落地成代码（每个数字都能回溯到上表）
+ThreadPoolExecutor erpSyncPool = new ThreadPoolExecutor(
+    50, 64,                                   // ① 公式 + 消化验算
+    60, TimeUnit.SECONDS,
+    new ArrayBlockingQueue&lt;&gt;(500),            // ② Little's Law：500/s × 1s
+    threadFactory("erp-sync-"),               // 线程名，jstack 排查刚需
+    new LogAndMqPolicy()                      // ③ 极端档出口：日志 + 告警 + 落 MQ
+);
+// 配套三件套：水位 80% 告警（queue.size &gt; 400）+ Nacos 动态调参 + 上线压测修正</code></pre>
+  <div class="box tip"><p><strong>面试口语版（四句背下来）</strong>："这个池推库存变更给 ERP：压测单任务 100ms、W/C≈3，监控峰值 500 条/秒，ERP 的 SLA 是延迟 1 秒以内。线程数按公式 16×(1+3)=64，但消化验算 50 个线程正好扛 500/s，所以 core=50、max=64。队列按 Little's Law，排队预算 1 秒 × 500 条 = <strong>500</strong>，给 ArrayBlockingQueue(500)。校验过链路：突发时 5 秒填满队列触发扩容到 640/s 追平，极端 700/s 时 564 个在途封顶、拒绝落 MQ 补偿——最后配水位告警和 Nacos 热调，压测修正收尾。"——<strong>输入有出处、公式有验算、链路有出口</strong>，最后一句"压测修正"是安全带。</p></div>
+  <h3>任务类型修正</h3>
+  <ul>
+    <li><strong>CPU 密集</strong>：队列往小给（几十以内）——排队没有意义，宁可快速扩线程 / 拒绝，让 CPU 保持满负荷；</li>
+    <li><strong>IO 密集</strong>：队列可以稍大，但排队时间全部算进 RT；下游变慢时，大队列只是把故障的爆发点往后挪。</li>
+  </ul>
+  <h3>容量过大的三个隐性代价</h3>
+  <table>
+    <tr><th>代价</th><th>后果</th></tr>
+    <tr><td><strong>排队延迟</strong></td><td>排队时间直接叠加 RT，队列越长尾延迟越高——P99 飙高最常见的来源就是"没报错但在排长队"</td></tr>
+    <tr><td><strong>掩盖故障</strong>（最隐蔽）</td><td>不拒绝、不告警、线程数不涨，监控上池子"看起来健康"，其实每个请求都在排队——过载被藏起来了</td></tr>
+    <tr><td><strong>内存</strong></td><td>ABQ 的引用数组本身便宜（10 万容量约几百 KB），真正贵的是堆里活着的 10 万个任务对象及其引用的业务数据</td></tr>
+  </table>
+  <div class="box warn"><p><strong>生产口径</strong>：水位持续 &gt;80% 的正确反应是查下游耗时 / 加线程 / 降级，<strong>调大容量只是止痛药</strong>；让过载走拒绝策略暴露（CallerRuns 背压 / 自定义 handler 落 MQ，第 05 节），配水位告警（第 13 节）兜底。</p></div>
+</section>
+
+<section id="govern">
+  <h2><span class="no">09</span>运行时治理</h2>
+  <ul>
+    <li><strong>动态调参</strong>：<code>setCorePoolSize(int)</code> / <code>setMaximumPoolSize(int)</code> / <code>setKeepAliveTime</code> / <code>setRejectedExecutionHandler</code> 都能运行时改。调大 core 会立即补建缺额核心线程；调小则等空闲时回收多余线程。<strong>美团动态线程池</strong>思路：参数放配置中心（Nacos/Apollo），变更回调里热更新线程池，配合监控告警，免发版调优。</li>
+    <li><strong>预热</strong>：<code>prestartAllCoreThreads()</code> 启动时把核心线程全部建好——核心线程默认懒创建（来一个任务建一个），大促/开抢场景用它抹平冷启动延迟。</li>
+    <li><strong>核心线程回收</strong>：<code>allowCoreThreadTimeOut(true)</code> 让核心线程也参与空闲回收——低频任务场景省资源，代价是来流量时要重新建线程。</li>
+  </ul>
+  <pre><code>// 参数放配置中心，变更回调里热生效（美团动态线程池思路）
+configListener.onChange(cfg -&gt; {
+    executor.setCorePoolSize(cfg.getCoreSize());
+    executor.setMaximumPoolSize(cfg.getMaxSize());
+});
+// 预热：启动即建满核心线程，避免流量高峰逐个建线程的冷启动
+executor.prestartAllCoreThreads();</code></pre>
+  <h3>追问：参数都能热改吗？—— 队列容量是 JDK 原生做不到的 ⭐</h3>
+  <p>这是"动态调参"追问的第二层，也是美团那篇线程池文的精髓。JDK 的 set 系方法能热改四个参数，但 <strong>workQueue 的容量改不了</strong>——<code>LinkedBlockingQueue</code> 的 <code>capacity</code> 字段是 <code>final</code>，<code>ArrayBlockingQueue</code> 底层是定长数组。而线上最想调的往往恰是容量（水位长期偏高想扩队列）。美团的解法：自定义 <strong>ResizableCapacityLinkedBlockingQueue</strong>——把 capacity 的 final 去掉、提供 <code>setCapacity()</code>（缩容时做好条件通知），参数全部放配置中心，推送变更即热生效、免发版。开源的 DynamicTp 等动态线程池框架走的同一条路。</p>
+  <pre><code>// JDK 原生可热改的：core / max / keepAlive / 拒绝策略
+executor.setCorePoolSize(n);
+executor.setMaximumPoolSize(n);
+executor.setKeepAliveTime(t, unit);
+executor.setRejectedExecutionHandler(h);
+// 改不了的：队列容量 —— LinkedBlockingQueue 的 capacity 是 final
+// 美团：自定义 ResizableCapacityLinkedBlockingQueue（capacity 可 set）
+//       + 配置中心推送 + 水位监控告警，形成"观测 → 调参 → 生效"闭环</code></pre>
+  <div class="box note"><p><strong>答这道追问的层次</strong>：第一层"setCorePoolSize 可以热改"人人会；第二层指出"队列容量是 JDK 盲区"就能甩开一批人；第三层说出美团的自定义队列方案 + 为什么执着热改（流量波动快于发版节奏），就是真的治理过线程池的口径。</p></div>
+</section>
+
+<section id="internal">
+  <h2><span class="no">10</span>源码：Worker 复用与 execute 三段</h2>
+  <h3>线程为什么能复用——runWorker 取任务循环</h3>
+  <p>每个线程被包成一个 <code>Worker</code>（继承 AQS、实现 Runnable）。线程启动后进入 <code>runWorker</code> 的<strong>取任务循环</strong>：干完手头任务不退出，回头继续从队列拿——<strong>复用的本质是线程不死、循环取任务</strong>。</p>
+  <pre><code>final void runWorker(Worker w) {
+    Runnable task = w.firstTask;
+    while (task != null || (task = getTask()) != null) {  // ⭐ 循环取任务 = 复用
+        try {
+            task.run();              // 注意：直接调 run()，不是 start()——线程还是原来那个
+        } finally { task = null; }
+    }                                 // getTask() 返回 null 时循环退出 → 线程结束（回收）
+}
+
+private Runnable getTask() {
+    // 核心线程   → take()：无限期阻塞等任务      → 所以默认永不回收
+    // 非核心线程 → poll(keepAliveTime)：限时等待 → 超时拿不到返回 null → 被回收
+    // allowCoreThreadTimeOut(true) 时，核心线程也走 poll 限时分支
+}</code></pre>
+  <div class="box note"><p><strong>一句话答"线程怎么复用和回收"</strong>：Worker 里一个 while 循环不断 getTask()；核心线程 take() 无限期阻塞所以常驻，非核心线程 poll(keepAliveTime) 限时等待，超时返回 null 循环退出、线程被回收。take 与 poll 的区别就是"常驻 vs 临时"的全部秘密。</p></div>
+  <h3>execute 三段逻辑（对照第 04 节流程）</h3>
+  <pre><code>// JDK 8 ThreadPoolExecutor#execute（注释版，源码简化）
+public void execute(Runnable command) {
+    int c = ctl.get();   // ctl：高 3 位运行状态 + 低 29 位线程数，一个字段管两件事
+    // ① 线程数 &lt; core：创建核心线程直接执行
+    if (workerCountOf(c) &lt; corePoolSize) {
+        if (addWorker(command, true)) return;
+        c = ctl.get();
+    }
+    // ② 核心满了：先入队（入队比建线程便宜，所以先入队！）
+    if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
+        int recheck = ctl.get();                 // double-check：入队期间池可能已 shutdown
+        if (! isRunning(recheck) &amp;&amp; remove(command))
+            reject(command);
+        else if (workerCountOf(recheck) == 0)
+            addWorker(null, false);              // 兜底：保证至少有一个线程在消费
+    }
+    // ③ 队列满：创建非核心线程；到 max 了 → 拒绝策略
+    else if (! addWorker(command, false))
+        reject(command);
+}</code></pre>
+  <div class="box tip"><p>被问源码时按"ctl 一个字段管两件事 → execute 三段对应流程五步 → runWorker 循环 + take/poll"的顺序讲，三分钟正好，多讲细节反而容易被追到防不住的地方。</p></div>
+  <h3>追问：Worker 为什么继承 AQS？⭐</h3>
+  <p>Worker 的 AQS 独占锁是一个<strong>"忙/闲标记"</strong>：runWorker 每取到任务先 <code>w.lock()</code>（标记忙），执行完 <code>unlock()</code>（标记闲）。它的唯一消费方是关闭逻辑：<code>shutdownNow</code> 中断前对每个 Worker 先 <code>tryLock()</code>——<strong>拿得到锁说明线程空闲（正阻塞在 getTask 上），安全中断；拿不到说明正在执行任务，跳过不打断</strong>。所以 shutdownNow 不是"无差别 interrupt"，而是只回收闲线程、不打断手头的活。</p>
+  <pre><code>// interruptIdleWorkers 的逻辑（简化）：只中断"闲"的 Worker
+for (Worker w : workers) {
+    if (w.tryLock()) {            // 拿到锁 = 空闲（没在跑任务）
+        w.thread.interrupt();     // 安全中断：它只是阻塞在 getTask() 等任务
+        w.unlock();
+    }                             // 拿不到锁 = 正在执行任务 → 跳过，不打断
+}</code></pre>
+  <div class="box note"><p>这是 AQS 独占模式<strong>最贴近生产的落地案例</strong>（美团 AQS 文的经典素材）：没有用锁做互斥，只是借独占状态当布尔标记。面试官从线程池追到 AQS 时，用 Worker 举例最自然——AQS 的完整原理见 <a href="03-互斥与同步.html">第 03 章</a>。</p></div>
+</section>
+
+<section id="forkjoin">
+  <h2><span class="no">11</span>Fork/Join 与 commonPool</h2>
+  <h3>work-stealing：双端队列</h3>
+  <ul>
+    <li><strong>Fork/Join</strong> 是分治（divide and conquer）框架：fork 把子任务压下去，join 等结果合并。</li>
+    <li>与普通线程池的区别在任务队列：ThreadPoolExecutor 是<strong>一个共享队列</strong>（高竞争）；ForkJoinPool 是<strong>每个线程一个双端队列</strong>——自己从队头取（LIFO，缓存友好），空闲了从别人队尾偷（FIFO，少争抢），这就是 <strong>work-stealing</strong>。</li>
+  </ul>
+  <pre><code>class SumTask extends RecursiveTask&lt;Long&gt; {         // 有返回值用 RecursiveTask，无返回用 RecursiveAction
+    private final long[] arr; private final int lo, hi;
+    // 构造器略
+    @Override protected Long compute() {
+        if (hi - lo &lt;= 10_000) {                    // 足够小：直接算
+            long s = 0;
+            for (int i = lo; i &lt; hi; i++) s += arr[i];
+            return s;
+        }
+        int mid = (lo + hi) &gt;&gt;&gt; 1;                  // 否则：一分为二
+        SumTask left = new SumTask(arr, lo, mid);
+        left.fork();                                 // 左半压入自己的队列（可能被偷走）
+        return new SumTask(arr, mid, hi).compute()   // 右半自己算
+             + left.join();                          // 再等左半结果
+    }
+}
+long total = ForkJoinPool.commonPool().invoke(new SumTask(arr, 0, arr.length));
+// parallelStream 底层就是 commonPool：
+long total2 = Arrays.stream(arr).parallel().sum();</code></pre>
+  <h3>commonPool：全局共享的默认池</h3>
+  <ul>
+    <li><code>ForkJoinPool.commonPool()</code> 是 JVM 级单例，大小 = <strong>CPU 核数 − 1</strong>，线程是<strong>守护线程</strong>；<strong>并行流（parallelStream）和 CompletableFuture 默认都用它</strong>（笔记并入）。</li>
+    <li><strong>大坑</strong>：commonPool 是为 CPU 密集设计的——在上面跑 IO/阻塞任务会把池占满，<strong>全应用的并行流一起饿死</strong>。所以并行流只适合 CPU 密集且数据量大的场景，IO 任务必须交自定义线程池（<a href="07-异步编程.html">第 07 章 CF 默认池的坑</a>）。</li>
+    <li>虚拟线程的调度器复用了 ForkJoinPool 的思想与实现（每载体线程一个队列 + stealing），见 <a href="10-虚拟线程.html">第 10 章 虚拟线程</a>。但注意：调度器是<strong>另起的专用实例</strong>，commonPool 本身在虚拟线程时代<strong>一个字段没变</strong>——并行流、CF 默认池照旧，"变与不变"对照见 <a href="10-虚拟线程.html#commonpool">10 章 §05</a>。</li>
+  </ul>
+</section>
+
+<section id="shutdown">
+  <h2><span class="no">12</span>优雅关闭</h2>
+  <table>
+    <tr><th>方法</th><th>语义</th><th>要点</th></tr>
+    <tr><td><code>shutdown()</code></td><td>平缓关闭：不再接受新任务（再提交触发拒绝策略），已提交任务（含队列里排队的）执行完</td><td>不中断正在执行的任务</td></tr>
+    <tr><td><code>shutdownNow()</code></td><td>立即关闭：<strong>interrupt 所有工作线程</strong>，返回队列中未执行任务的 <code>List&lt;Runnable&gt;</code></td><td>只有响应中断的任务才会真正停下来</td></tr>
+    <tr><td><code>awaitTermination(t, u)</code></td><td>阻塞等待池终止，配合 shutdown 分阶段用</td><td>返回 false 表示超时还没关完</td></tr>
+  </table>
+  <pre><code>// 生产标准姿势：注册 JVM 关闭钩子，先平缓、超时再强关
+Runtime.getRuntime().addShutdownHook(new Thread(() -&gt; {
+    pool.shutdown();                                        // ① 停止接新任务
+    try {
+        if (! pool.awaitTermination(30, TimeUnit.SECONDS)) {
+            List&lt;Runnable&gt; left = pool.shutdownNow();       // ② 超时强关，拿回没跑的任务
+            log.warn("强制关闭，{} 个任务未执行，落库补偿", left.size());
+            if (! pool.awaitTermination(10, TimeUnit.SECONDS))
+                log.error("线程池仍未终止");
+        }
+    } catch (InterruptedException ie) {
+        pool.shutdownNow();
+        Thread.currentThread().interrupt();                 // 恢复中断标志
+    }
+}));</code></pre>
+  <h3>线程池的五状态（ctl 高 3 位，追问常客）</h3>
+  <pre><code>RUNNING     接受新任务 + 处理队列任务（正常运行）
+   │ shutdown()
+SHUTDOWN    不接新任务，把队列里的任务执行完
+   │ shutdownNow()
+STOP        不接新任务、不处理队列、中断所有工作线程
+   │ 队列清空且工作线程归零
+TIDYING     过渡态，执行 terminated() 钩子方法
+   │
+TERMINATED  终态 —— awaitTermination 等的就是它</code></pre>
+  <div class="box warn"><p><strong>前提</strong>：任务里的代码要正确响应中断（不吞 InterruptedException，见 <a href="01-并发基础.html">第 01 章中断陷阱</a>），否则 shutdownNow 的 interrupt 也停不干净——优雅关闭是"池 + 任务"双方配合的事。</p></div>
+  <div class="box note"><p><strong>容器/K8s 下的关闭链路（2026-11-10 补互链）</strong>：生产中触发这段关闭钩子的通常不是 System.exit，而是 K8s 删 Pod 发来的 <strong>SIGTERM</strong>——完整时序（endpoint 摘除与 SIGTERM 并发、preStop sleep 补窗口、terminationGracePeriodSeconds 宽限期、shell 格式 CMD 收不到信号、PID 1）在 <a href="../18-devops/06-K8s生产实践.html">18-devops/06 §05 优雅停机全链路</a>，本章是它的 JVM 侧上篇。</p></div>
+</section>
+
+<section id="monitor">
+  <h2><span class="no">13</span>监控与水位告警</h2>
+  <table>
+    <tr><th>API</th><th>含义</th><th>关注点</th></tr>
+    <tr><td><code>getActiveCount()</code></td><td>正在执行任务的线程数</td><td>长期 ≈ max → 容量不足</td></tr>
+    <tr><td><code>getQueue().size()</code></td><td>队列积压任务数（<strong>水位</strong>）</td><td>核心指标：持续上涨 = 消化不过来</td></tr>
+    <tr><td><code>getPoolSize()</code> / <code>getLargestPoolSize()</code></td><td>当前 / 历史峰值线程数</td><td>峰值打满过 max 说明触发过扩容</td></tr>
+    <tr><td><code>getCompletedTaskCount()</code> / <code>getTaskCount()</code></td><td>已完成 / 总任务（近似值）</td><td>算吞吐与完成率趋势</td></tr>
+    <tr><td>拒绝次数</td><td>自定义 handler 里打点（第 05 节）</td><td>拒绝一旦发生就已丢/已降级，要前置告警</td></tr>
+  </table>
+  <pre><code>// 定时上报 + 队列水位 80% 提前告警（别等拒绝了才知道）
+scheduled.scheduleAtFixedRate(() -&gt; {
+    int queued = pool.getQueue().size();
+    metrics.gauge("tp.queue.size", queued);
+    metrics.gauge("tp.active",  pool.getActiveCount());
+    metrics.gauge("tp.pool",    pool.getPoolSize());
+    if (queued &gt; CAPACITY * 0.8) {
+        alert.warn("线程池队列水位 {}%", queued * 100 / CAPACITY);
+    }
+}, 10, 10, TimeUnit.SECONDS);</code></pre>
+  <div class="box tip"><p>监控三问口径：<strong>水位多高</strong>（队列 size）、<strong>涨得多快</strong>（增长速率，区分流量尖峰 vs 消化变慢）、<strong>拒没拒</strong>（handler 打点）。水位告警是治理的前置闸门，配动态调参（第 09 节）形成闭环。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">14</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：执行流程 → 队列满了先建线程还是先扩容？</strong>→ 先入队，队列满才建非核心线程 → 为什么？入队便宜、建线程贵 → 再追问：那无界队列下 max 生效吗？不生效，queueing forever → 正是 Executors 坑的根因。</li>
+    <li><strong>追问链：拒绝策略 → CallerRuns 的本质？</strong>→ 背压（负反馈降速）→ 风险？Tomcat 线程被拖慢 → 更稳的方案？自定义 handler 落 MQ + 告警补偿。</li>
+    <li><strong>追问链：线程数 → CPU 密集为什么 +1？IO 密集为什么 ×2？</strong>→ W/C 比不同 → 有公式吗？N = Ncpu × Ucpu × (1 + W/C) → W/C 怎么测？压测 + APM → 定完就完了？压测起步、监控 + 动态调参收尾。</li>
+    <li><strong>追问链：队列容量 → 给多少？</strong>→ 先纠正问法：容量不是"越大越稳"，它是扩容时机的开关 → 多大？Little's Law L = λ × W_queue，排队预算从 SLA 倒推 → 给大点不行吗？太大 = 队列永远不满，max 形同虚设，还顺手掩盖故障（延迟 / 假健康 / 内存三代价）→ 生产怎么盯？水位 80% 告警，调容量是止痛药、查下游耗时才是病根（第 08 节）→ 追问"你系统里具体给多少"？先反问哪个池（核心链路不走池），再按"输入有出处（压测/监控/SLA）→ 公式 + 消化验算 → 三档推演有出口"报 WMS 库存同步算例（第 08 节算例二）。</li>
+    <li><strong>追问链：核心线程能回收吗？</strong>→ 默认不能，allowCoreThreadTimeOut(true) 可以 → 核心线程什么时候创建？懒创建，来任务才建 → 想启动就绪？prestartAllCoreThreads() 预热。</li>
+    <li><strong>陷阱：submit() 吞异常</strong>→ submit 把任务包进 Future，run 里的异常被捕获存进 Future，不调 get() 就永远不知道出过错；execute 则直接走线程的 UncaughtExceptionHandler。排查"任务没执行"先想到这。</li>
+    <li><strong>陷阱：Spring 的 ThreadPoolTaskExecutor</strong>→ 本质还是包了一层 ThreadPoolExecutor，corePoolSize 等参数一一对应——说得出这层对应关系，说明生产真用过（框架视角见 <a href="../04-spring/README.html">04-spring</a>）。</li>
+    <li><strong>陷阱：非核心线程执行的是队头任务？</strong>→ 不是，执行的是刚提交、触发扩容的那个任务（插队立即跑），队里的按顺序等。</li>
+    <li><strong>场景题：线程池打满怎么排查？</strong>→ 看监控水位与拒绝量 → jstack 看线程在干什么（任务慢 or 任务多）→ 处置：扩容/降级/业务隔离分池 → 长期：动态线程池 + 水位告警。</li>
+    <li><strong>追问链：动态调参 → 哪些参数能热改？</strong>→ core/max/keepAlive/handler 都有 set 方法 → 队列容量呢？JDK 原生改不了（capacity 是 final）→ 怎么解？自定义可变容量队列（美团 ResizableCapacityLinkedBlockingQueue / DynamicTp 同思路）→ 为什么执着于热改？流量波动快于发版节奏（第 09 节）。</li>
+    <li><strong>追问链：Worker 为什么继承 AQS？</strong>→ 用独占锁做"忙/闲标记" → 谁消费这个标记？shutdownNow 的 tryLock——只中断闲线程、不打断正在执行的任务 → 这是 AQS 独占模式最贴近生产的落地案例（第 10 节）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">15</span>面试自查清单</h2>
+  <ol>
+    <li>池化三收益（降消耗、提响应、可管理）张口就来，并能对应 new Thread() 的三大问题。</li>
+    <li>七大参数逐个报出 + 每个参数"为什么这么给"，threadFactory 能现场写自定义线程名。</li>
+    <li>五步流程倒背如流，且能讲清"队列满才建非核心线程"的原因（入队比建线程便宜）与无界队列的连锁失效。</li>
+    <li>四种拒绝策略 + CallerRuns 的背压本质与 Tomcat 风险 + 自定义 handler（日志/告警/MQ）。</li>
+    <li>Executors 四工厂各自的坑能分清两类 OOM（堆堆积 vs 线程爆炸），记得阿里规约的强制条款。</li>
+    <li>线程数：经验值（CPU+1 / 核数×2 / max=core×2~5）+ 公式 N = Ncpu × Ucpu × (1 + W/C) + "压测调整、监控闭环"口径。</li>
+    <li>队列容量：能现场演算 L = λ × W_queue（SLA 倒推排队预算），讲得出"容量 = 扩容时机开关"与容量过大的三个隐性代价（排队延迟 / 掩盖故障 / 内存）；被问"你系统具体给多少"时能按 WMS 库存同步算例口径报——输入有出处、线程数有消化验算、链路三档推演有出口。</li>
+    <li>治理三件套：setCorePoolSize 动态调参（配置中心）、prestartAllCoreThreads 预热、allowCoreThreadTimeOut。</li>
+    <li>能讲 runWorker 循环 + take/poll 实现复用与回收，execute 三段逻辑与流程五步对得上。</li>
+    <li>Fork/Join：work-stealing 双端队列、commonPool 大小（核数−1）与"IO 任务占满饿死并行流"的坑。</li>
+    <li>优雅关闭：shutdown / shutdownNow / awaitTermination 区别 + 关闭钩子标准写法；监控：水位、速率、拒绝量三问。</li>
+    <li>动态治理讲得出边界：set 系能改什么、队列容量为什么是 JDK 盲区、美团/DynamicTp 怎么补；Worker 继承 AQS 的"忙闲标记"语义能说清。</li>
+  </ol>
+  <div class="pager">
+    <a href="05-无锁编程.html">⬅ 上一章：05 无锁编程</a>
+    <a class="next" href="07-异步编程.html">下一章：07 异步编程 Future 与 CompletableFuture →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源合并）：① 蓝本 AlgoMaster Concurrency（Executors &amp; Thread Pools）；② <a href="https://javaguide.cn/java/concurrent/java-thread-pool-best-practices.html">JavaGuide · 线程池最佳实践</a> 及 <a href="https://javaguide.cn/java/concurrent">并发专题</a>；③ <a href="https://pdai.tech/md/java/thread/java-thread-x-overview.html">pdai.tech 并发系列</a>（线程池源码篇）；④ 美团技术团队：<a href="https://tech.meituan.com/2020/04/02/java-pooling-pratice-in-meituan.html">《Java线程池实现原理及其在美团业务中的实践》</a>（动态线程池与监控告警）、<a href="https://tech.meituan.com/2019/12/05/AQS.html">《从ReentrantLock的实现看AQS的原理及应用》</a>（Worker×AQS）；既有笔记 Java/java 基础.md 线程池节。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 06 章 线程池与 Executor</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

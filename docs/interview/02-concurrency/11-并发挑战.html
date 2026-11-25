@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 11 章 · 并发挑战 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#four">死锁四必要条件 ⭐⭐</a>
+  <a href="#code">死锁现场与预防</a>
+  <a href="#detect">检测与排查 ⭐</a>
+  <a href="#live">活锁与饥饿</a>
+  <a href="#spurious">伪唤醒 ⭐</a>
+  <a href="#inversion">优先级反转与线程泄漏</a>
+  <a href="#rt">场景：RT 突增排查</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="10-虚拟线程.html">⬅ 上一章：10 虚拟线程</a>
+  <a href="12-经典同步题.html">下一章：12 经典同步题 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 11 章 · 并发挑战</h1>
+    <div class="sub">死锁四条件 · jstack/arthas 排查 · 活锁与饥饿 · 伪唤醒 while 守卫 · 优先级反转 · 线程泄漏 —— 并发"生病"了怎么诊断怎么治</div>
+    <div class="meta">
+      <span>⭐ 高频：死锁四条件 · 伪唤醒 · jstack 排查</span>
+      <span>蓝本：AlgoMaster Concurrency · Deadlock &amp; Liveness</span>
+      <span>已合并：Java/java 基础.md 死锁节（593-612 行）✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>死锁的四个必要条件？为什么"缺一不成死锁"？⭐⭐（并入笔记）</li>
+      <li>怎么预防死锁？分别对应破坏哪一条？锁排序为什么最常用？⭐</li>
+      <li>线上疑似死锁，你怎么排查？jstack 里看什么？⭐</li>
+      <li>死锁、活锁、饥饿三者的区别？各举一个例子。</li>
+      <li>什么是伪唤醒？wait 为什么必须写在 while 里而不是 if？⭐</li>
+      <li>听说过优先级反转吗？火星探路者事故是怎么回事？</li>
+      <li>什么是线程泄漏？你项目里怎么防的？</li>
+    </ol>
+  </div>
+  <p>本章是<strong>"理论题 + 排查题"双考点</strong>：四条件、伪唤醒是背了就必须满分的理论；jstack/arthas 排查是 7 年经验必须演示得了的实操。前者答错直接暴露基础，后者答不出现场感说明没值过 On-Call。</p>
+</section>
+
+<section id="four">
+  <h2><span class="no">02</span>死锁四必要条件 ⭐⭐</h2>
+  <p>死锁（Deadlock）：一组线程互相持有对方需要的资源、互相等待，谁都无法推进。<strong>四个条件必须同时成立</strong>（Coffman 条件）——缺任何一个，死锁都不成立，这也是全部预防手段的理论根据：</p>
+  <table>
+    <tr><th>条件</th><th>含义</th><th>口语记忆</th></tr>
+    <tr><td><strong>互斥</strong>（Mutual Exclusion）</td><td>同一资源同一时刻只能被一个线程占用（笔记：相互条件）</td><td>资源独占，不能共享</td></tr>
+    <tr><td><strong>请求与保持</strong>（Hold and Wait）</td><td>线程因请求新资源而阻塞时，<strong>对已获得的资源保持不放</strong></td><td>占着碗里的，等锅里的</td></tr>
+    <tr><td><strong>不可剥夺</strong>（No Preemption)</td><td>线程获得的资源在用完之前<strong>不能被强行剥夺</strong>，只能自己释放</td><td>抢不走，只能等他放手</td></tr>
+    <tr><td><strong>循环等待</strong>（Circular Wait）</td><td>存在等待环：T1 持 L1 等 L2，T2 持 L2 等 L1（可推广到 N 个线程成环）</td><td>首尾相接的等</td></tr>
+  </table>
+  <ul>
+    <li><strong>为什么"缺一不成死锁"是题眼</strong>：四个条件是死锁的充要刻画（在资源分配图成环的意义上），所以<strong>预防 = 破坏任意一条</strong>。而现实中互斥通常破坏不了（锁本身就是互斥的），工程上主要打后三条——其中<strong>锁排序打"循环等待"，成本最低、最常用</strong>。</li>
+    <li>辨析：死锁线程<strong>全部静止</strong>（都在等，不耗 CPU）；活锁线程<strong>还在动</strong>（空转重试，耗 CPU）。面试里"卡死"两个字两种病都指，先分辨是哪一种再谈解法。</li>
+  </ul>
+  <div class="box note"><p>进阶口径：死锁处理三学派——<strong>预防</strong>（事前破坏条件，本文主线）、<strong>避免</strong>（运行时判断资源分配是否安全，银行家算法，面试提一句即可）、<strong>检测+恢复</strong>（事后：检测等待环，牺牲一个线程回滚——数据库引擎就是这么干的）。</p></div>
+</section>
+
+<section id="code">
+  <h2><span class="no">03</span>死锁现场与预防</h2>
+  <h3>最小可跑的死锁示例（两线程交叉拿两把锁）</h3>
+  <pre><code>public class DeadlockDemo {
+    private static final Object LOCK_A = new Object();
+    private static final Object LOCK_B = new Object();
+
+    public static void main(String[] args) {
+        Thread t1 = new Thread(() -&gt; {
+            synchronized (LOCK_A) {
+                sleep(100);                                  // 放大时间窗，保证 t2 已拿到 B
+                synchronized (LOCK_B) { System.out.println("t1: A+B"); }   // 等 B —— 死锁
+            }
+        }, "t1");
+        Thread t2 = new Thread(() -&gt; {
+            synchronized (LOCK_B) {
+                sleep(100);
+                synchronized (LOCK_A) { System.out.println("t2: B+A"); }   // 等 A —— 死锁
+            }
+        }, "t2");
+        t1.start(); t2.start();                              // 两线程永远挂起，进程不退出
+    }
+
+    static void sleep(long ms) {
+        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+    }
+}</code></pre>
+  <h3>预防三板斧（对应破坏哪一条）</h3>
+  <pre><code>// ① 锁排序：全局约定按固定顺序加锁 —— 破坏"循环等待"（最常用，成本最低）
+void transfer(Account from, Account to) {
+    Account first  = from.id &lt; to.id ? from : to;    // 永远先锁 id 小的
+    Account second = from.id &lt; to.id ? to : from;
+    synchronized (first) { synchronized (second) { doTransfer(from, to); } }
+}
+
+// ② tryLock 超时：拿不到就放手重试，不死等 —— 破坏"请求与保持"（已持有的可释放）
+if (lock1.tryLock(1, TimeUnit.SECONDS)) {
+    try {
+        if (lock2.tryLock(1, TimeUnit.SECONDS)) {
+            try { doTransfer(); } finally { lock2.unlock(); }
+        } else {
+            backoffAndRetry();                            // 拿不到第二把：放手，退避后整体重来
+        }
+    } finally { lock1.unlock(); }                         // ⭐ 第一把必须释放，否则白搭
+}
+
+// ③ 一次性申请全部资源：要么全拿到，要么一个不占 —— 从根上破坏"请求与保持"</code></pre>
+  <ul>
+    <li><strong>锁排序的实现要点</strong>：顺序依据必须<strong>全局全序</strong>（自增 id、hashCode 排序都行，但任何两处代码对同一对资源的排序必须一致）。动态排序的坑：对象没有天然 id 时用 <code>System.identityHashCode</code>，极小概率相等再退化为第三把锁——这条说出来是加分项。</li>
+    <li><strong>tryLock 细节追问</strong>：超时拿不到时必须释放已拿到的锁再整体重试，否则只是把死锁变成了"占着第一把等第二把"；重试要带随机退避防止同步化（否则会逼近活锁，见下节）。</li>
+    <li>破坏"不可剥夺"在纯 Java 里只有 tryLock 一种近似（不能从外部强行 unlock 别人的锁）；破坏"互斥"的思路是干脆不用锁：无锁结构（<a href="05-无锁编程.html">第 05 章</a>）、单线程 Actor 化。锁策略全景见 <a href="04-锁策略.html">第 04 章</a>。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题模板</strong>：先背四个条件名（互斥/请求与保持/不可剥夺/循环等待），再补"工程上主要破坏循环等待（锁排序）和请求与保持（tryLock/一次性申请）"，最后一句"我们代码里转账就是这么做的"——理论、手段、实践三层齐了。</p></div>
+</section>
+
+<section id="detect">
+  <h2><span class="no">04</span>检测与排查 ⭐</h2>
+  <h3>先认出现象（监控层）</h3>
+  <ul>
+    <li>典型曲线：<strong>吞吐量断崖式下降、接口超时（RT）飙升、线程数只涨不落</strong>；死锁线程永远不会自愈，表现为"某个功能从某时刻起 100% 超时"。</li>
+    <li>线程池视角：活跃线程打满且任务队列持续堆积——疑似全员卡死（不一定是死锁，也可能是下游全慢）。</li>
+  </ul>
+  <h3>工具链（笔记 600-605 并入）</h3>
+  <pre><code># ① jstack：JDK 自带，末尾直接给出判定
+jstack &lt;pid&gt;
+#   关键输出：
+#   "t1" ... locked &lt;0x... LOCK_A&gt;, waiting to lock &lt;0x... LOCK_B&gt;
+#   "t2" ... locked &lt;0x... LOCK_B&gt;, waiting to lock &lt;0x... LOCK_A&gt;
+#
+#   Found one Java-level deadlock:        &lt;-- 一行实锤，jstack 能自动检测 JVM 内 monitor 死锁
+#   =============================
+#   "t1":
+#     waiting to lock object ... held by "t2"
+
+# ② arthas：线上更顺手，直接指认阻塞源头
+thread -b          # 找出"阻塞其他线程最多"的线程 —— 直接给出死锁/阻塞元凶的堆栈
+thread --lockedMonitors   # 列出各线程持有的 monitor，自己拼等待环
+
+# ③ 数据库层死锁（for update 相互锁定）
+mysql&gt; SHOW ENGINE INNODB STATUS\G
+#   看 LATEST DETECTED DEADLOCK 段：两个事务各自持有和等待的索引/行、谁被回滚</code></pre>
+  <ul>
+    <li><strong>jstack 的边界</strong>：它能自动检测的是 <strong>monitor（synchronized）死锁</strong>；<code>ReentrantLock</code> 互相等待不会被打上 "Found deadlock" 标记，要靠人肉看 <code>waiting on condition</code> + <code>locked</code> 持有列表拼环——这个差异是高频追问。</li>
+    <li><strong>arthas thread -b 的适用面</strong>：它找的是"持有锁并阻塞了最多线程"的元凶，对 synchronized 和 AQS 锁都有效，且能看到具体堆栈行号——生产优先用它，比传 dump 文件快。</li>
+    <li><strong>数据库死锁特征</strong>：应用侧不是线程挂死，而是很快抛 <code>DeadlockLoserDataAccessException</code>（MySQL 挑一个事务回滚）——所以 DB 死锁排查看错误日志 + innodb status，而不是 jstack。两者别混。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：jstack 单次抓到 BLOCKED 不等于死锁（可能只是竞争激烈）。判定标准是<strong>多次采样（间隔几秒抓 3 次）同一批线程还在等同一批锁、且互相持有</strong>——成环才是死锁，单向等待只是慢。</p></div>
+</section>
+
+<section id="live">
+  <h2><span class="no">05</span>活锁与饥饿</h2>
+  <h3>活锁（Livelock）</h3>
+  <ul>
+    <li>定义：<strong>线程没有阻塞、一直在运行（不停改变自身状态），但整体任务永远推进不了</strong>——典型是两个线程互相检测到冲突后"互相礼让"，各自重试，节奏完全同步，于是永远再次撞车。</li>
+    <li>与死锁的区别一句话：死锁是"都在睡"，活锁是"都在空转"——活锁还白吃 CPU。</li>
+    <li>解法：<strong>引入随机性</strong>——重试前加随机延迟（随机退避），把两个线程的节奏打散；以太网 CSMA/CD、消息队列重试抖动（jitter）都是这个原理。</li>
+  </ul>
+  <pre><code>// 活锁原型：两个消费者同时抢两条资源，失败就"全放重试"
+while (!done) {
+    if (!tryAcquireBoth()) {
+        releaseAll();                 // 两个线程每次都在同一拍失败、同一拍重试 → 永远同步失败
+        sleep(100);                   // 固定退避：节奏仍同步，无解
+        // sleep(100 + random.nextInt(200));   // ✅ 随机退避：节奏错开，活锁破解
+        continue;
+    }
+    doWork(); done = true;
+}</code></pre>
+  <h3>饥饿（Starvation）</h3>
+  <ul>
+    <li>定义：线程<strong>长期抢不到资源</strong>（CPU 或锁）而无法推进——不是不能跑，是轮不上。成因：优先级太低被高优先级线程持续压制；<strong>非公平锁下"手速慢"的线程可能永远抢不到</strong>；临界区太长把别人饿死。</li>
+    <li>解法：<strong>公平锁</strong>（<code>new ReentrantLock(true)</code>，按排队顺序发放，代价是吞吐略降）、缩短临界区、控制线程优先级策略（Java 优先级只是 hint，别依赖）。</li>
+  </ul>
+  <h3>三者对比（一张表收口）</h3>
+  <table>
+    <tr><th>维度</th><th>死锁</th><th>活锁</th><th>饥饿</th></tr>
+    <tr><td>线程状态</td><td>阻塞，完全静止</td><td>运行中，不停重试</td><td>等待中或抢不到调度</td></tr>
+    <tr><td>能否自愈</td><td>不能（无限期）</td><td>运气好可能偶然解开</td><td>压力降了可能缓解</td></tr>
+    <tr><td>CPU 表现</td><td>不消耗（都在等）</td><td>空转消耗 CPU</td><td>不一定</td></tr>
+    <tr><td>根因</td><td>循环等待</td><td>互相礼让/同步重试</td><td>优先级/公平性失衡</td></tr>
+    <tr><td>解法</td><td>锁排序、tryLock、一次申请</td><td>随机退避</td><td>公平锁、短临界区</td></tr>
+  </table>
+</section>
+
+<section id="spurious">
+  <h2><span class="no">06</span>伪唤醒 ⭐</h2>
+  <p><strong>伪唤醒（spurious wakeup）是真实存在的</strong>：OS 底层（Linux futex 等）出于性能考虑<strong>允许 wait 在没有任何 notify 的情况下返回</strong>——JLS 也明确允许 JVM 这样做。所以铁律是：<strong><code>wait()</code> 返回 ≠ 条件已满足</strong>，醒来后必须重查条件，因此 wait 必须写在 <code>while</code> 里而不是 <code>if</code> 里。</p>
+  <pre><code>// 血案版本：if 只查一次条件
+synchronized (queue) {
+    if (queue.isEmpty()) {
+        queue.wait();          // 被"伪唤醒"或被 notify 后条件又被别人消费 —— 醒来时未必非空
+    }
+    queue.remove();            // 空队列上 remove：IndexOutOfBoundsException / 返回 null 污染下游
+}
+
+// 正确版本：while 守卫，每次醒来重查
+synchronized (queue) {
+    while (queue.isEmpty()) {  // ⭐ 醒来第一件事：重查条件，不满足继续睡
+        queue.wait();
+    }
+    queue.remove();            // 走到这里时条件必然成立
+}</code></pre>
+  <ul>
+    <li><strong>除了 OS 层伪唤醒，还有两个"类伪唤醒"来源</strong>同样被 while 兜住：① notifyAll 唤醒多个线程，先醒的把数据消费光（"偷唤醒"）；② notify 唤醒的是"错误"条件的线程。while 一招防三害。</li>
+    <li><strong>底层为什么要允许伪唤醒</strong>：futex 的等待/唤醒在内核高并发路径上做精确条件判定代价太高，实现上允许"顺带唤醒"，把条件校验成本还给用户态——用 while 重查一次远比内核做复杂匹配便宜。能答到这层是区分度。</li>
+    <li>同理推广：<code>Condition.await()</code>、<code>LockSupport.park()</code> 的返回都<strong>不承诺原因</strong>，park 醒来后都要重新校验条件——AQS 源码里全是这个模式。</li>
+    <li>wait/notify 的完整机制（为什么在 Object、notify 随机性、两阶段释放锁）见 <a href="03-互斥与同步.html">第 03 章 互斥与同步</a>；生产者-消费者的完整实现见 <a href="12-经典同步题.html">第 12 章</a>。</li>
+  </ul>
+  <div class="box warn"><p><strong>面试官最爱设的套</strong>："既然没人 notify，wait 不就不会醒，用 if 也安全？"——错。futex 允许虚假唤醒、interrupt 会打断、notifyAll 会群醒，任何一种都让 if 版本爆炸。答案永远是 while。</p></div>
+</section>
+
+<section id="inversion">
+  <h2><span class="no">07</span>优先级反转与线程泄漏</h2>
+  <h3>优先级反转（Priority Inversion）</h3>
+  <ul>
+    <li>场景：<strong>低优先级线程持有锁 → 高优先级线程等这把锁 → 中优先级线程抢占低优先级线程的 CPU</strong>。结果：高优先级被"中优先级"间接压制——优先级名义上反转了。锁本该传递依赖，被第三方插了队。</li>
+    <li><strong>经典事故：1997 火星探路者（Mars Pathfinder）</strong>——低优先级的气象任务持有共享总线锁，高优先级的总线管理任务等锁，中优先级的通信任务频繁抢占气象任务，导致高优先级任务超时、看门狗不断复位探测器。地面团队远程启用<strong>优先级继承（Priority Inheritance, PI）</strong>才解决。</li>
+    <li><strong>优先级继承</strong>：持锁线程临时<strong>继承等锁线程中的最高优先级</strong>，让它尽快干完释放锁，把锁的依赖传递下去。RTOS 普遍内置（VxWorks 的互斥量可选 PI 标志）；Linux 有 <code>PTHREAD_PRIO_INHERIT</code>。</li>
+    <li><strong>Java 侧的现实</strong>：Java 线程优先级只是提示（映射到 OS 也未必生效），JDK 内不提供带 PI 的锁；工程上的替代思路是<strong>别让低价值任务持有高价值任务需要的锁</strong>——锁粒度按业务等级拆分、关键路径不与杂务共锁。答出"Java 无 PI、要靠架构规避"即是亮点。</li>
+  </ul>
+  <h3>线程泄漏（Thread Leak）</h3>
+  <ul>
+    <li><strong>忘记 shutdown</strong>：new 了线程池/Thread 没收尾，核心线程常驻——反复发布后线程数阶梯上涨，最终 <code>unable to create new native thread</code>。防御：ExecutorService 用 try-with-resources 或注册 shutdown 钩子；周期任务统一收口到调度中心。</li>
+    <li><strong>无界队列堆积</strong>：<code>newLinkedBlockingQueue()</code> 不传容量 = Integer.MAX_VALUE，任务只进不出时内存被队列吃光——线程没漏，内存漏了（<a href="06-线程池.html">第 06 章</a>）。防御：有界队列 + 拒绝策略。</li>
+    <li><strong>ThreadLocal 未 remove</strong>：线程池线程长存 → Entry 的 value 强引用滞留 → 经典内存泄漏链（完整机制在 <a href="09-并发容器.html">第 09 章 ThreadLocal</a>）。防御：finally 里 remove，或换 ScopedValue（<a href="10-虚拟线程.html">第 10 章</a>）。</li>
+    <li><strong>怎么发现</strong>：监控线程数趋势（右掉不归零、重启前创新高）+ jstack 看同名业务线程数量是否随发布次数增长。</li>
+  </ul>
+</section>
+
+<section id="rt">
+  <h2><span class="no">08</span>场景收尾：接口 RT 突增的排查序列</h2>
+  <p>把本章串成一条实战动线——面试官问"某接口 RT 从 50ms 突增到 3s，说下你的动作序列"：</p>
+  <ol>
+    <li><strong>定范围</strong>：看监控是<strong>全接口还是单接口</strong>（全接口 → 先怀疑自身进程/GC/线程池；单接口 → 先怀疑下游和 SQL），同时看错误率与线程数曲线。</li>
+    <li><strong>jstack 多次采样</strong>：间隔 5-10 秒抓 3 次，看<strong>线程状态分布</strong>：
+      <ul>
+        <li>大量 <code>BLOCKED</code>（waiting to lock …）→ 锁竞争或死锁：找成环（互相持有）→ 死锁按 <a href="#detect">第 04 节</a>处理；单向等待 → 热点锁，考虑锁拆分/降临界区。</li>
+        <li>大量 <code>WAITING (on condition)</code> 停在下游调用 → 线程池被慢下游占满，本质是容量/熔断问题。</li>
+        <li>RUNNABLE 且 CPU 高 → 另一条线：死循环 or GC——切到 <a href="../03-jvm/README.html">03-jvm</a> 的 CPU 排查与 GC 日志。</li>
+      </ul>
+    </li>
+    <li><strong>arthas 快速验证</strong>：<code>thread -n 3</code> 看 CPU 前 3、<code>thread -b</code> 看阻塞源头，省去传 dump 的往返。</li>
+    <li><strong>DB 侧核对</strong>：慢 SQL 日志 + <code>SHOW ENGINE INNODB STATUS</code> 看 LATEST DETECTED DEADLOCK / 锁等待。</li>
+    <li><strong>恢复与复盘</strong>：先重启/摘流量止血，再按根因落修复（锁排序、超时、熔断），沉淀成规范。</li>
+  </ol>
+  <div class="box tip"><p><strong>评分点</strong>：这个序列的隐藏考点是"多次采样"和"状态分布先行"——单次 jstack 说明不了任何问题，先看 BLOCKED/WAITING/RUNNABLE 的构成再下钻，才是做过事的人的顺序。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">09</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：四条件 → 为什么破坏互斥不可行？→</strong> 临界资源天然独占（共享变量写就是互斥的）；能做的"去互斥"是无锁化/单线程化（CAS、Actor、Disruptor）——顺势把话题带到 <a href="05-无锁编程.html">第 05 章</a>。</li>
+    <li><strong>追问链：jstack 能查出所有死锁吗？→</strong> 只能自动识别 monitor（synchronized）环；ReentrantLock 的环要人肉拼"持有+等待"；分布式锁死锁 JVM 层根本看不见 → 引出 Redis/DB 锁的超时与续期。</li>
+    <li><strong>陷阱：死锁线程会占 CPU 吗？→</strong> 不会，都在 WAITING/BLOCKED——所以"CPU 不高但接口全超时"反而更像死锁，这是反直觉的判据。</li>
+    <li><strong>陷阱：tryLock 就一定防死锁吗？→</strong> 前提是拿不到就<strong>释放已持有的全部锁</strong>再整体重试；只超时第二把不放手第一把，照样锁死。且固定间隔重试有活锁风险，要加随机退避。</li>
+    <li><strong>陷阱：公平锁能防饥饿，能防死锁吗？→</strong> 不能。公平只改变"谁下一个拿锁"，循环等待照样成环——公平锁防饥饿、tryLock/锁排序防死锁，别答串。</li>
+    <li><strong>陷阱：notify 之后条件一定成立？→</strong> notify 只意味着"有人可能改了条件"，多个等待者竞争 + 伪唤醒都存在 → while 重查是唯一正解（<a href="#spurious">第 06 节</a>）。</li>
+    <li><strong>追问：虚拟线程时代这些病有变化吗？→</strong> 病理不变（锁语义、JMM 都没变），死锁照样发生且载体线程被 pin 时更隐蔽（<a href="10-虚拟线程.html">第 10 章</a>）；排查改用 <code>jcmd Thread.dump_to_file -format=json</code>。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">10</span>面试自查清单</h2>
+  <ol>
+    <li>四必要条件名 + 含义逐条背得出，并能说出"缺一不成死锁 → 预防=破坏任一条"的推理。</li>
+    <li>三板斧与条件的对应：锁排序↔循环等待、tryLock/一次性申请↔请求与保持，锁排序的"全局全序"要点。</li>
+    <li>能写最小死锁 demo，也能现场改写成锁排序版和 tryLock 版。</li>
+    <li>排查链路完整：现象（吞吐/RT/线程数）→ jstack 多次采样 + "Found one Java-level deadlock" → arthas thread -b → innodb status，且知道 jstack 只自动认 monitor 环。</li>
+    <li>死锁/活锁/饥饿三列对比表能默写，活锁解法是随机退避。</li>
+    <li>伪唤醒：futex 真实存在、wait 返回≠被 notify、while 守卫 + 三个"类伪唤醒"来源。</li>
+    <li>优先级反转：火星探路者故事 + 优先级继承原理 + Java 无 PI 要架构规避。</li>
+    <li>线程泄漏三来源：忘 shutdown、无界队列、ThreadLocal 未 remove，各自的防御动作。</li>
+    <li>RT 突增排查序列能按顺序说 5 步，突出"多次采样 + 状态分布先行"。</li>
+  </ol>
+  <div class="pager">
+    <a href="10-虚拟线程.html">⬅ 上一章：虚拟线程</a>
+    <a class="next" href="12-经典同步题.html">下一章：经典同步题 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；② <a href="https://javaguide.cn/java/concurrent/java-concurrent-questions-01.html">JavaGuide 并发常见题（上）</a>（死锁四条件与排查口径）；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 11 章 并发挑战</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

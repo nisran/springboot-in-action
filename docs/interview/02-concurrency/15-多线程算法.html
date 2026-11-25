@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 15 章 · 多线程算法 — Java 并发编程</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 02 Java 并发编程</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#basic">并行化的基本功</a>
+  <a href="#sort">专题1 并行归并排序 ⭐</a>
+  <a href="#wc">专题2 词频统计</a>
+  <a href="#bfs">专题3 并行 BFS ⭐</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <a href="#finale">板块收官</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="14-并发数据结构.html">上一章：14 并发数据结构</a>
+  <a href="../03-jvm/README.html">下一板块：03 JVM →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 15 章 · 多线程算法</h1>
+    <div class="sub">Fork/Join 并行归并排序 · 先局部后合并的词频统计 · 层同步并行 BFS —— 分治 + 合并 + 负载均衡，把并发放到算法层面</div>
+    <div class="meta">
+      <span>⭐ 高频：并行归并排序 · 并行 BFS 层同步</span>
+      <span>蓝本：AlgoMaster Concurrency · Multithreaded Algorithms</span>
+      <span>02 板块收官章 · 下一站 03-jvm</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>用 Fork/Join 手写一个并行归并排序；fork 和 join 的调用顺序有什么规矩？⭐⭐</li>
+      <li>任务切分到多细合适？切得太细会发生什么？Arrays.parallelSort 是怎么做的？⭐</li>
+      <li>多线程统计一个 10GB 文件的词频，怎么设计？为什么"先局部后合并"比直接共用一个 ConcurrentHashMap 吞吐高？⭐</li>
+      <li>并行 BFS 怎么做层间同步？CyclicBarrier 和 AtomicInteger 倒计数分别怎么写？⭐</li>
+      <li>为什么 DFS 难以并行化，BFS 却天然适合？</li>
+      <li>work stealing 是怎么解决负载不均的？Amdahl 定律说加速比卡在哪？</li>
+      <li>Fork/Join、手管线程池、parallelStream 做同一道题，你怎么选？</li>
+    </ol>
+  </div>
+  <p>这一章是 02 板块的收官章：前面 14 章的锁、CAS、线程池、容器，到了算法题里要<strong>组合着用</strong>。三个专题对应三类通用模式——分治并行（归并）、分片聚合（词频）、层级同步（BFS），覆盖了面试里绝大多数"多线程算法"题。</p>
+</section>
+
+<section id="basic">
+  <h2><span class="no">02</span>并行化的基本功</h2>
+  <p>一个算法能不能并行、并行后快不快，取决于四件事：<strong>切得开、算得独立、合得回来、匀得均匀</strong>。</p>
+  <ul>
+    <li><strong>任务切分（分治）</strong>：divide → conquer → combine。先看子问题是否<strong>独立</strong>：归并排序切两半互不依赖，可以并行；Fibonacci 朴素递归的子问题之间有大量重叠，切了就是重复计算，反而更慢。</li>
+    <li><strong>合并策略决定整体复杂度</strong>：数组归并 O(n)、Map 按 key 逐项 merge、多路取最小用小顶堆——合并做不好，前面省的时间全赔回去。</li>
+    <li><strong>负载均衡（work stealing）</strong>：ForkJoinPool 给每个工作线程一个 deque：自己从队头取任务做，空闲了从<strong>别人队尾偷</strong>。分治树不均衡（快排 pivot 偏斜、图各层宽度不一）时靠偷任务自动摊平——框架细节在 <a href="06-线程池.html">第 06 章 Fork/Join</a>。</li>
+    <li><strong>切分阈值</strong>：每个任务的调度开销（任务对象 + 入队 + CAS）是微秒级的固定成本，任务计算量必须远大于它，否则"任务开销反超收益"，并行比串行还慢。经验：数组类任务 1k~10k 元素/任务（<code>Arrays.parallelSort</code> 的粒度就是 1&lt;&lt;13 = 8192），最终以基准实测为准。</li>
+  </ul>
+  <h3>一眼判断：这个算法能不能并行</h3>
+  <table>
+    <tr><th>模式</th><th>例子</th><th>结论</th></tr>
+    <tr><td>子问题完全独立</td><td>归并排序两半、map/filter 按分区处理</td><td>天然并行，分治直接上</td></tr>
+    <tr><td>链式依赖</td><td>冒泡排序（相邻比较）、朴素前缀和（后一个依赖前一个的和）</td><td>难并行，先改算法（前缀和有并行扫描算法）再谈多线程</td></tr>
+    <tr><td>子问题重叠</td><td>Fibonacci 朴素递归</td><td>并行 = 重复计算，越并行越慢；换备忘录/动态规划</td></tr>
+    <tr><td>分片独立 + 合并有套路</td><td>词频统计、TopK、求和求最大</td><td>适合"先局部后合并"</td></tr>
+    <tr><td>按阶段推进</td><td>BFS 的层、流水线阶段</td><td>阶段内并行 + 阶段间同步（barrier）</td></tr>
+  </table>
+  <div class="box note"><p><strong>Amdahl 定律</strong>：加速比 S ≤ 1 / (f + (1−f)/p)，f 是串行部分占比。归并排序里 merge 若只能单线程做，核数再多也封顶——<strong>串行段（划分、合并、同步点）才是并行算法设计的胜负手</strong>，这句话面试时先说出来。</p></div>
+</section>
+
+<section id="sort">
+  <h2><span class="no">03</span>专题 1 · 并行归并排序 ⭐</h2>
+  <h3>思路</h3>
+  <p>递归二分到阈值以下转<strong>串行排序</strong>（小段上插入排序/双轴快排的局部性反而更好），段内有序后再两两 merge。用 <code>RecursiveAction</code>（无返回值的 Fork/Join 任务）承载：每个任务负责数组的一个区间 [lo, hi)。</p>
+  <h3>代码</h3>
+  <pre><code>class ParallelMergeSort extends RecursiveAction {    // RecursiveAction：无返回值的 FJ 任务
+    private static final int THRESHOLD = 1 &lt;&lt; 13;   // 阈值 8192：小于它任务开销反超收益
+    private final int[] a, tmp;
+    private final int lo, hi;                        // 本任务负责的区间 [lo, hi)
+
+    ParallelMergeSort(int[] a, int[] tmp, int lo, int hi) {
+        this.a = a; this.tmp = tmp; this.lo = lo; this.hi = hi;
+    }
+
+    @Override
+    protected void compute() {
+        if (hi - lo &lt;= THRESHOLD) {                  // ⭐ 阈值内转串行
+            Arrays.sort(a, lo, hi);                  // 小段直接用现成排序，CPU 缓存友好
+            return;
+        }
+        int mid = (lo + hi) &gt;&gt;&gt; 1;                  // 无符号右移取中点，不溢出
+        ParallelMergeSort left  = new ParallelMergeSort(a, tmp, lo, mid);
+        ParallelMergeSort right = new ParallelMergeSort(a, tmp, mid, hi);
+        left.fork();                                 // ⭐ 规矩①：先 fork 左半（进队列给别人偷）
+        right.compute();                             // ⭐ 规矩②：右半当前线程直接算，自己绝不闲着
+        left.join();                                 // ⭐ 规矩③：join 放最后，等 fork 出去的那份
+        merge(a, tmp, lo, mid, hi);                  // 两半各自有序，最后归并
+    }
+
+    private static void merge(int[] a, int[] tmp, int lo, int mid, int hi) {
+        System.arraycopy(a, lo, tmp, lo, mid - lo);  // 左半复制到 tmp，右半留在原地
+        int i = lo, j = mid;
+        for (int k = lo; k &lt; hi; k++) {              // 经典双指针归并
+            if (i &gt;= mid)           a[k] = a[j++];   // 左半用尽，取右半
+            else if (j &gt;= hi)       a[k] = tmp[i++]; // 右半用尽，取左半
+            else if (a[j] &lt; tmp[i]) a[k] = a[j++];   // 取两边较小者（稳定：相等先取左）
+            else                     a[k] = tmp[i++];
+        }
+    }
+}
+
+// 启动：共享同一个 tmp 数组，避免每层任务重复分配大数组
+int[] a = {5, 3, 8, 1, 9, 2, 7, 6, 0, 4};   // 待排序数据（示意）
+ForkJoinPool pool = ForkJoinPool.commonPool();      // 默认并行度 = CPU 核数 - 1
+pool.invoke(new ParallelMergeSort(a, new int[a.length], 0, a.length));</code></pre>
+  <div class="box warn"><p><strong>fork / join 的规矩（高频追问，错一个就露馅）</strong>：① 不要两个都 fork 再两个 join——当前线程 fork 完立刻阻塞等 join，等于把自己变成闲置等待者；正确姿势是"fork 一个、自己算一个、最后 join"。② fork 之后不要马上 join——中间这段是当前线程干活的窗口。③ 等价简写 <code>invokeAll(left, right)</code>，内部就是 fork 一个 + compute 一个 + join。④ 不要在 FJ 任务里做阻塞 IO——worker 被占住又偷不了任务，整个池假死（<a href="06-线程池.html">第 06 章</a>的经典事故）。</p></div>
+  <h3>性能讨论</h3>
+  <ul>
+    <li><strong>为什么快：work stealing 补偷任务。</strong>递归左半 fork 进队列后，当前线程继续算右半；如果某个线程先做完，它会从别的线程队列<strong>尾部</strong>偷大任务——队尾是分治树上游的大粒度任务，偷一次赚得多，负载被持续摊平。理想加速比 O(n log n / p)，实际受内存带宽限制（归并是带宽敏感型）。</li>
+    <li><strong>与 Arrays.parallelSort 的关系</strong>：JDK 8+ 的实现就是这套——commonPool + 粒度 8192（<code>MIN_ARRAY_SORT_GRAN</code>）+ 阈值内转串行。对象数组用并行归并（TimSort 变体，保稳定性），基本类型用并行双轴快排（不用保稳定，快排常数更小）。手写这道题等于把 parallelSort 讲透了。</li>
+    <li><strong>为什么归并"天然"适合并行</strong>：两半完全独立（各自排序互不依赖），merge 只在边界处发生；对比冒泡/选择排序——相邻比较是<strong>链式依赖</strong>，切开子段后边界还有逆序对，合并代价把收益全吃掉。链式依赖是并行化的天敌。</li>
+  </ul>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：为什么归并可以不用并行快排？</strong>→ 也能做（partition 后两半独立递归），但 partition 本身是串行段（Amdahl），且分治树随 pivot 偏斜，更依赖 work stealing 兜底；JDK 对基本类型正是并行快排、对象类型并行归并——稳定性和常数各有取舍。</li>
+    <li><strong>追问链：tmp 数组为什么要外面传进来共享？</strong>→ 每层任务各自 new 大数组会把内存和 GC 压力放大；共享一个 tmp 时，各任务的 merge 只读写自己的 [lo, hi) 区间，无重叠即无需同步——"共享但分区"是无锁的常见手法。</li>
+    <li><strong>追问链：数组只有 1 万个元素还并行吗？</strong>→ 直接 <code>Arrays.sort</code>。1 万元素串行排序毫秒级，任何任务调度开销都不值——先问数据量级再谈并行，这是工程判断力。</li>
+  </ul>
+</section>
+
+<section id="wc">
+  <h2><span class="no">04</span>专题 2 · 多线程词频统计</h2>
+  <h3>思路</h3>
+  <p>大文本按块切分（按行边界对齐，别把单词截断）→ <strong>每个线程在自己的局部 HashMap 里统计</strong>（全程不碰任何共享结构）→ 最后合并阶段用 <code>ConcurrentHashMap.merge</code> 把各线程的局部结果归成全局。这就是 <strong>"先局部后合并"（map-side combine）</strong>，和 MapReduce 的 Combiner 是同一个思想。</p>
+  <h3>代码</h3>
+  <pre><code>int cores = Runtime.getRuntime().availableProcessors();
+List&lt;String&gt; lines = Files.readAllLines(Path.of("big.log"));  // 示意；超大文件应分块读
+int chunk = (lines.size() + cores - 1) / cores;               // 均分 n 块（按行切，不截断单词）
+ExecutorService pool = Executors.newFixedThreadPool(cores);
+List&lt;Future&lt;Map&lt;String, Integer&gt;&gt;&gt; futures = new ArrayList&lt;&gt;();
+
+for (int i = 0; i &lt; lines.size(); i += chunk) {
+    List&lt;String&gt; part = lines.subList(i, Math.min(i + chunk, lines.size()));
+    futures.add(pool.submit(() -&gt; {
+        Map&lt;String, Integer&gt; local = new HashMap&lt;&gt;();   // ⭐ 线程局部累积：全程零共享、零同步
+        for (String line : part)
+            for (String w : line.toLowerCase().split("\\W+"))
+                if (!w.isEmpty()) local.merge(w, 1, Integer::sum);  // 普通 HashMap 就够
+        return local;
+    }));
+}
+
+// 合并阶段：只在边界发生一次，用 CHM 的复合原子操作逐 key 归并
+ConcurrentHashMap&lt;String, Long&gt; global = new ConcurrentHashMap&lt;&gt;();
+for (Future&lt;Map&lt;String, Integer&gt;&gt; f : futures)
+    for (Map.Entry&lt;String, Integer&gt; e : f.get().entrySet())    // InterruptedException 处理略
+        global.merge(e.getKey(), e.getValue().longValue(), Long::sum);  // ⭐ 读旧值+求和+写回，一步原子
+pool.shutdown();</code></pre>
+  <p>如果只需要<strong>总词数</strong>（不分组），计数器用 LongAdder 而不是 AtomicLong：</p>
+  <pre><code>LongAdder total = new LongAdder();
+total.increment();   // 高竞争下把热点分散到 Cell[]，读时 sum() 汇总
+                     // AtomicLong 是单点 CAS，竞争一激烈自旋失败率陡增 —— 详见 05-无锁编程.html</code></pre>
+  <h3>性能讨论：为什么"先局部后合并"赢</h3>
+  <ul>
+    <li><strong>对比方案：直接共享一个 CHM，每读一个词就 merge 一次。</strong>每次 merge 都要：hash 定位桶 → 桶内链/树遍历 → 可能进桶级 synchronized；而高频词（the / is / and）<strong>全部撞在同一个桶</strong>，竞争集中、缓存行在核间反复失效。局部 HashMap 没有任何同步指令，合并只在最后做一次 O(总词数)——把几十万次竞争摊薄成几千次。</li>
+    <li><strong>本质：减少共享写点的数量级。</strong>并发结构的优化上限是"缩小临界区"，而线程私有数据的优化是"消灭临界区"——呼应 <a href="14-并发数据结构.html">第 14 章</a>结尾那句"不共享是最高级的并发安全"。</li>
+    <li><strong>CHM.merge 的原子性靠什么？</strong>桶头 synchronized 包住"读旧值-计算-写回"的复合操作——这正是 <a href="09-并发容器.html">第 09 章复合操作原子性</a>的落点，两个考点在这道题里会合。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题技巧：先报数字再讲方案。</strong>"10GB 文本 ≈ 百亿字符，8 核切成 8 块各 1.25GB；局部 HashMap 只装去重后的词（英文词库量级 10^5~10^6），每块内存几十 MB，可控；合并阶段只需归并 8 份局部表。"——有量级估算的答案自带"真的做过"的说服力，7 年经验尤其要这么答。</p></div>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：最后要 TopK 高频词呢？</strong>→ 每线程局部维护大小为 K 的小顶堆（或直接局部排序截断），最后只合并 n×K 个条目——数据移动量从"全量词表"降到 n×K，还是"先局部后合并"。</li>
+    <li><strong>追问链：10GB 文件读不进内存怎么办？</strong>→ FileChannel 按 position 分块，每块内先找换行符把边界对齐再交给线程；合并阶段不变。切分必须尊重数据的语义边界（这里是"单词不能截断"）。</li>
+    <li><strong>追问链：流式/无限数据呢？</strong>→ 分批局部聚合 + 周期性滚动合并（滑动窗口聚合），思想不变，只是合并不是"最后一次"而是"每个窗口边界"。</li>
+    <li><strong>追问链：用 parallelStream 一行搞定行不行？</strong>→ 功能上可以（<code>parallelStream().collect(groupingBy(..., counting()))</code>），但 commonPool 是全局共享的、切分粒度不可控、还怕流水线里混进阻塞——面试口径："能写，但生产上我自己管线程池和粒度更稳"（详见 <a href="07-异步编程.html">第 07 章</a>）。</li>
+  </ul>
+</section>
+
+<section id="bfs">
+  <h2><span class="no">05</span>专题 3 · 并行 BFS ⭐</h2>
+  <h3>思路：层级同步</h3>
+  <p>BFS 按"层"（frontier）展开：同一层的节点<strong>互不依赖</strong>（最短路性质保证同层节点不会互为前驱），是天然并行单元；而下一层的输入 = 本层全部输出，<strong>层与层之间必须同步</strong>。整体结构 = <strong>层内 map 并行 + 层间 barrier</strong>，两种实现：每层一栅栏（CyclicBarrier）或层内未完成计数归零开门（AtomicInteger）。</p>
+  <h3>实现 A：CyclicBarrier 每层一栅栏</h3>
+  <pre><code>class ParallelBFS {
+    private final List&lt;List&lt;Integer&gt;&gt; graph;          // 邻接表
+    private final int n;
+    private final int threads;                        // 常驻 worker 数
+    private final CyclicBarrier barrier;              // ⭐ 循环栅栏：每层复用（cyclic 的含义）
+    private final AtomicIntegerArray visited;         // CAS 置位，代替非线程安全的 boolean[]
+    private volatile List&lt;Integer&gt; frontier;          // 当前层（全体线程统一读）
+    private final ConcurrentLinkedQueue&lt;Integer&gt; next = new ConcurrentLinkedQueue&lt;&gt;();
+
+    ParallelBFS(List&lt;List&lt;Integer&gt;&gt; graph, int threads) {
+        this.graph = graph; this.n = graph.size(); this.threads = threads;
+        this.barrier = new CyclicBarrier(threads);    // parties = 工作线程数
+        this.visited = new AtomicIntegerArray(n);
+    }
+
+    void bfs(int src) {                               // 启动：置源点 + 起 N 个 worker（示意）
+        visited.set(src, 1);
+        frontier = List.of(src);
+        for (int i = 0; i &lt; threads; i++)
+            new Thread(new Worker(i), "bfs-worker-" + i).start();
+    }
+
+    private void await() { try { barrier.await(); } catch (Exception e) { throw new IllegalStateException(e); } }
+
+    class Worker implements Runnable {
+        final int id;
+        Worker(int id) { this.id = id; }
+        public void run() {
+            while (!frontier.isEmpty()) {
+                List&lt;Integer&gt; layer = frontier;
+                // ⭐ 同层节点互不依赖：本线程只扩展按步长分给自己的那一份
+                for (int i = id; i &lt; layer.size(); i += threads) {
+                    for (int nb : graph.get(layer.get(i))) {
+                        if (visited.compareAndSet(nb, 0, 1))  // 恰好一个线程能置 1 成功
+                            next.add(nb);                      // 置位成功者负责入队：不重不漏
+                    }
+                }
+                await();                       // 栅栏①：层内全员扩展完毕
+                if (id == 0) {                  // 0 号线程统一换层（避免全员同时换）
+                    frontier = List.copyOf(next);   // volatile 写发布新层
+                    next.clear();
+                }
+                await();                       // 栅栏②：等换层完成，全员再进下一轮
+            }
+        }
+    }
+}</code></pre>
+  <h3>实现 B：AtomicInteger 层内计数归零开门</h3>
+  <pre><code>class LevelCountBFS {
+    private final List&lt;List&lt;Integer&gt;&gt; graph;         // 邻接表
+    private final int n;
+    private volatile List&lt;Integer&gt; frontier;
+    private final AtomicIntegerArray visited;
+
+    LevelCountBFS(List&lt;List&lt;Integer&gt;&gt; graph) {
+        this.graph = graph; this.n = graph.size();
+        this.visited = new AtomicIntegerArray(n);
+    }
+
+    // 不用栅栏：本层派一个任务/节点，未完成计数归零 = 本层结束（多线程 BFS 面试题的通行思路）
+    void bfsParallel(int src, ExecutorService pool) {
+        visited.set(src, 1);
+        frontier = List.of(src);
+        while (!frontier.isEmpty()) {
+            List&lt;Integer&gt; layer = frontier;
+            ConcurrentLinkedQueue&lt;Integer&gt; nextQ = new ConcurrentLinkedQueue&lt;&gt;();
+            AtomicInteger remaining = new AtomicInteger(layer.size());  // 本层待完成计数
+
+            for (Integer node : layer) {
+                pool.submit(() -&gt; {
+                    for (int nb : graph.get(node))
+                        if (visited.compareAndSet(nb, 0, 1))       // CAS 去重：不重复入队
+                            nextQ.add(nb);
+                    if (remaining.decrementAndGet() == 0)          // ⭐ 最后一个完成的线程"开门"
+                        frontier = List.copyOf(nextQ);             // 发布下一层（volatile 写）
+                });
+            }
+            // ⭐ 层间同步：自旋等新层发布。volatile 写/读构成 happens-before，
+            //    看到新 frontier 时，其内容必然完整可见（生产上用 Phaser / CountDownLatch，别忙等）
+            while (frontier == layer) Thread.onSpinWait();
+        }
+    }
+}</code></pre>
+  <h3>两方案对比与讨论</h3>
+  <table>
+    <tr><th></th><th>CyclicBarrier 每层一栅栏</th><th>AtomicInteger 计数归零</th></tr>
+    <tr><td>线程模型</td><td>N 个常驻 worker 分片扫 frontier</td><td>每节点一个任务入池，天然适配层宽波动</td></tr>
+    <tr><td>同步成本</td><td>每层两次栅栏（扩展完 + 换层完）</td><td>每任务一次 decrementAndGet + 自旋等待</td></tr>
+    <tr><td>层很窄时</td><td>worker 空转等栅栏，浪费明显</td><td>任务少，天然轻</td></tr>
+    <tr><td>注意点</td><td>换层时序：必须二次栅栏等 0 号换完</td><td>"发布下一层"必须在开门信号可见之前完成</td></tr>
+  </table>
+  <p>工程上还可直接用 <code>Phaser.arriveAndAwaitAdvance()</code>（每层一个 phase，支持动态注册参与者），语义就是"每层一栅栏"的现代版；CyclicBarrier/Phaser 的对比详见 <a href="08-并发工具类.html">第 08 章 并发工具类</a>。</p>
+  <h3>为什么 BFS 天然并行、DFS 难并行</h3>
+  <ul>
+    <li><strong>DFS 的状态是"当前路径"</strong>：递归栈走到哪、下一步扩展谁，都依赖路径历史；并行 DFS 要么每条路径复制一份 visited（内存爆炸 + 可能重复搜索同一子树），要么任务间高频通信去重——并行开销吃掉收益。</li>
+    <li><strong>BFS 把"路径状态"显式变成了"层"这个集合</strong>：同层节点由最短路性质保证互不为祖先-后代，扩展彼此独立；visited 判定可以 CAS 化。结构上就是 map（同层并行）+ barrier（层间同步），正好对上本章开头的基本功模型——分布式图计算框架 Pregel 的 superstep 就是"层"的全局化版本。</li>
+  </ul>
+  <h3>追问</h3>
+  <ul>
+    <li><strong>追问链：visited 用 boolean[] 行不行？</strong>→ 不行：同层两线程同时发现同一邻居，都读到 false、都入队 → 重复扩展。必须 <code>AtomicIntegerArray.compareAndSet(nb, 0, 1)</code> 保证"恰好一个线程入队成功"。补一句更成熟的：若扩展操作幂等，重复入队只损性能不出错——能分清"正确性必需"与"性能优化"两种 CAS 用途，是亮点。</li>
+    <li><strong>追问链：前几层只有一两个节点，N 个 worker 全在等？</strong>→ 混合策略：层宽小于阈值走串行，超过再切并行——和归并排序的切分阈值是同一个道理：并行化本身有成本，量不够就不切。</li>
+    <li><strong>追问链：多源 BFS（多起点同时扩散）？</strong>→ 初始 frontier 放多个源即可，层级同步模型一字不改——"多源最短路"就是这个变体，能主动指出来说明你理解的是模型而不是模板。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">06</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：阈值到底定多少？</strong>→ 不是拍脑袋：以"任务计算耗时 ≥ 10 倍调度开销"为下限，用 JMH 对不同阈值跑基准；不同负载最优值不同，说"实测调优"比报一个神奇数字可信。</li>
+    <li><strong>追问链：Fork/Join 会死锁吗？</strong>→ 会：任务里 join 一个非自己 fork 的任务、或在 compute 里做长时间阻塞 IO——worker 全被占住、无人可偷，整个 commonPool 假死。规矩：compute 里只做 CPU 计算，join 只 join 自己 fork 的子任务（<a href="06-线程池.html">第 06 章</a>）。</li>
+    <li><strong>陷阱：parallelStream 一把梭。</strong>→ 共享 commonPool（别的框架也在用，互相干扰）、阻塞操作会被全局放大、无序性悄悄改变语义；适合的是纯 CPU、无共享副作用、量够大的小任务——否则老实写线程池（<a href="07-异步编程.html">第 07 章</a>有专节）。</li>
+    <li><strong>陷阱：词频统计把局部 Map 也换成 CHM。</strong>→ 局部累积本来零竞争，换并发结构是白白付同步税——"局部数据用普通结构"是本模式的要点，写反了恰恰暴露没理解"先局部后合并"。</li>
+    <li><strong>亮点：伪共享（false sharing）。</strong>→ 多线程写同一缓存行的不同变量（如朴素计数器数组），核间缓存一致性协议让性能塌方；LongAdder 的 Cell 间距 / <code>@Contended</code> 就是解法——主动提一句，链到 <a href="05-无锁编程.html">第 05 章</a>。</li>
+    <li><strong>陷阱：把 CyclicBarrier 和 CountDownLatch 用混。</strong>→ barrier 是"全员到齐一起放行"且可循环复用（BFS 每层重复用，正合适）；latch 是"计数归零放行"一次性。BFS 若用 latch，每层都要 new 一个——能说出这个差别就顺手复习了 <a href="08-并发工具类.html">第 08 章</a>。</li>
+    <li><strong>追问：怎么验证真的并行了？</strong>→ 压测吞吐对比（单线程 vs 并行），加线程栈采样（async-profiler / arthas）看 CPU 利用率与线程 park 分布——"并行了但没变快"时，先查串行段和同步开销。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">07</span>面试自查清单</h2>
+  <ol>
+    <li>能背出并行化四要素（切分 / 独立子问题 / 合并策略 / work stealing 均衡）+ 切分阈值的成本直觉，并各举一例。</li>
+    <li>Fork/Join 并行归并能白板写出：RecursiveAction、阈值转串行、fork→compute→join 顺序规矩、共享 tmp。</li>
+    <li>知道 Arrays.parallelSort 就是这套实现（commonPool + 粒度 8192），对象/基本类型策略的差异及原因。</li>
+    <li>词频统计能写出"分块 → 局部 HashMap → CHM.merge 合并"，并解释为什么比直接共享 CHM 快（热点集中 + 同步税）。</li>
+    <li>LongAdder vs AtomicLong 的选型与原理张口就来。</li>
+    <li>并行 BFS 两种层同步（CyclicBarrier / AtomicInteger 归零开门）能写核心段，知道 visited 必须 CAS 及原因。</li>
+    <li>能讲"DFS 难并行、BFS 天然并行"的结构性原因（路径依赖 vs 层独立），能延伸到 Pregel superstep。</li>
+    <li>Amdahl 定律一句话 + "串行段决定上限"的直觉，知道怎么验证并行收益（基准 + 采样）。</li>
+  </ol>
+</section>
+
+<section id="finale">
+  <h2><span class="no">08</span>板块收官：02 并发编程知识地图</h2>
+  <p>15 章到这里收口。回看整个 02 板块，其实一直在回答三个问题：<strong>①并发为什么会出错</strong>——JMM 的可见性 / 原子性 / 有序性（01、02 章）；<strong>②怎么保证不出错</strong>——互斥与同步（03）、锁策略与 AQS（04）、无锁与 CAS（05）；<strong>③怎么用得又快又稳</strong>——线程池与 Fork/Join（06）、异步编排（07）、并发工具与容器（08、09）、虚拟线程（10），最后落到挑战、经典题、设计题与本章的手写结构、并行算法（11-15）。面试遇到任何并发题，先定位它考的是这三层中的哪一层，再往下展开，答案就不会散。</p>
+  <ul>
+    <li><strong>原理篇</strong>：<a href="01-并发基础.html">01 并发基础</a> · <a href="02-JMM.html">02 JMM</a> · <a href="05-无锁编程.html">05 无锁编程</a></li>
+    <li><strong>控制篇</strong>：<a href="03-互斥与同步.html">03 互斥与同步</a> · <a href="04-锁策略.html">04 锁策略</a> · <a href="08-并发工具类.html">08 并发工具类</a></li>
+    <li><strong>工程篇</strong>：<a href="06-线程池.html">06 线程池</a> · <a href="07-异步编程.html">07 异步编程</a> · <a href="09-并发容器.html">09 并发容器</a> · <a href="10-虚拟线程.html">10 虚拟线程</a></li>
+    <li><strong>实战篇</strong>：<a href="11-并发挑战.html">11 并发挑战</a> · <a href="12-经典同步题.html">12 经典同步题</a> · <a href="13-并发设计题.html">13 并发设计题</a> · <a href="14-并发数据结构.html">14 并发数据结构</a> · 15 多线程算法（本章）</li>
+  </ul>
+  <div class="box tip"><p><strong>下一板块</strong>：并发的地基一半在 JVM。<a href="../03-jvm/README.html">03 JVM 与内存模型</a>里，JMM 的 happens-before 落到 JVM 内存结构（堆 / 栈 / 元空间）、GC 线程如何与业务线程并发工作（安全点、三色标记）、线上 CPU 100% 与内存泄漏怎么排查（jstack / arthas / heap dump）——带着 02 章的"可见性 / 原子性"问题去 03 找 JVM 层的答案。</p></div>
+  <p>最后一句复习心法：并发面试的所有题目，都能折回到<strong>"共享了什么 → 怎么协调 → 怎么验证"</strong>这三问。共享得越少越好（线程私有/不可变），协调选最轻的工具（volatile → CAS → 锁 → 栅栏，按需升级），验证靠 happens-before 推理加压测采样——这套框架从第 01 章贯穿到本章，也是把 02 板块读"厚"之后再读"薄"的那一页。</p>
+  <div class="pager">
+    <a href="14-并发数据结构.html">⬅ 上一章：并发数据结构</a>
+    <a class="next" href="../03-jvm/README.html">下一板块：03 JVM 与内存模型 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源体系）：① 蓝本 AlgoMaster Concurrency；本章以蓝本 AlgoMaster + 自研题解为主；②③无直接对应；既有笔记 Java/java 基础.md 并发节。深挖路线见 <a href="README.html#sources">板块 README · 资料来源</a>。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">02 Java 并发编程</a> · 第 15 章 多线程算法</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>
