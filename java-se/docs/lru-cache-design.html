@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LRU 缓存:从 LinkedHashMap 到双索引设计</title>
+<style>
+  :root {
+    --text: #24292f;
+    --muted: #57606a;
+    --accent: #0969da;
+    --border: #d0d7de;
+    --code-bg: #f6f8fa;
+    --warn-bg: #fff8c5;
+    --tip-bg: #dafbe1;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--text);
+    line-height: 1.75;
+    margin: 0;
+    background: #fff;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+  h1 { font-size: 1.9em; line-height: 1.3; margin: 0 0 4px; }
+  h2 {
+    font-size: 1.4em;
+    margin-top: 2.2em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--border);
+  }
+  h3 { font-size: 1.12em; margin-top: 1.6em; }
+  p { margin: 0.8em 0; }
+  code {
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+  table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.92em; }
+  th, td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; }
+  th { background: var(--code-bg); }
+  .subtitle { color: var(--muted); margin-bottom: 2em; }
+  .toc {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 0 0 2.5em;
+  }
+  .toc .toc-title { font-weight: 700; margin-bottom: 6px; }
+  .toc ol { margin: 0; padding-left: 1.4em; }
+  .toc li { margin: 2px 0; }
+  .warn {
+    background: var(--warn-bg);
+    border-left: 4px solid #d4a72c;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 16px;
+    margin: 1.2em 0;
+  }
+  .tip {
+    background: var(--tip-bg);
+    border-left: 4px solid #4ac26b;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 16px;
+    margin: 1.2em 0;
+  }
+  .warn .label, .tip .label { font-weight: 700; margin-right: 6px; }
+  .warn .label { color: #9a6700; }
+  .tip .label { color: #1a7f37; }
+  .diagram {
+    background: var(--code-bg);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.82em;
+    line-height: 1.55;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  footer {
+    margin-top: 4em;
+    padding-top: 1.2em;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.88em;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>LRU 缓存:从 LinkedHashMap 到双索引设计</h1>
+<p class="subtitle">学习笔记 · 对应 <code>org.esmile.basic.collections.LRUCache</code> · Java 21</p>
+
+<nav class="toc">
+  <div class="toc-title">目录</div>
+  <ol>
+    <li><a href="#s1">LRU 是什么</a></li>
+    <li><a href="#s2">加上 TTL:两个容易混淆的概念</a></li>
+    <li><a href="#s3">设计点一:双索引结构——两套索引,互相欠信息</a></li>
+    <li><a href="#s4">设计点二:PriorityQueue.remove(Object) 是 O(n)</a></li>
+    <li><a href="#s5">线程安全:从简单到复杂高效</a></li>
+    <li><a href="#s6">细节打磨清单</a></li>
+  </ol>
+</nav>
+
+<h2 id="s1">一、LRU 是什么</h2>
+
+<p>缓存的容量是有限的,满了就必须删——<strong>按什么规则删</strong>,就是缓存的核心设计决策:</p>
+
+<table>
+  <tr><th>策略</th><th>规则</th><th>一句话点评</th></tr>
+  <tr><td>FIFO</td><td>先进先出,删最老的</td><td>实现最简单,但不区分"常用"和"用完就扔"</td></tr>
+  <tr><td><strong>LRU</strong></td><td>删<strong>最久未被使用</strong>的</td><td>核心假设:最近用过的,将来更可能再用</td></tr>
+  <tr><td>LFU</td><td>删使用<strong>次数最少</strong>的</td><td>统计更多信息,但"历史包袱"重,旧热点赶不走</td></tr>
+</table>
+
+<p>LRU 的两个关键动作:</p>
+<ul>
+  <li><code>get(key)</code> 命中后,要把这个 key 提到"最近使用"的位置——<strong>访问本身就是一种使用</strong>;</li>
+  <li><code>put(key, value)</code> 时如果满了,淘汰<strong>最久未使用</strong>的那个。</li>
+</ul>
+
+<h3>1.1 为什么用 <code>LinkedHashMap(accessOrder = true)</code></h3>
+
+<p>经典实现(LeetCode 146)是 <code>HashMap + 手写双向链表</code>:map 负责 O(1) 查找,链表负责维护"使用顺序"。<code>LinkedHashMap</code> 就是 JDK 替你维护了这条链表——第三个构造参数 <code>accessOrder = true</code> 之后,<strong>每次 get / put 都自动把该条目挪到"最近使用"一端</strong>:</p>
+
+<pre><code>// 迭代顺序 = 访问顺序:第一个是最久未使用(LRU),最后一个是最近使用(MRU)
+map = new LinkedHashMap&lt;&gt;(capacity, 0.75f, true);</code></pre>
+
+<div class="warn">
+  <span class="label">⚠ 陷阱卡</span>
+  Java 21 起 <code>LinkedHashMap</code> 实现了 <code>SequencedMap</code>(JEP 431),新增了
+  <code>firstEntry()</code> / <code>lastEntry()</code>。在 accessOrder 模式下:
+  <strong><code>firstEntry()</code> 才是最久未使用(该淘汰的)</strong>,
+  <code>lastEntry()</code> 是最近刚用过的——拿反了,就会把刚访问的热数据赶出去。
+</div>
+
+<h2 id="s2">二、加上 TTL:两个容易混淆的概念</h2>
+
+<table>
+  <tr><th>概念</th><th>常用名</th><th>例子</th><th>性质</th></tr>
+  <tr><td>存活时长</td><td><code>ttl</code>、<code>ttlMillis</code>、<code>duration</code></td><td>60_000(还能活 60 秒)</td><td>相对时间,会"倒数"</td></tr>
+  <tr><td>过期时刻</td><td><code>expireAt</code>、<code>deadline</code></td><td>1730000000000(某个时间点)</td><td>绝对时间,固定不变</td></tr>
+</table>
+
+<p>换算关系,进门就做:</p>
+
+<pre><code>expireAt = System.currentTimeMillis() + ttlMillis;</code></pre>
+
+<p>现成的对照:HTTP Cookie 同时定义了 <code>Max-Age=3600</code>(时长)和 <code>Expires=Wed, 30 Oct 2026 ...</code>(时刻);Redis 的 <code>EXPIRE key 60</code> 对外是 TTL 语义,内部实现也是立刻换算成绝对时间戳。</p>
+
+<div class="tip">
+  <span class="label">✔ 为什么内部要存 expireAt</span>
+  如果直接存 ttl(60 秒),判断过期时还得知道"什么时候存的",需要再记一个插入时间;
+  存绝对时刻,判断只要一步 <code>now &gt; expireAt</code>,而且"续命"就是自然语义:重新覆盖 <code>expireAt = now + ttl</code>。
+</div>
+
+<h3>2.1 过期清理的两种姿势</h3>
+<ul>
+  <li><strong>惰性(lazy)</strong>:只有 get / put 摸到某个 key 时才顺手检查它。代价:过期条目在被摸到之前一直占内存,<code>size()</code> 虚高。</li>
+  <li><strong>顺带全清(scrub-on-access)</strong>:每次 get / put 先把所有已过期的一次清掉(最小堆的 <code>peek()</code> 看谁最早过期)。代价:单次操作可能多做一点工作,但均摊很便宜。本实现用的就是这种。</li>
+  <li>(生产级还有第三种:后台线程定时扫,如 Guava/Caffeine,复杂度最高。)</li>
+</ul>
+
+<h2 id="s3">三、设计点一:双索引结构——两套索引,互相欠信息</h2>
+
+<p>为什么一个数据结构不够?因为有两个互相独立的排序需求:</p>
+<ul>
+  <li>查值 + LRU 顺序 → 需要 <code>HashMap + 访问顺序链表</code>(LinkedHashMap)</li>
+  <li>"谁先过期" → 需要<strong>按 expireAt 排序</strong>的结构(最小堆 / TreeSet)</li>
+</ul>
+
+<p>所以用<strong>双索引</strong>:同一条数据,两套结构各挂一份。</p>
+
+<div class="diagram">   LinkedHashMap (accessOrder)              PriorityQueue (min-heap, 按 expireAt)
+   ┌──────────────────────────┐          ┌──────────────────────────────┐
+   │ 2 → Val(v, expireAt)     │ ← 最久未使用 │ Key(2, t₂)  ← 堆顶 = 最早过期   │
+   │ 3 → Val(v, expireAt)     │             │ Key(3, t₃)                    │
+   │ 1 → Val(v, expireAt)     │ ← 最近使用   │ Key(1, t₁)                    │
+   └──────────────────────────┘          └──────────────────────────────┘
+        ▲ firstEntry():容量淘汰用              ▲ peek():过期清理用</div>
+
+<p>这是生产级缓存(Caffeine、Guava Cache)的通用思路:<strong>一个结构干不了一件以上的事,就分两套索引各管一摊</strong>。方向没问题,但它有固有摩擦:</p>
+
+<p><strong>两套结构互相"欠"对方的信息。</strong>map 淘汰 LRU 时,需要 expireAt 才能从堆里定位并删掉对应条目;堆过期清理时,需要 key 才能从 map 里删。于是 (key, expireAt) 被迫复制进堆,expireAt 又复制进 Val——<strong>同一份事实存了两处(two sources of truth),每条更新路径都必须记得同步两边</strong>。</p>
+
+<div class="warn">
+  <span class="label">⚠ 同步坑实例</span>
+  更新已有 key 时,堆里的旧条目是 <code>Key(key, 旧 expireAt)</code>。
+  record 的 <code>equals</code> 基于全部组件,拿<strong>新 expireAt</strong> 构造的 Key 永远删不掉旧条目——必须用
+  <code>oldVal.expireAt</code> 去删,再 add 新的。漏了任何一半,堆里就留下"尸体",之后 <code>removeExpired()</code> 会把刚续命的 key 冤枉地删掉。
+</div>
+
+<p><strong>工业解法:共享 Node。</strong>不复制两份,而是让一个 <code>Node(key, value, expireAt)</code> 对象同时被两边引用(map 存 <code>K → Node</code>,堆里存 Node 引用)。信息只有一份,"同步"这个问题就从根上消失了。Caffeine 内部就是这么组织的。</p>
+
+<h2 id="s4">四、设计点二:PriorityQueue.remove(Object) 是 O(n)</h2>
+
+<p>直觉上"堆都是 O(log n)",但这是错觉。二叉堆只知道<strong>父子大小关系</strong>,不知道元素在数组哪个位置:</p>
+
+<table>
+  <tr><th>操作</th><th>复杂度</th><th>原因</th></tr>
+  <tr><td><code>offer</code> / <code>poll</code> / <code>peek</code></td><td>O(log n) / O(log n) / O(1)</td><td>只需从堆顶/堆尾调整</td></tr>
+  <tr><td><code>remove(Object)</code></td><td><strong>O(n)</strong></td><td>必须<strong>线性扫描</strong>整个数组找到它,再 O(log n) 调整</td></tr>
+</table>
+
+<p>本实现里,每次<strong>更新已有 key</strong>、每次<strong>容量淘汰</strong>,都要 <code>queue.remove(...)</code>——这两条高频路径直接退化成 O(n)。</p>
+
+<h3>方案 A:换 TreeSet,拿到真正的 O(log n)</h3>
+
+<pre><code>TreeSet&lt;Key&lt;K&gt;&gt; set = new TreeSet&lt;&gt;(
+        Comparator.comparingLong((Key&lt;K&gt; k) -&gt; k.expireAt)
+                  .thenComparing(k -&gt; k.k));   // ← 不加这行会出大事,见下</code></pre>
+
+<ul>
+  <li><code>first()</code> = 最早过期(替代 <code>peek()</code>),<code>remove(精确对象)</code> 是 O(log n);</li>
+  <li>复杂度全面对数级,代码几乎不用改结构。</li>
+</ul>
+
+<div class="warn">
+  <span class="label">⚠ 精妙的坑:TreeSet 用 comparator 判等</span>
+  TreeSet 判断"是不是同一个元素"不看 <code>equals</code>,看 <strong>compare 结果是否为 0</strong>。
+  如果 comparator 只比 <code>expireAt</code>,那么"同一毫秒过期的两个不同 key"会被当成同一个元素——第二个 <code>add</code> 直接消失,缓存凭空丢数据!
+  必须用 <code>thenComparing</code> 把 key 排进去做第二级比较。
+</div>
+
+<h3>方案 B:惰性删除(lazy deletion)</h3>
+
+<p>压根不删。给 Node 加一个"死亡"标记(或版本号):</p>
+
+<ul>
+  <li>map 淘汰 / 更新时,只标记,不动堆;</li>
+  <li><code>removeExpired()</code> 从堆顶 poll 时,发现是尸体就丢弃,继续 poll;</li>
+  <li>堆会比真实数据"虚胖",但每条真实数据最多产生一具尸体,均摊代价依然可控。</li>
+</ul>
+
+<p>这是定时器、事件循环的经典手法,Caffeine 内部也大量使用。它还有一个隐藏福利:<strong>彻底消灭了 remove(Object) 和"两份真相同步"两个问题</strong>——不需要从堆里精确删某个东西了。</p>
+
+<h3>两个方案对比</h3>
+
+<table>
+  <tr><th></th><th>现状(PriorityQueue)</th><th>方案 A(TreeSet)</th><th>方案 B(惰性删除)</th></tr>
+  <tr><td>插入/查询过期</td><td>O(log n)</td><td>O(log n)</td><td>O(log n)</td></tr>
+  <tr><td>更新/淘汰时的删除</td><td><strong>O(n)</strong></td><td>O(log n)</td><td>O(1) 标记</td></tr>
+  <tr><td>内存</td><td>精确</td><td>精确</td><td>堆会虚胖(尸体)</td></tr>
+  <tr><td>主要风险</td><td>性能</td><td>comparator 判等坑</td><td>逻辑稍绕(要标记+校验)</td></tr>
+</table>
+
+<h2 id="s5">五、线程安全:从简单到复杂高效</h2>
+
+<p>先明确这个类并发下为什么会坏:<code>accessOrder = true</code> 的 LinkedHashMap,<strong>get 也会改链表结构</strong>(把节点挪到尾部);PriorityQueue 同样非线程安全;而且 map 和堆两份索引的同步横跨多条语句,并发交错必然失同步。四个方案,由简到繁:</p>
+
+<h3>方案 1:synchronized 粗锁 —— 正确性优先</h3>
+
+<pre><code>public synchronized V get(K key) { ... }
+public synchronized V put(K key, V value, long ttlMillis) { ... }
+public synchronized int size() { ... }</code></pre>
+
+<ul>
+  <li>所有操作全局串行,一把锁同时罩住 map + queue 两个结构,<strong>绝不出错</strong>;</li>
+  <li>吞吐最低:读读也互斥;</li>
+  <li>适用:学习阶段、低并发场景——先把正确性立住,再谈优化。</li>
+</ul>
+
+<h3>方案 2:ReentrantReadWriteLock —— 本例的陷阱</h3>
+
+<p>直觉很美好:get 拿读锁、put 拿写锁,读读就能并行了。但本类有个致命细节:<strong>accessOrder 模式下 get 是"写"操作</strong>(移动链表节点 + <code>removeExpired()</code> 删条目),必须拿写锁——读写锁于是退化成一把全局写锁,白忙一场。</p>
+
+<div class="warn">
+  <span class="label">⚠ 教训</span>
+  读写锁的前提是"读操作真的不修改共享结构"。LRU 这种"访问即修改"的语义天生不匹配,
+  除非像 Caffeine 那样把"访问记录"从 get 的关键路径上摘出去(见方案 4)。
+</div>
+
+<p>顺带一句:<code>ReentrantLock</code> 相比 <code>synchronized</code> 提供的是 <code>tryLock</code> / 超时 / 可中断 / Condition 等能力,锁粒度不变,本类用不上。</p>
+
+<h3>方案 3:锁分段—— 把一把锁变成 N 把</h3>
+
+<p>既然一把锁罩所有人,那就切成 N 个独立的缓存,每个 key 按哈希落一个分片:</p>
+
+<pre><code>class ShardedLRUCache&lt;K, V&gt; {
+    private final LRUCache&lt;K, V&gt;[] shards;   // 每片内部就是方案 1 的 synchronized 版
+    private final int mask;                    // 分片数取 2 的幂,用位运算取模
+
+    private LRUCache&lt;K, V&gt; shard(K key) {
+        return shards[(key.hashCode() &amp; 0x7fffffff) &amp; mask];
+    }
+    public V get(K key) { return shard(key).get(key); }
+    public V put(K key, V value, long ttlMillis) { return shard(key).put(key, value, ttlMillis); }
+}</code></pre>
+
+<ul>
+  <li>并行度 ≈ 分片数:不同 key 大概率落不同片,片内仍是简单粗锁,正确性不打折;</li>
+  <li>代价(语义放宽):"全局最久未使用"退化为"分片内最久未使用";总容量变成近似值;<code>size()</code> 是弱一致快照;</li>
+  <li>老 ConcurrentHashMap 的 segment 设计、Redis 都是这么干的。<strong>自己实现高并发缓存,首选这条路。</strong></li>
+</ul>
+
+<h3>方案 4:工业级 —— Caffeine 思路,读近乎无锁</h3>
+
+<ul>
+  <li><strong>读路径不加锁</strong>:get 命中后,只把"这个 key 刚被访问"这一事件用 CAS 塞进一个环形缓冲,立刻返回——链表根本不动;</li>
+  <li><strong>写路径</strong>:同样先进写缓冲队列;</li>
+  <li><strong>后台线程</strong>异步把缓冲"排水",批量维护 LRU 顺序、执行淘汰和过期清理;</li>
+  <li>结果:读接近无锁 O(1),写分摊;代价是复杂度高一个数量级,且 LRU 顺序短暂"陈旧"(最终一致)。</li>
+</ul>
+
+<p>结论:生产环境别手搓,直接用 <a href="https://github.com/ben-manes/caffeine">Caffeine</a> 或 Guava Cache——API 里的 <code>maximumSize</code>、<code>expireAfterWrite</code> 正对应本文的 capacity 与 TTL。</p>
+
+<h3>四方案对比</h3>
+
+<table>
+  <tr><th>方案</th><th>并行度</th><th>读-读</th><th>读-写</th><th>实现难度</th><th>适用场景</th></tr>
+  <tr><td>synchronized 粗锁</td><td>1</td><td>互斥</td><td>互斥</td><td>★</td><td>学习 / 低并发</td></tr>
+  <tr><td>读写锁</td><td>1(本例退化)</td><td>—</td><td>—</td><td>★★</td><td>本例不适用(get 即写)</td></tr>
+  <tr><td>锁分段</td><td>≈ N</td><td>片间并行</td><td>片间并行</td><td>★★</td><td>中高并发自实现首选</td></tr>
+  <tr><td>Caffeine 式</td><td>接近 CPU 核数</td><td>无锁 CAS</td><td>缓冲 + 异步</td><td>★★★★★</td><td>生产 / 交给库</td></tr>
+</table>
+
+<div class="tip">
+  <span class="label">✔ 任何方案都绕不开的两个正确性问题</span>
+  ① <strong>复合操作不原子</strong>:先 get 判断 miss 再 put,两步之间别的线程可能已经写入——要么在外层整体加锁,要么提供 <code>computeIfAbsent</code> 风格的原子 API;
+  ② <code>size()</code> / 遍历只能是<strong>弱一致快照</strong>,别指望"精确的同一瞬间"。
+</div>
+
+<h2 id="s6">六、细节打磨清单</h2>
+
+<ul>
+  <li>比较器永远别用减法:<code>(a, b) -&gt; a.expireAt - b.expireAt</code> 会溢出,用 <code>Long.compare</code> 或 <code>Comparator.comparingLong</code>;</li>
+  <li><code>containsKey</code> + <code>put</code> 是两次哈希查找,一次 <code>put</code> 用返回值就够了(<code>oldVal != null</code> 即更新);</li>
+  <li>异常要带消息:<code>throw new IllegalArgumentException("capacity must be positive: " + capacity)</code>;</li>
+  <li>API 参数命名自解释:<code>ttlMillis</code>,并在 javadoc 写明单位;对外暴露"时长",内部存储"时刻";</li>
+  <li>该类<strong>非线程安全</strong>(LinkedHashMap 与堆都不是),javadoc 里注明;加锁的四种姿势见<a href="#s5">第五节</a>;</li>
+</ul>
+
+<footer>
+  基于 <code>java-se/src/main/java/org/esmile/se/collections/LRUCache.java</code> 的实现与评审整理 · 2026-10 · 8/8 测试通过时的快照
+</footer>
+
+</main>
+</body>
+</html>
