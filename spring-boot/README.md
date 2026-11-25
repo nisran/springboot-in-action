@@ -49,7 +49,7 @@
 
 ## Spring Boot Actuator
 
-document: [Production-ready Features (spring.io)](https://docs.spring.io/spring-boot/docs/3.1.1/reference/html/actuator.html)
+document: [Production-ready Features (spring.io)](https://docs.spring.io/spring-boot/4.1/reference/actuator/index.html)
 
 springboot 提供了很多production-ready 功能，帮你实现auditing，health，matrics等监督功能。这些功能一般通过HTTP终端或者JMX来提供，前者用的较多。
 
