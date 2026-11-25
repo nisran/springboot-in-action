@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 01 章 · 基础语法与类型系统 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#jvm-jdk">JDK / JVM 与字节码</a>
+  <a href="#types">数据类型全景</a>
+  <a href="#boxing">装箱拆箱与缓存池 ⭐</a>
+  <a href="#pass-by">值传递陷阱 ⭐</a>
+  <a href="#casting">类型转换与浮点精度</a>
+  <a href="#string">String 不可变性 ⭐⭐</a>
+  <a href="#builder">StringBuilder 三兄弟</a>
+  <a href="#char-encoding">char 与编码 ⭐</a>
+  <a href="#overflow">运算与溢出陷阱 ⭐</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="02-面向对象.html">下一章：02 面向对象基础 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 01 章 · 基础语法与类型系统</h1>
+    <div class="sub">基本类型与包装类 · 值传递 · String 不可变性 · 常量池 —— 开场 10 分钟定基调的地方</div>
+    <div class="meta">
+      <span>⭐ 高频：String 不可变 · 值传递 · Integer 缓存</span>
+      <span>蓝本：AlgoMaster Java · Strings &amp; Immutability 等</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span class="tag exist">已合并：Java/java 基础.md ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>JDK、JRE、JVM 是什么关系？.java 文件是怎么跑起来的？</li>
+      <li>基本类型和包装类型有什么区别？Integer 用 <code>==</code> 比较什么时候相等？⭐</li>
+      <li>Java 是值传递还是引用传递？用代码证明。⭐</li>
+      <li><code>new String("abc")</code> 创建了几个对象？</li>
+      <li>String 为什么设计成不可变？不可变带来了什么好处？⭐⭐</li>
+      <li>String / StringBuilder / StringBuffer 怎么选？</li>
+      <li><code>0.1 + 0.2 != 0.3</code> 为什么？怎么解决金额计算？</li>
+    </ol>
+  </div>
+  <p>这一章是一面的"开场题集中营"：题目简单，但<strong>答得深不深直接暴露基本功</strong>。7 年经验回答这类题的打法：先给结论，再给底层机制（内存 / 字节码 / 源码），最后补一句实战里怎么避免踩坑。</p>
+</section>
+
+<section id="jvm-jdk">
+  <h2><span class="no">02</span>从 .java 到运行：JDK / JRE / JVM 与字节码</h2>
+  <p><strong>关系一句话：JDK ⊃ JRE ⊃ JVM。</strong>JVM 只负责执行字节码；JRE = JVM + 核心类库；JDK = JRE + 编译器 javac + 工具链（javap、jdb、jconsole 等）。</p>
+  <h3>执行链路</h3>
+  <pre><code>.java ──javac 前端编译──&gt; .class（字节码）──类加载──&gt; JVM
+                                        ├─ 解释器逐条执行
+                                        └─ JIT 热点代码编译为机器码（存入 CodeCache）</code></pre>
+  <ul>
+    <li><strong>为什么有中间字节码层</strong>：一次编译到处运行（不绑定特定 CPU 指令集）；相比 JS / Python 纯解释执行效率更高；字节码是 JVM 生态的基石（Kotlin、Scala、Groovy 都编译成 .class）；安全和反射等动态能力也建立在这层之上。</li>
+    <li><strong>JIT（Just-In-Time）</strong>：运行期把频繁执行的热点代码（方法调用计数 / 回边计数超过阈值）编译成机器码缓存，用次数换速度。</li>
+    <li><strong>分层编译（Tiered Compilation）</strong>：HotSpot 实际是 C1（client，编译快、优化浅）和 C2（server，编译慢、优化深）两级 JIT 配合——C1 先快速出机器码保住启动速度，热点再升级 C2 深度优化（内联、逃逸分析、锁消除）。JDK 8 起默认开启。</li>
+    <li><strong>AOT（Ahead-Of-Time）</strong>：执行前静态编译成机器码（GraalVM Native Image）。启动快、内存省、难反编译；代价是反射、动态代理、运行时类加载等动态特性受限——这正是 Spring 3 对 Native 支持做了大量改造的原因。</li>
+  </ul>
+  <h3>亲手看一眼字节码（javap，加分动作）</h3>
+  <pre><code>// Demo.java
+public class Demo {
+    public static int add(int a, int b) { return a + b; }
+    public static void main(String[] args) { System.out.println(add(1, 2)); }
+}
+
+$ javac Demo.java &amp;&amp; javap -c Demo
+public static int add(int, int);
+    Code:
+       0: iload_0        // 取局部变量表第 0 个 int（a）压栈
+       1: iload_1        // 取 b 压栈
+       2: iadd           // 栈顶两个 int 相加，结果回栈
+       3: ireturn        // 返回栈顶 int
+// 每个 .class 头 4 字节是魔数 0xCAFEBABE——"为什么 Java 图标是咖啡"的标准冷知识</code></pre>
+  <ul>
+    <li>字节码是<strong>基于栈</strong>的指令集（操作数先进栈再运算），不是物理 CPU 那种基于寄存器的指令集——所以同一份 .class 才能不绑定具体 CPU 架构。</li>
+    <li>javap 常用参数：<code>-c</code> 反汇编、<code>-v</code> 常量池/版本号/行号表全量、<code>-l</code> 行号表与局部变量表。面试聊"你看过字节码吗"，拿 add 方法这三条指令开讲最稳。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：先说三层包含关系，再主动展开"字节码 + 解释/JIT 混合执行"，能顺带提一句 AOT 和 GraalVM 就是加分项。类加载与 JIT 细节在 <a href="../03-jvm/README.html">03-jvm 板块</a>深入。</p></div>
+  <ul>
+    <li><strong>追问链：.class 一定能跨版本运行吗？</strong>→ 不能。每个 JDK 编译出的 .class 带 major version（JDK 8 = 52，JDK 17 = 61），<strong>高版本 JVM 能加载低版本字节码，反之报 UnsupportedClassVersionError</strong>——这就是"用 JDK 17 跑 JDK 11 编译的包没问题，反过来必炸"的原理。</li>
+    <li><strong>追问链：解释执行既然慢，为什么不全部 JIT？</strong>→ 冷代码编译不划算（编译本身耗 CPU/内存），且很多代码一生只执行几次。分层编译的本质是"按热度分级投资"。</li>
+  </ul>
+</section>
+
+<section id="types">
+  <h2><span class="no">03</span>数据类型全景：8 种基本类型 + 引用类型</h2>
+  <table>
+    <tr><th>类型</th><th>大小</th><th>默认值</th><th>包装类</th><th>缓存范围</th></tr>
+    <tr><td><code>byte</code></td><td>1 字节</td><td>0</td><td>Byte</td><td>[-128, 127]</td></tr>
+    <tr><td><code>short</code></td><td>2 字节</td><td>0</td><td>Short</td><td>[-128, 127]</td></tr>
+    <tr><td><code>int</code></td><td>4 字节</td><td>0</td><td>Integer</td><td>[-128, 127]（可调）</td></tr>
+    <tr><td><code>long</code></td><td>8 字节</td><td>0L</td><td>Long</td><td>[-128, 127]</td></tr>
+    <tr><td><code>float</code></td><td>4 字节</td><td>0.0f</td><td>Float</td><td>无缓存</td></tr>
+    <tr><td><code>double</code></td><td>8 字节</td><td>0.0d</td><td>Double</td><td>无缓存</td></tr>
+    <tr><td><code>char</code></td><td>2 字节</td><td>'\u0000'</td><td>Character</td><td>[0, 127]</td></tr>
+    <tr><td><code>boolean</code></td><td>JVM 规范未定（通常按 int 处理）</td><td>false</td><td>Boolean</td><td>TRUE / FALSE 两个单例</td></tr>
+  </table>
+  <h3>存储位置（高频追问点）</h3>
+  <ul>
+    <li><strong>基本类型局部变量</strong>：存在栈帧的局部变量表里，方法结束随栈帧弹出。</li>
+    <li><strong>基本类型成员变量</strong>：随对象在堆里（static 的在方法区/元空间的类信息中）。</li>
+    <li><strong>包装类型 / 引用类型</strong>：对象本体在堆，变量里存的是引用。</li>
+  </ul>
+  <div class="box warn"><p><strong>易错</strong>："基本类型存在栈上"这句话不严谨——只有<strong>局部变量</strong>在栈上，成员变量跟着对象进堆。面试官就爱挖这个半对不对的表述。</p></div>
+  <h3>基本类型 vs 包装类型怎么选</h3>
+  <ul>
+    <li>局部变量、循环计数用基本类型：无装箱开销、不会 NPE。</li>
+    <li>实体字段 / RPC / DAO / 泛型与集合只能用包装类型（<code>List&lt;int&gt;</code> 不存在），数据库可能为 null 的列必须用包装类型，否则 0 和 null 语义混淆。</li>
+    <li>比较：基本类型用 <code>==</code>，包装类型一律 <code>equals()</code>。</li>
+  </ul>
+  <ul>
+    <li><strong>追问链：char 2 字节能存"𠀀"这种生僻字/emoji 吗？</strong>→ 存不了。char 是 UTF-16 代码单元，BMP 内字符（常用汉字"中""国"）一个 char 够；增补区字符（emoji 😀、生僻字）要<strong>两个 char 组成代理对（surrogate pair）</strong>，所以 <code>"😀".length() == 2</code>——数"字符个数"应该用 <code>codePointCount</code>。详见本章 <a href="#char-encoding">char 与编码</a>一节。</li>
+    <li><strong>追问链：boolean 到底占几个字节？</strong>→ JVM 规范没定义 boolean 的独立指令，压栈操作按 int（4 字节）处理；单个 boolean 字段在对象里通常占 1 字节（再补齐到 8 的倍数）。标准答案就一句："规范未定，实现上栈按 int、堆里按 1 字节算"。</li>
+  </ul>
+</section>
+
+<section id="boxing">
+  <h2><span class="no">04</span>自动装箱拆箱与缓存池 ⭐</h2>
+  <p>装箱 = <code>Integer.valueOf(int)</code>，拆箱 = <code>intValue()</code>，编译期自动插入（语法糖）。经典陷阱题：</p>
+  <pre><code>Integer a = 127, b = 127;
+Integer c = 128, d = 128;
+System.out.println(a == b);   // true  —— 127 在缓存池内，valueOf 返回同一个对象
+System.out.println(c == d);   // false —— 128 超出缓存，各自 new 了新对象
+System.out.println(c.equals(d)); // true —— 值比较，包装类型永远用 equals</code></pre>
+  <ul>
+    <li>缓存实现在 <code>Integer.valueOf()</code> 里的静态内部类 <code>IntegerCache</code>，默认 [-128, 127]；<code>-XX:AutoBoxCacheMax=&lt;size&gt;</code> 可调上限，下限 -128 不可改。</li>
+    <li>Byte/Short/Integer/Long 缓存 [-128,127]，Character 缓存 [0,127]，Boolean 返回 TRUE/FALSE 单例；<strong>Float/Double 没有缓存</strong>。</li>
+    <li>若一边是基本类型，<code>==</code> 会先拆箱再比值：<code>c == 128</code> 为 true——陷阱只在<strong>两边都是包装类型</strong>时出现。</li>
+  </ul>
+  <h3>IntegerCache 源码（能默写核心三行就够）</h3>
+  <pre><code>private static class IntegerCache {
+    static final int low = -128;          // 下限写死
+    static final int high;                // 上限可在 JVM 启动时调
+    static final Integer[] cache;         // 静态数组，类加载时全部预先建好
+    static {
+        int h = 127;
+        String integerCacheHighPropValue =
+            VM.getSavedProperty("java.lang.Integer.IntegerCache.high");
+        // ... 解析 -XX:AutoBoxCacheMax，上限还可以把 high 压到不小于 127
+        cache = new Integer[(high - low) + 1];
+        int j = low;
+        for (int k = 0; k &lt; cache.length; k++)
+            cache[k] = new Integer(j++);
+    }
+}
+public static Integer valueOf(int i) {
+    if (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)
+        return IntegerCache.cache[i + (-IntegerCache.low)];   // 命中直接返回缓存对象
+    return new Integer(i);            // 未命中才 new（JDK 9 后 new Integer 已 @Deprecated）
+}</code></pre>
+  <h3>拆箱 NPE：藏得最深的一类线上事故</h3>
+  <pre><code>Integer count = null;
+int n = count + 1;                      // 拆箱 NPE——好懂，但少见
+
+int flag = flagConfig ? 1 : count;      // 三元运算符：两臂类型不一致
+// 编译器把 int 臂 1 装箱、Integer 臂拆箱"统一类型"→ 实际调 count.intValue() → NPE
+// 修复：cond ? 1 : count == null ? 0 : count，或两臂都用 Integer（统一成装箱不拆箱）</code></pre>
+  <p><strong>原理</strong>：JLS 规定三元运算符若一臂是基本类型、另一臂是包装类型，结果类型按"数值提升"走基本类型——于是包装臂被迫拆箱。这是阿里规约"三元表达式注意拆箱 NPE"条目的根源。</p>
+  <div class="box tip"><p><strong>实战关联</strong>：阿里巴巴规约强制"POJO 属性必须用包装类型"，RPC 方法返回值/参数用包装类型；同时提醒所有包装类型之间相等比较必须用 equals——这两条就是从这道题长出来的。</p></div>
+  <ul>
+    <li><strong>追问链：为什么下限 -128 不能调？</strong>→ 协议约定俗成 + 实现简单（负索引偏移 <code>i + 128</code> 恒非负）；上调上限只放宽"命中区间"，不影响任何既有语义，所以 JVM 敢开放它。</li>
+    <li><strong>追问链：装箱发生在方法重载时怎么选？</strong>→ 重载解析三步：① <strong>先找不需要装箱/变长参数就能匹配的</strong>（<code>int</code> → <code>foo(int)</code>）；② 找允许装箱/拆箱的（<code>foo(Integer)</code>）；③ 才考虑 varargs（<code>foo(int...)</code>）。所以 <code>foo(1)</code> 在 <code>foo(int)</code> 和 <code>foo(Integer)</code> 同时存在时永远选前者，装箱只是兜底——同理 <code>remove(int index)</code> 和 <code>remove(Object o)</code> 的经典冲突（见 <a href="08-集合框架.html">第 08 章</a>）。</li>
+  </ul>
+</section>
+
+<section id="pass-by">
+  <h2><span class="no">05</span>Java 只有值传递 ⭐</h2>
+  <p><strong>结论先行：Java 是严格的值传递（pass by value），没有引用传递。</strong>传递引用类型时，拷贝的是"引用的值"（即地址值的副本），不是对象本身。</p>
+  <pre><code>static void change(StringBuilder sb, int x) {
+    sb.append("!");        // 生效：副本引用指向同一个对象，改的是堆里那个对象
+    sb = new StringBuilder("new");  // 不影响外面：只改了副本引用的指向
+    x = 99;                // 不生效：基本类型拷贝的是值
+}
+
+StringBuilder buf = new StringBuilder("hi");
+int n = 1;
+change(buf, n);
+System.out.println(buf + " " + n);   // hi! 1</code></pre>
+  <h3>记忆骨架</h3>
+  <ul>
+    <li>基本类型 → 拷贝值；引用类型 → 拷贝地址值。</li>
+    <li>方法内对参数重新赋值（改指向）不影响调用方；通过参数修改对象内部状态会影响调用方。</li>
+    <li>所以 String / Integer 这类不可变对象在方法里"改不了"：看起来是改值，实际只能改指向。</li>
+  </ul>
+  <h3>经典反例：为什么"swap 两个 Integer"永远失败</h3>
+  <pre><code>static void swap(Integer a, Integer b) {
+    Integer tmp = a; a = b; b = tmp;   // 只交换了两个"引用副本"的指向，堆对象纹丝不动
+}
+Integer x = 1, y = 2;
+swap(x, y);
+System.out.println(x + "," + y);       // 还是 1,2
+
+// 想真的换出去，只能走"可变载体"：数组 / AtomicReference / 自定义 Holder
+static void swap(int[] pair) { int t = pair[0]; pair[0] = pair[1]; pair[1] = t; }</code></pre>
+  <div class="box warn"><p><strong>追问预判</strong>："那 C++ 的引用传递和 Java 有什么区别？"——C++ 的 <code>int&amp; r = x</code> 是变量的别名，对 r 赋值直接改 x；Java 永远拿到的是副本，做不到这件事。</p></div>
+  <ul>
+    <li><strong>追问链：String 参数在方法里"改"了，为什么外面看不到？</strong>→ 两层原因叠加：① 值传递——改的是副本引用；② String 不可变——<code>concat/replace</code> 全是新对象，连"改内部"这条路都不存在。两个知识点经常被串成一道题考。</li>
+    <li><strong>追问链：为什么说"数组当出参"不违反值传递？</strong>→ 传进去的是数组引用的副本，但两个引用指向同一个堆上数组，<code>arr[0] = x</code> 改的是共享对象的内容——"改指向不可见，改内容可见"口诀的直接应用。</li>
+  </ul>
+</section>
+
+<section id="casting">
+  <h2><span class="no">06</span>类型转换与浮点精度</h2>
+  <h3>自动提升与强制转换</h3>
+  <ul>
+    <li>隐式 widening：byte → short → int → long → float → double（注意 int → float 可丢精度——float 尾数只有 24 位，装不下全部 int）。</li>
+    <li>强制 narrowing 要显式写 <code>(int)</code>，可能截断；<code>byte b = (byte)(byte1 + byte2)</code> 这种编译期提升坑要会讲。</li>
+  </ul>
+  <pre><code>int big = 130;
+byte b = (byte) big;          // 截断：只留低 8 位 → -126（130 = 0b10000010，符号位 1）
+System.out.println(b);        // -126，不是 130 也不是 3
+
+char c = 'A';
+int n = c + 1;                // char 参与算术先提升为 int → 66；写回 char 要强转
+System.out.println((char) n); // 'B'
+byte b1 = 10;
+b1 += 1;                      // ✅ 复合赋值自带隐式强转，编译通过
+b1 = b1 + 1;                  // ❌ b1+1 提升为 int，赋回 byte 报错——复合赋值反而"更宽松"</code></pre>
+  <h3>浮点数为什么不准</h3>
+  <p>IEEE 754 用 <code>V = (-1)^S × M × 2^E</code>（符号位 + 尾数 + 阶码）表示。二进制下 0.1、0.2 这类十进制小数是<strong>无限循环二进制小数</strong>，尾数位数有限必然截断，误差就进来了。</p>
+  <pre><code>System.out.println(0.1 + 0.2);            // 0.30000000000000004
+System.out.println(0.1 + 0.2 == 0.3);     // false
+System.out.println(1.0 / 3 * 3 == 1);     // false；double 能精确表示的只有"分母是 2 的幂"类小数
+
+// 金额计算的正解：
+BigDecimal a = new BigDecimal("0.1");     // ⭐ 用 String 构造，别用 double 构造
+BigDecimal r = a.add(new BigDecimal("0.2"));
+System.out.println(r);                     // 0.3 精确
+System.out.println(r.compareTo(new BigDecimal("0.3")) == 0);  // true（equals 会连 scale 一起比）</code></pre>
+  <div class="box warn"><p><strong>BigDecimal 四个陷阱</strong>：① <code>new BigDecimal(0.1)</code> 把 double 的误差原样带进来（打印就是 0.1000000000000000055511151231257827…），必须用字符串构造或 <code>BigDecimal.valueOf()</code>（内部先 <code>Double.toString</code>）；② <code>equals</code> 比较 scale（0.10 ≠ 0.1），比大小用 <code>compareTo</code>；③ <code>divide</code> 除不尽且不指定 scale/舍入模式直接抛 <code>ArithmeticException</code>——必须写 <code>divide(b, 2, RoundingMode.HALF_UP)</code>；④ 它也<strong>不可变</strong>，<code>setScale/add</code> 返回的是新对象，"调完方法不接返回值"等于白调。</p></div>
+  <ul>
+    <li><strong>追问链：为什么金额不用 long 存"分"？</strong>→ 其实这是比 BigDecimal 更稳的方案（long 9.2×10^18 分 = 92 亿亿元，永不溢出、无舍入误差）；BigDecimal 的价值在"小数位数本身是业务需求"的场景（利率、汇率），两者都要会说。面试加分答法：内部记"分"用 long，对外展示时再转 BigDecimal 格式化。</li>
+  </ul>
+</section>
+
+<section id="string">
+  <h2><span class="no">07</span>String 不可变性 ⭐⭐（必考）</h2>
+  <h3>怎么实现的</h3>
+  <pre><code>public final class String {          // final 类：不能被继承改写行为
+    private final byte[] value;       // JDK 9+：byte[] + coder（LATIN1/UTF16）；JDK 8 是 char[]
+    private int hash;                 // 缓存 hashCode，因为内容不会变
+    // 没有 setter，所有"修改"方法都返回新对象：replace/substring/concat/trim/toUpperCase…
+}</code></pre>
+  <h3>为什么设计成不可变（答题骨架，4 条）</h3>
+  <ol>
+    <li><strong>字符串常量池的前提</strong>：同一份字面量可以放心共享一个对象，省内存。若 String 可变，一处修改、所有引用全遭殃。</li>
+    <li><strong>线程安全</strong>：不可变对象天然线程安全，不需要任何同步，可以自由跨线程传递。</li>
+    <li><strong>hashCode 可以缓存</strong>：String 是 HashMap 最常用的 key，hash 算一次就存字段，后续 O(1) 取用；key 可变的话 HashMap 直接废掉。</li>
+    <li><strong>安全性</strong>：类加载器按类名字符串加载、文件路径、网络参数——不可变保证传入后不会被中途篡改。</li>
+  </ol>
+  <h3>常量池与 intern</h3>
+  <pre><code>String s1 = "abc";                 // 字面量 → 字符串常量池（JDK 7 起位于堆中）
+String s2 = "abc";
+System.out.println(s1 == s2);       // true，池中同一个对象
+
+String s3 = new String("abc");      // 堆里 new 一个新对象；"abc" 字面量若不存在还会先进池
+System.out.println(s1 == s3);       // false
+System.out.println(s1 == s3.intern()); // true，intern() 返回池中那份
+
+// 编译期常量折叠：
+String s4 = "ab" + "c";             // 编译期直接折叠成 "ab c"→"abc"
+System.out.println(s1 == s4);       // true
+String ab = "ab";
+String s5 = ab + "c";               // 运行期拼接（JDK 8：StringBuilder；JDK 9+：invokedynamic），产生新对象
+System.out.println(s1 == s5);       // false
+final String fab = "ab";
+String s6 = fab + "c";              // fab 是编译期常量（final + 字面量初始化）→ 常量传播后仍折叠
+System.out.println(s1 == s6);       // true</code></pre>
+  <p><strong>"new String("abc") 创建几个对象"</strong>的标准答案：最多 2 个——池中字面量 "abc"（若首次出现）+ 堆中 new 出来的对象。追问 <code>new String("ab") + "c"</code> 时注意 StringBuilder 参与，此时答案是"堆上 2~3 个 + 池中 'ab'"级别的讨论题——先给"最多 2 个"的口径再展开，别一上来就抠细节。</p>
+  <h3>intern()：一个方法横跨 JDK 6/7 的版本差异</h3>
+  <pre><code>String s = new String("a") + new String("b");  // 堆上新对象 "ab"，池中没有 "ab" 字面量
+String i = s.intern();
+System.out.println(i == s);        // JDK 7+：true —— intern 发现池里没有，
+                                   //   把堆上这个对象的引用登记进常量池（JDK 7 起）
+                                   // JDK 6：false —— 常量池在永久代，intern 会"复制"一份进去，
+                                   //   池里那份和堆里 s 不是同一个对象</code></pre>
+  <ul>
+    <li>变化的根因：<strong>JDK 7 把字符串常量池从永久代挪到了堆</strong>，池里存"堆对象的引用"成为可能，intern 从"复制"变"登记"。这一问能同时考常量池位置 + 版本演进，高级岗常拿它区分背诵党和理解党。</li>
+    <li>实战口径：<strong>业务代码别手写 intern()</strong>。它适合"海量重复短字符串去重"的特定场景（如缓存 key），滥用会让我们自己管理池压力——且 intern 是 native 方法、旧版本有性能争议。</li>
+    <li>同类需求生产上更常用 <strong>G1 的字符串去重</strong>（JDK 8u20+，<code>-XX:+UseStringDeduplication</code>）：GC 时自动把 value 数组相同的 String 底层共享，对业务透明。</li>
+  </ul>
+  <div class="box note"><p>JDK 9 把 <code>char[] value</code> 改成 <code>byte[]</code> + coder 标记（Compact Strings）：纯 Latin-1 字符串内存减半，中文等多数字符仍走 UTF-16。这一句能体现你跟过新版本演进。</p></div>
+  <div class="box warn"><p><strong>反射改 String 的下场</strong>：JDK 8 时代反射改 <code>value</code> 字段能"全局污染"（同字面量全 JVM 生效），JDK 9 模块系统把 <code>java.lang</code> 封死后，<code>setAccessible(true)</code> 直接抛 <code>InaccessibleObjectException</code>——面试聊"反射能改 String 吗"，按"能→有害→新版已封死"三段答。</p></div>
+</section>
+
+<section id="builder">
+  <h2><span class="no">08</span>String / StringBuilder / StringBuffer</h2>
+  <table>
+    <tr><th></th><th>String</th><th>StringBuilder</th><th>StringBuffer</th></tr>
+    <tr><td>可变性</td><td>不可变</td><td>可变</td><td>可变</td></tr>
+    <tr><td>线程安全</td><td>安全（不可变）</td><td>不安全</td><td>安全（方法 synchronized）</td></tr>
+    <tr><td>性能</td><td>拼接差</td><td>最快</td><td>有锁开销</td></tr>
+    <tr><td>场景</td><td>常量、少量拼接</td><td>单线程拼接（99% 场景）</td><td>多线程共享拼接（罕见）</td></tr>
+  </table>
+  <h3>为什么循环里不能用 String +</h3>
+  <pre><code>// 反例：每次 + 都 new StringBuilder + new String，n 轮产生 ~2n 个临时对象
+String s = "";
+for (int i = 0; i &lt; 10000; i++) s += i;
+
+// 正解：循环外建一个 builder，内部 char[] 扩容 amortized O(1)
+StringBuilder sb = new StringBuilder(64);   // 能预估容量就给初始容量，避免扩容拷贝
+for (int i = 0; i &lt; 10000; i++) sb.append(i);</code></pre>
+  <ul>
+    <li>StringBuilder 底层是 char[]（JDK 9 后 byte[]），默认容量 16，扩容为 <code>(旧容量 × 2) + 2</code>，Arrays.copyOf 拷贝。</li>
+    <li>单行 <code>a + b + c</code> 编译器本身就会转成 StringBuilder / invokedynamic（JDK 9+ StringConcatFactory），单行拼接不必手写 builder。</li>
+    <li>JDK 9+ 拼接底层从固定 StringBuilder 改为 <code>invokedynamic</code> 调 StringConcatFactory，可按策略生成更优字节码——高级岗加分点。</li>
+  </ul>
+</section>
+
+<section id="char-encoding">
+  <h2><span class="no">09</span>char 与编码：UTF-16、代码点与乱码根因 ⭐</h2>
+  <h3>char 是 UTF-16 代码单元，不是"一个字符"</h3>
+  <ul>
+    <li>Java 源码层的 <code>char</code> 固定 2 字节，取值 [0, 65535]，本质是 <strong>UTF-16 的一个代码单元（code unit）</strong>。</li>
+    <li>Unicode 字符分两段：<strong>BMP（基本多文种平面）</strong>内一个代码点 = 1 个 char；<strong>增补平面</strong>（emoji、古文字、部分生僻汉字）一个代码点 = <strong>2 个 char（代理对：高代理 0xD800-0xDBFF + 低代理 0xDC00-0xDFFF）</strong>。</li>
+    <li>所以「一个汉字占几字节」在 Java 里要反问编码：JVM 内 String 按名字是 UTF-16（JDK 9 后纯 ASCII 内部存 LATIN1），落盘/上网则看所选编码——UTF-8 常用汉字 3 字节、GBK 2 字节、UTF-16 4 字节（含 BOM 讨论）。</li>
+  </ul>
+  <pre><code>String s1 = "中";
+System.out.println(s1.length());              // 1 —— BMP 字符，1 个 char
+System.out.println(s1.getBytes("UTF-8").length);   // 3 —— 落盘 UTF-8 编码
+System.out.println(s1.getBytes("GBK").length);     // 2
+
+String s2 = "😀";                              // U+1F600，增补平面
+System.out.println(s2.length());              // 2 —— 代理对，2 个 char
+System.out.println(s2.codePointCount(0, s2.length()));  // 1 —— 才是"人眼数出来的字符数"
+System.out.println(s2.charAt(0));             // 打出乱码 '?'：半个代理对不是合法字符
+
+// 遍历"字符"的正确姿势（按代码点）：
+s2.codePoints().forEach(cp -&gt; System.out.println(new String(Character.toChars(cp))));</code></pre>
+  <h3>乱码的根因：编码与解码不对称</h3>
+  <ul>
+    <li>乱码从来不是"数据坏了"，而是<strong>用编码 A 编码的字节被拿编码 B 去解码</strong>。经典组合："UTF-8 字节流按 ISO-8859-1 解码"（每个字节变一个怪字符，可逆，能救回来）；"GBK 字节按 UTF-8 解码"（大量非法序列被替换成 �，<strong>不可逆，救不回来</strong>）。</li>
+    <li>方向记法：<code>byte[] ← 编码 → String</code>。<code>new String(bytes, charset)</code> 是<strong>解码</strong>（字节→字符串），<code>str.getBytes(charset)</code> 是<strong>编码</strong>（字符串→字节）。两端 charset 不一致 = 乱码。</li>
+    <li>为什么 ISO-8859-1 当"中间转码跳板"：<strong>它和字节是一一映射的</strong>（单字节全区间），任何字节流按它解码都不丢信息，所以老系统"存不动中文"时常用 latin1 落库再转回来。</li>
+  </ul>
+  <div class="box warn"><p><strong>面试组合拳</strong>：为什么读写文件/网络必须显式指定 charset？——因为 <code>new String(bytes)</code>、<code>getBytes()</code> 无参版本用的是<strong>平台默认编码</strong>（<code>file.encoding</code>，Linux 容器里常是 ANSI_X3.4-1968 即纯 ASCII），本地好好的代码进容器就乱码。JDK 18 起（JEP 400）默认编码统一为 UTF-8，但老项目仍要显式写。这也是 <code>StandardCharsets.UTF_8</code> 被规约要求 everywhere 的原因。</p></div>
+  <ul>
+    <li><strong>追问链：char 能存 emoji 吗？</strong>→ 不能。char 只有 16 位，emoji 在增补平面（码点 &gt; 0xFFFF），一个 emoji 要两个 char（代理对）或直接用 <code>int</code> 码点表示——<code>Character.toChars(0x1F600)</code> 返回 length 2 的 char[]。</li>
+    <li><strong>追问链：String.length() 返回什么？</strong>→ 代码单元数不是字符数。带 emoji 的字符串截取子串还可能把代理对拦腰截断，产出"半个字符"的非法 String——文本截断要按 code point 或用 <code>BreakIterator</code>。</li>
+  </ul>
+</section>
+
+<section id="overflow">
+  <h2><span class="no">10</span>运算与溢出陷阱 ⭐</h2>
+  <h3>整型溢出：静默回绕，不是异常</h3>
+  <pre><code>int max = Integer.MAX_VALUE;      // 2147483647 = 0x7FFFFFFF
+System.out.println(max + 1);      // -2147483648 —— 补码回绕，不抛任何异常
+System.out.println(max * 2);      // -2
+
+// 经典事故：先按 int 乘再转 long，溢出已经发生
+int seconds = 1_000_000;
+long millis = seconds * 1000;          // 1_000_000_000 没超 int，侥幸对
+long nanos  = seconds * 1_000_000;     // 先 int 溢出再 widening → 错值！
+long ok     = seconds * 1_000_000L;    // ✅ 让一边先变 long，全程 long 运算
+long safe   = Math.multiplyExact(seconds, 1_000_000L);  // JDK 8+ Math.*Exact 全家桶：溢出直接抛 ArithmeticException</code></pre>
+  <ul>
+    <li>为什么静默：JVM 设计追求<strong>指令确定性</strong>——每条算术指令耗时固定、不依赖检查分支，溢出检查交给需要的人显式调 <code>Math.addExact / subtractExact / multiplyExact</code>（JDK 8+）。</li>
+    <li>业务口诀：<strong>"可能大"的中间量先升 long，金额量根本不用浮点</strong>；分页计算 <code>(pageNo-1) * pageSize</code> 在 pageNo 极大时就是这个坑。</li>
+  </ul>
+  <h3>位运算与移位：三个必考细节</h3>
+  <pre><code>int neg = -8;
+System.out.println(neg &gt;&gt; 1);    // -4  —— 算术右移，高位补符号位（负数还是负数）
+System.out.println(neg &gt;&gt;&gt; 1);   // 2147483644 —— 逻辑右移，高位补 0（负数变巨正数）
+System.out.println(neg &gt;&gt;&gt; 0);   // -8；>>> 会先把操作数提升 int/long
+
+System.out.println(-1 &gt;&gt; 1);     // -1 —— 负数算术右移永远不"趋近 0"，除 2 口诀只对正数严格成立
+System.out.println(1 &lt;&lt; 35);     // 32 —— 移位数对 32 取模（int）；long 对 64 取模，1L&lt;&lt;64==1L 自身</code></pre>
+  <ul>
+    <li><code>&gt;&gt;&gt;</code> 是 Java 补齐 C 缺口的发明：C/C++ 对无符号右移没区分，Java 没有 unsigned int，就用 <code>&gt;&gt;&gt;</code> 显式表达"补 0"。<code>HashMap.hash()</code> 的 <code>h ^ (h &gt;&gt;&gt; 16)</code> 正是用它取高位参与扰动（<a href="08-集合框架.html">第 08 章</a>细讲）。</li>
+    <li><strong>追问链：自增 i++ 是原子操作吗？</strong>→ 不是。<code>i++</code> 编译成"读-改-写"三条字节码（getfield/iload → iadd → putfield），多线程下丢失更新；<code>i++</code> 的正确并发替代是 <code>AtomicInteger.incrementAndGet()</code>（CAS）或锁——本质成因与修法见 <a href="../02-concurrency/05-无锁编程.html">02-concurrency 无锁编程</a>。</li>
+    <li><strong>追问链：<code>1/0</code> 和 <code>1/0.0</code> 的区别？</strong>→ 整数除 0 抛 <code>ArithmeticException</code>；浮点除 0 得 Infinity/NaN（IEEE 754 定义了这些特殊值），<code>Double.isNaN/isInfinite</code> 检查。<code>0.0/0.0 == Double.NaN</code> 是 false（NaN 与任何比较都假），判 NaN 必须 <code>isNaN</code>。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">11</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：String 不可变 → 那我想改怎么办？</strong>→ StringBuilder / 想共享就 intern；再追"反射能改 value 吗"→ JDK 9 前可以暴力改 <code>value</code> 字段（有隐患），JDK 12+ 后模块系统封锁 <code>String.value</code>，反射修改直接失败。</li>
+    <li><strong>追问链：Integer 缓存 → 为什么是 -128 到 127？</strong>→ JVM 规范建议的最小区间，命中率高、内存可控；设计上是对"小整数高频使用"的权衡，可调上限体现了这一点。</li>
+    <li><strong>追问链：char 能存汉字吗？</strong>→ 常用汉字能（BMP 内，一个 char），生僻字/emoji 不能（增补平面要代理对两个 char）；进一步追"String.length() 返回什么"答"代码单元数，不是字符数"。</li>
+    <li><strong>追问链：为什么读写文件必须指定编码？</strong>→ 无参 API 用平台默认编码（JDK 17- 是 file.encoding，容器里常退化为 ASCII），本地/线上环境不一致就乱码；JDK 18+ 默认 UTF-8 但显式 <code>StandardCharsets.UTF_8</code> 仍是规约。</li>
+    <li><strong>追问链：BigDecimal 还有什么坑？</strong>→ 除不尽不传 scale 抛 ArithmeticException、equals 比 scale、不可变方法要接返回值；再深问"金额为什么不用 double"回到 IEEE 754。</li>
+    <li><strong>陷阱：整型先算后转 long</strong>——<code>int * int</code> 先溢出再 widening；同类坑：两个 Integer 用 <code>==</code>、<code>a += b</code> 的隐式强转。</li>
+    <li><strong>陷阱：<code>-1 >> 1</code> 还是 -1</strong>——负数算术右移不趋近 0；"右移一位等于除 2"口诀只对正数成立。</li>
+    <li><strong>陷阱：字符串拼接混入 null</strong>——<code>"v=" + null</code> 得到 "v=null" 字符串（不是 NPE），悄悄把 null 写进日志/落库；真正的 NPE 在 <code>null.toString()</code> 或拆箱场景。</li>
+    <li><strong>陷阱：<code>Integer == null</code> 拆箱 NPE</strong>：三元运算符 <code>cond ? 1 : wrappedNull</code> 会因类型统一自动拆箱，NPE 藏得极深（阿里规约专门有条目）。</li>
+    <li><strong>陷阱：<code>str.equals("abc")</strong> 顺序反了 NPE → 常量放前面 <code>"abc".equals(str)</code> 或 Objects.equals。</li>
+    <li><strong>陷阱：switch 传 null 的 Integer</strong> 也会拆箱 NPE。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">12</span>面试自查清单</h2>
+  <ol>
+    <li>能画出 JDK/JRE/JVM 包含关系，说清字节码 → 解释/JIT 混合执行链路。</li>
+    <li>能说出 8 种基本类型 + 大小 + 包装类，以及缓存范围（Integer 可调）。</li>
+    <li>Integer 127/128 <code>==</code> 题能秒答并讲出 IntegerCache 源码级原因。</li>
+    <li>能用一段代码证明 Java 是值传递，并解释"副本引用改内部可见、改指向不可见"。</li>
+    <li>String 不可变的 4 条理由脱口而出，附带 hash 缓存与常量池依赖。</li>
+    <li><code>new String("abc")</code> 对象数、intern 行为、常量折叠时机都能讲清。</li>
+    <li>金额计算知道用 BigDecimal 字符串构造 + compareTo，说出 divide 指定 scale 的坑。</li>
+    <li>循环拼接知道为什么用 StringBuilder，以及初始容量优化。</li>
+    <li>能讲清 char/UTF-16/代理对：为什么 emoji 的 length 是 2、乱码的根因是编解码不对称。</li>
+    <li>知道整型溢出静默回绕、"先乘再转 long"陷阱、Math.*Exact 与 Atomic 替代。</li>
+    <li>重载解析三步（不用装箱 → 装箱 → varargs）能结合 remove(int)/remove(Object) 讲。</li>
+    <li>能用 javap -c 讲出 add 方法的 iload/iadd/ireturn，以及魔数 CAFEBABE、class 版本号跨版本问题。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章在 AlgoMaster 蓝本与仓库笔记基础上，参考并合并了 <a href="https://javaguide.cn/java/basis/java-basic-questions-01.html">JavaGuide · Java 基础常见面试题（上）</a>的问答口径与深度点（重构改写，非原文照抄）。</p></div>
+  <div class="pager">
+    <a href="README.html">⬅ 返回板块目录</a>
+    <a class="next" href="02-面向对象.html">下一章：面向对象基础 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 01 章 基础语法与类型系统</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

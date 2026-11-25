@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 03 章 · 继承与多态 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#extends">继承与"组合优先"</a>
+  <a href="#super">super 与构造器链</a>
+  <a href="#override">重写规则：两同两小一大</a>
+  <a href="#binding">多态底层：静态/动态绑定</a>
+  <a href="#object-methods">equals · hashCode · toString ⭐⭐</a>
+  <a href="#instanceof">instanceof 与模式匹配</a>
+  <a href="#covariant">协变返回类型</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="02-面向对象.html">上一章：02 面向对象基础</a>
+  <a href="04-抽象与接口.html">下一章：04 抽象与接口 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 03 章 · 继承与多态</h1>
+    <div class="sub">extends · super · 重写规则 · 构造器链 · equals/hashCode 契约 · instanceof · 协变返回</div>
+    <div class="meta">
+      <span>⭐⭐ 必考：equals/hashCode 契约 · 重写规则</span>
+      <span>蓝本：AlgoMaster Java · Inheritance &amp; Polymorphism</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span>设计模式视角：<a href="../07-LLD/README.html" style="color:inherit">07-LLD</a></span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>重写（override）要遵守哪些规则？"两同两小一大"具体指什么？⭐</li>
+      <li>子类构造器第一行不写 super() 会怎样？父类没有无参构造器呢？</li>
+      <li><code>==</code> 和 <code>equals()</code> 的区别？equals 不重写时是什么行为？⭐</li>
+      <li>为什么重写 equals 必须重写 hashCode？⭐⭐（要求现场推演 HashMap 行为）</li>
+      <li>只重写 equals 不重写 hashCode，放进 HashSet/HashMap 会发生什么？给出完整反例。⭐⭐</li>
+      <li>equals 的五大契约是什么？继承体系下用 instanceof 判等有什么坑？</li>
+      <li>字段有多态吗？父类引用指向子类对象，访问同名字段得到谁的字段？⭐</li>
+      <li>instanceof 对 null 返回什么？JDK 16 的模式匹配怎么写？</li>
+      <li>子类重写方法能不能改返回值类型？（协变返回与桥方法）</li>
+    </ol>
+  </div>
+  <p>这一章的 equals/hashCode 是整个 Java 面试<strong>出场率最高的知识点之一</strong>，而且必带追问链（契约 → HashMap 原理 → 可变 key 的坑）。其余小节（重写规则、绑定机制、协变）都是能把"CRUD 经验"和"语言功底"区分开的筛子题。</p>
+</section>
+
+<section id="extends">
+  <h2><span class="no">02</span>继承的本质与"组合优先"</h2>
+  <h3>继承是什么</h3>
+  <ul>
+    <li>Java <strong>单继承</strong>（一个 extends）+ <strong>多接口实现</strong>；所有类隐式继承 <code>Object</code>，形成一棵继承树。</li>
+    <li>子类获得父类的字段和方法（private 字段也被继承，只是不可直接访问——要靠父类暴露的方法）；构造器<strong>不被继承</strong>。</li>
+    <li>继承表达 <strong>is-a</strong>：能满足"子类是父类的一种、且能无差别替换父类"（里氏替换原则 LSP）才用继承。</li>
+  </ul>
+  <h3>为什么"组合优先于继承"（Effective Java Item 18）</h3>
+  <p>继承会<strong>破坏封装</strong>：子类依赖父类的实现细节（哪些方法内部调用了哪些方法——"自用性 self-use"），父类升级一改，子类悄悄坏掉。经典反例：</p>
+  <pre><code>// 想统计 add 被调用了几次：
+public class InstrumentedHashSet&lt;E&gt; extends HashSet&lt;E&gt; {
+    private int addCount = 0;
+
+    @Override public boolean add(E e) {
+        addCount++;
+        return super.add(e);
+    }
+    @Override public boolean addAll(Collection&lt;? extends E&gt; c) {
+        addCount += c.size();
+        return super.addAll(c);        // HashSet.addAll 内部自用的是 add()
+    }                                   // → c 里每个元素 addCount 被加了两遍！
+}</code></pre>
+  <ul>
+    <li>父类 <code>addAll</code> 的实现细节（内部循环调 <code>add</code>）是子类不该依赖的"实现自由度"；HashSet 一旦改为批量插入，子类直接失准。</li>
+    <li><strong>正解：组合 + 觔托（forwarding）</strong>——把 HashSet 作为字段持有，实现 Set 接口并把调用转发过去，再自由叠加计数（装饰器思路，见 <a href="../07-LLD/README.html">07-LLD 设计模式</a>）。</li>
+    <li>JDK 反面教材也能佐证：<code>Stack extends Vector</code>、<code>Properties extends Hashtable</code>——把"能力"做成了"继承"，暴露了一堆不该有的方法。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>："业务代码里 90% 想写 extends 的冲动其实是'想复用实现'，此时用组合+委托；继承只在真实 is-a、且父类为继承而设计（模板方法、文档写明自用性）时使用。"这句能把话题引到你熟悉的模板方法/装饰器上，主动权在手。</p></div>
+</section>
+
+<section id="super">
+  <h2><span class="no">03</span>super 与构造器链</h2>
+  <h3>构造器链规则</h3>
+  <ul>
+    <li>每个构造器要么显式调 <code>this(...)</code>（本类链），要么显式/隐式调 <code>super(...)</code>（父类链），二者必有其一且必须第一行——<strong>对象一定是从 Object 顶端一路构造下来的</strong>。</li>
+    <li>不写时编译器默认插入 <code>super()</code>（无参）；<strong>父类只有带参构造器、子类构造器又不显式调用时，直接编译错误</strong>——日常报错高频来源。</li>
+    <li><code>super.method()</code> / <code>super.field</code>：以<strong>静态方式</strong>调用父类版本（编译期定死目标，不走虚分派），可以在实现里"调一层父类"。</li>
+    <li>不存在 <code>super.super.xxx</code>——跳级访问不合法。</li>
+  </ul>
+  <h3>经典陷阱：构造器里调用可被重写的方法 ⭐</h3>
+  <pre><code>class Parent {
+    Parent() {
+        overrideMe();                       // 多态！实际跑的是子类版本
+    }
+    void overrideMe() { }
+}
+
+class Child extends Parent {
+    private final String name;
+    Child() { name = "child"; }             // 父类构造器执行时，这行还没跑到
+    @Override void overrideMe() {
+        System.out.println(name.length()); // NPE：final 字段竟是 null
+    }
+}</code></pre>
+  <ul>
+    <li>顺序是：Parent 构造器 → 其中调用的 overrideMe 动态分派到 Child 版本 → 此时 Child 的字段还没初始化（第 02 章的初始化顺序：父类构造先于子类实例字段）。</li>
+    <li>同理，构造器里别启动线程、别注册监听器（this 逃逸）。</li>
+    <li><strong>规则（Effective Java Item 19）</strong>：构造器里只调 <code>private</code> / <code>final</code> / <code>static</code> 方法；<code>Cloneable</code> 和反序列化（readObject）同理。</li>
+    <li>模板方法模式里故意暴露 <code>hook()</code> 给子类，是有意为之的例外——但必须文档化"构造期会被调用"。</li>
+  </ul>
+</section>
+
+<section id="override">
+  <h2><span class="no">04</span>重写规则：两同两小一大</h2>
+  <table>
+    <tr><th>口诀</th><th>规则</th><th>说明 / 边界</th></tr>
+    <tr><td rowspan="2"><strong>两同</strong></td><td>方法名相同</td><td>—</td></tr>
+    <tr><td>参数列表相同</td><td>参数类型、个数、顺序一致（与参数名无关）</td></tr>
+    <tr><td rowspan="2"><strong>两小</strong></td><td>返回类型 ≤ 父类</td><td>相同或是其子类型（协变返回，JDK 5+）</td></tr>
+    <tr><td>抛出异常 ≤ 父类</td><td>checked 异常更窄或不抛；<strong>RuntimeException 不受限</strong></td></tr>
+    <tr><td><strong>一大</strong></td><td>访问权限 ≥ 父类</td><td>protected 可放宽为 public，不能收紧</td></tr>
+  </table>
+  <ul>
+    <li>前置条件：实例方法，且父类方法<strong>不是</strong> static / private / final（private 天然不可见谈不上重写；static 是隐藏，见第 02 章）。</li>
+    <li>参数列表不同 = <strong>重载（overload）</strong>，是另一件事：编译期静态绑定、可改变返回类型。</li>
+    <li><code>@Override</code> 注解必须写：拼错方法名/参数时编译器当场报错，否则"以为重写了其实新增了一个方法"，bug 藏得极深。</li>
+  </ul>
+  <pre><code>class Parent {
+    protected Number compute(int x) throws Exception { return 0; }
+}
+class Child extends Parent {
+    @Override
+    public Integer compute(int x) {          // 权限放大 ✅ 返回收窄（协变）✅ 异常更少 ✅
+        return x * 2;
+    }
+}</code></pre>
+  <h3>重载决议三步：编译器怎么选"最具体的" ⭐</h3>
+  <ul>
+    <li>阶段 ①：不用装箱和变长参数就能匹配的（<code>int</code> → <code>f(int)</code>）；阶段 ②：允许装箱/拆箱（<code>f(Integer)</code>）；阶段 ③：变长参数（<code>f(int...)</code>）。上一阶段有候选就不再看下一阶段。</li>
+    <li>"最具体"= 对任意调用实参组合，A 能赋给 B 的形参类型则 A 更具体——父子都匹配时选子类形参版本。</li>
+  </ul>
+  <pre><code>static void f(Object o) { System.out.println("Object"); }
+static void f(String s) { System.out.println("String"); }
+static void f(int... v) { System.out.println("varargs"); }
+
+f("hi");     // String —— 不装箱直接匹配 String，且比 Object 更具体
+f(42);       // Object —— int→String 不匹配；int→Object 不行，但 int→装箱 Integer→Object 可以（阶段②）
+f((Object) null);  // Object；f(null) 则选 String（null 可赋给两者，取更具体的 String）
+f();         // varargs —— 前两阶段无候选，阶段③兜底</code></pre>
+  <div class="box warn"><p><strong>经典生产坑</strong>：<code>List.remove(int index)</code> 与 <code>remove(Object o)</code>——<code>List&lt;Integer&gt; list; list.remove(1)</code> 删的是<strong>下标 1</strong> 不是元素 1（阶段①精确匹配 int）。要按元素删必须 <code>remove(Integer.valueOf(1))</code>。这是第 <a href="08-集合框架.html">08 章</a>的高频题，根因在重载决议。</p></div>
+  <div class="box warn"><p><strong>易混</strong>：重载（overload）与重写（override）。重载：同类（或父子）中同名<strong>不同参</strong>，编译期按静态类型选目标；重写：父子间同签名，运行期按实际对象类型选目标。一句话——"重载看左边，重写看右边（运行时对象）"。<strong>对返回值的要求是标配追问</strong>：重载的判定与返回值无关——两个方法<strong>仅返回值不同直接编译错误</strong>（调用点 <code>f();</code> 不接收返回值，编译器无法裁决）；重写的返回值必须相同或协变收窄（仅限引用类型），基本类型 / void 必须<strong>严格相同</strong>（协变与桥方法展开见<a href="#covariant">第 08 节</a>）。</p></div>
+</section>
+
+<section id="binding">
+  <h2><span class="no">05</span>多态底层：静态绑定与动态绑定</h2>
+  <p><strong>多态三要素</strong>：继承/实现 + 重写 + 父类引用指向子类对象。运行期同一个调用，实际执行哪个方法由<strong>对象的实际类型</strong>决定。</p>
+  <h3>五种调用指令（字节码视角，加分项）</h3>
+  <table>
+    <tr><th>指令</th><th>场景</th><th>绑定</th></tr>
+    <tr><td><code>invokestatic</code></td><td>静态方法</td><td>编译期静态绑定</td></tr>
+    <tr><td><code>invokespecial</code></td><td>构造器、private 方法、super.method()</td><td>编译期静态绑定</td></tr>
+    <tr><td><code>invokevirtual</code></td><td>普通实例方法</td><td>运行期虚分派（vtable）</td></tr>
+    <tr><td><code>invokeinterface</code></td><td>接口方法</td><td>运行期虚分派（itable）</td></tr>
+    <tr><td><code>invokedynamic</code></td><td>Lambda、字符串拼接（JDK 9+）</td><td>运行期引导决定</td></tr>
+  </table>
+  <ul>
+    <li><strong>虚方法表（vtable）</strong>：每个类一张方法表，子类表复制父类表，<strong>重写的方法占用同一个槽位</strong>（覆盖）。<code>invokevirtual</code> 运行期经对象头类型指针找到实际类的 vtable，按槽位取出目标——这就是动态绑定的实现。</li>
+    <li>final / private / static 方法不占虚分派路径（static 用 invokestatic，private 用 invokespecial），所以"final 利于内联"的优化说法从这来。</li>
+  </ul>
+  <h3>invokevirtual 运行五步（把 vtable 讲穿）</h3>
+  <pre><code>Shape s = new Circle();
+s.area();          // 字节码：invokevirtual #4  // Method Shape.area:()D
+
+① 拿到栈顶对象引用，取对象头的类型指针（klass pointer）→ 实际类型 Circle
+② 首次遇到该调用点：解析常量池 #4 → 确认方法名/描述符 area()D，缓存进内联缓存
+   （没有解析记录时还要做一次"链接"：访问权限检查、惰性加载）
+③ 在 Circle 的 vtable 里，沿 area()D 对应的固定槽位取方法入口
+   （javac 编译子类时已保证重写方法与父类同槽位——虚方法表布局在类加载期生成）
+④ 校验通过后调用；JIT 热身后若发现调用点单态（mono，只见过一种类型），
+   直接内联 + 去虚化，运行期判断退化为一次类型守卫
+⑤ 双态（bimorphic）也可分支内联；多态+不可预测则走真·vtable 查表</code></pre>
+  <ul>
+    <li>这一段的价值：把"运行期按实际类型找方法"从口号落到<strong>槽位 + 类型指针 + 内联缓存</strong>三个实体上。面试官追问"虚分派到底慢在哪"时，能答到"主要是一层间接寻址 + 阻碍内联，JIT 单态去虚化后开销几乎归零"就是高级岗口径。</li>
+    <li>接口方法走 <strong>itable</strong>（接口方法表），实现类更多、布局更复杂，历史口径"接口调用比类调用略慢"由此来——现代 JIT 优化后差距基本抹平，答题时别说死。</li>
+  </ul>
+  <h3>字段没有多态（必考陷阱）⭐</h3>
+  <pre><code>class P { int x = 1; int get() { return 1; } }
+class C extends P { int x = 2; int get() { return 2; } }
+
+P p = new C();
+System.out.println(p.x);      // 1 —— 字段按【编译期类型】P 解析，无多态
+System.out.println(p.get());  // 2 —— 方法走虚分派，按实际类型 C
+((C) p).x;                    // 2 —— 强转后按 C 找字段</code></pre>
+  <ul>
+    <li>字段访问在编译期就定死了（getfield 指令带符号引用，不做虚分派）；"同名字段遮蔽"只是两层独立存储，子类里还能用 <code>super.x</code> 访问父类那份。</li>
+    <li>追问延伸：static 方法也按编译期类型（第 02 章的 hiding 例子），三者可以串成一个考点。</li>
+  </ul>
+</section>
+
+<section id="object-methods">
+  <h2><span class="no">06</span>Object 方法：equals · hashCode · toString ⭐⭐（必考）</h2>
+  <h3>== vs equals</h3>
+  <table>
+    <tr><th></th><th><code>==</code></th><th><code>equals</code></th></tr>
+    <tr><td>基本类型</td><td>比值</td><td>不能用（不是对象）</td></tr>
+    <tr><td>引用类型</td><td>比引用（同一对象？）</td><td>默认等同 ==；重写后按"内容/逻辑"判等</td></tr>
+  </table>
+  <ul>
+    <li><code>Object.equals</code> 的默认实现就是 <code>this == obj</code>——重写是为了给值语义（id 相同即同一用户）。</li>
+    <li>包装类型/字符串一律 equals（Integer 缓存陷阱见 <a href="01-基础语法.html">第 01 章</a>）；判空安全用 <code>Objects.equals(a, b)</code>。</li>
+  </ul>
+  <h3>equals 五大契约 + hashCode 两大约束</h3>
+  <ul>
+    <li>equals：<strong>自反</strong>（x.equals(x) 真）、<strong>对称</strong>、<strong>传递</strong>、<strong>一致</strong>（多次调用结果不变）、x.equals(null) 为 false。</li>
+    <li>hashCode：<strong>一致性</strong>（同对象多次调用一致）；<strong>equals 相等 ⇒ hashCode 必须相等</strong>；hashCode 相等不要求 equals（哈希碰撞允许）。</li>
+  </ul>
+  <h3>核心反例：只重写 equals，HashMap 取不到值 ⭐⭐</h3>
+  <pre><code>class Key {
+    final int id;
+    Key(int id) { this.id = id; }
+
+    @Override
+    public boolean equals(Object o) {
+        return (o instanceof Key k) &amp;&amp; k.id == id;   // 重写了 equals
+    }
+    // ❌ 没重写 hashCode：用 Object 的身份哈希（近似内存地址）
+}
+
+Map&lt;Key, String&gt; map = new HashMap&lt;&gt;();
+map.put(new Key(42), "payload");
+
+map.get(new Key(42));            // null！
+map.containsKey(new Key(42));    // false</code></pre>
+  <p><strong>为什么（HashMap 查找两步走）</strong>：</p>
+  <ol>
+    <li>第一步 <code>hash(key) &amp; (n-1)</code> 算桶下标——两个"逻辑相等"的 Key 身份 hashCode 不同 → <strong>落在不同的桶</strong>；</li>
+    <li>第二步才在桶内链表/红黑树上用 equals 精确比对——<strong>桶都不对，equals 根本没机会执行</strong>；</li>
+    <li>于是"存进去的 Entry 永远查不到"，HashSet 的 contains 同理为 false，去重也失效。</li>
+  </ol>
+  <div class="box tip"><p><strong>答题口径</strong>："equals 和 hashCode 是同一逻辑身份的两种表达——equals 是完整判等，hashCode 是它的<strong>粗粒度摘要</strong>（先分桶再精查的索引结构）。HashMap/HashSet/Hashtable 及一切哈希容器都依赖'相等对象必落同桶'这一前提，只改 equals 等于把索引和内容改拧了。"能顺着讲出 HashMap 的两步查找，这题就是满分。</p></div>
+  <h3>标准写法（7 年经验模板）</h3>
+  <pre><code>@Override
+public boolean equals(Object o) {
+    if (this == o) return true;                      // 快路径：同一引用
+    if (!(o instanceof Order that)) return false;    // 类型检查（JDK 16 模式匹配）
+    return id == that.id &amp;&amp; Objects.equals(buyer, that.buyer);
+}
+
+@Override
+public int hashCode() {
+    return Objects.hash(id, buyer);     // 参与字段必须与 equals 完全一致
+    // 热点路径优化：return 31 * id + Objects.hashCode(buyer);
+}</code></pre>
+  <ul>
+    <li>公式 <code>31 * h + fieldHash</code>：31 是奇素数——偶数乘法丢低位信息；<code>31*i == (i &lt;&lt; 5) - i</code> 可被 JIT 优化成移位减法。</li>
+    <li>long 用 <code>Long.hashCode(l)</code>（异或高低 32 位），double 先 <code>Double.doubleToLongBits</code>；数组用 <code>Arrays.hashCode</code>。</li>
+    <li><code>Objects.hash(...)</code> 内部 varargs 会建 Object[]，超热点对象（每秒百万次 equals 的缓存 key）手写三目式。</li>
+  </ul>
+  <h3>继承体系下 instanceof vs getClass 之争</h3>
+  <ul>
+    <li>用 <code>instanceof</code> 判等 + 子类加字段：Point 与 ColorPoint，<code>p.equals(cp)</code> 真、<code>cp.equals(p)</code> 假 → <strong>破坏对称性</strong>（Effective Java Item 10 经典推演）。</li>
+    <li>三选一口径：① <code>getClass() == o.getClass()</code>（严格：不同类永不等，牺牲"父类引用能等于子类对象"）；② instanceof 且不再被继承（类标 final 或用组合）；③ record / Lombok 自动按全字段生成（本质是①）。</li>
+    <li>实战推荐：DTO/值对象直接 record（第 04 章），equals/hashCode 全字段自动生成，天然规避此争论。</li>
+  </ul>
+  <div class="box warn"><p><strong>JDK 真实事故：java.sql.Timestamp extends java.util.Date</strong>——同一毫秒时刻的 date 与 ts：<code>date.equals(ts)</code> 为 true（Date 只比毫秒，看不到纳秒），而 <code>ts.equals(date)</code> 恒 false（Timestamp 的 equals 要求参数 instanceof Timestamp）——<strong>同一对对象、方向一换结果翻转，对称性破产</strong>。官方 javadoc 直言"equals 不是对称的，不建议 Timestamp 与 Date 混用"；一个 Map 里两类混放，contains 结果飘忽。这是"instanceof 宽松判等必须配 final 类"的最佳实证，也被列入 Effective Java Item 10 的反面教材。</p></div>
+  <pre><code>// getClass() 严格版（层次结构会扩展、子类不该等于父类时用它）：
+@Override
+public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;   // 精确同类
+    return id == ((Order) o).id;
+}
+// 取舍口径：类会被第三方继承 → getClass()；类是 final / 内部实现类 → instanceof 也安全；
+// record 直接全字段生成，两难不存在。</code></pre>
+  <h3>toString</h3>
+  <ul>
+    <li>默认 <code>类名@十六进制身份哈希</code>，日志里全是它等于没打印——POJO 必须重写。</li>
+    <li>自动方案：record、Lombok <code>@ToString</code>、IDE 生成；注意<strong>敏感字段脱敏</strong>（手机号、身份证、密码）——高级岗的实战加分点，顺手提日志安全。</li>
+    <li>注意 toString 里的开销：超大集合对象打日志会触发整棵对象图的字符串化，影响性能。</li>
+  </ul>
+  <div class="box warn"><p><strong>可变 key 的坑</strong>：把对象放进 HashMap 后<strong>修改参与 hashCode 的字段</strong> → 桶下标变了，旧位置的 Entry 从此查不到、删不掉（直到扩容 rehash 才"诈尸"），本质是<strong>内存泄漏</strong>。阿里规约因此要求：作为 key 的对象及其字段必须不可变（String、Integer、Long 是最稳的 key）。</p></div>
+</section>
+
+<section id="instanceof">
+  <h2><span class="no">07</span>instanceof 与 JDK 16 模式匹配</h2>
+  <h3>基本规则</h3>
+  <ul>
+    <li><code>obj instanceof T</code>：运行期判断 obj 的实际类型是否与 T 兼容（本身或子类/实现）。</li>
+    <li><code>null instanceof 任何类型</code> 永远是 <code>false</code>——instanceof 天然判空安全。</li>
+    <li><strong>编译期"恒假拦截"</strong>：编译器能证明"声明类型的对象永远不可能是 T"时，instanceof 直接编译错误（<code>Integer i; i instanceof String</code> → "不兼容的类型"）。根因是<strong>类单继承</strong>：两个无交集的类不可能有共同对象——哪怕都不是 final（<code>ArrayList a; a instanceof LinkedList</code> 也报错）；final 类没实现的接口同理（<code>Integer instanceof Cloneable</code> 报错）。放行：T 是声明类型的子类（<code>Object o; o instanceof String</code>）；声明类型是接口或非 final 类（可能有子类实现/继承 T）；恒真也放行（<code>String s; s instanceof Object</code>）——只拦恒假，不拦恒真。Java 17+ sealed 更进一步：目标类型不在 permits 名单内直接报错。</li>
+    <li>兄弟方法：<code>Class.isInstance(obj)</code>（反射版）、<code>Class.isAssignableFrom(cls)</code>（类型间关系）、<code>o.getClass() == T.class</code>（精确类型相等，equals 严格版用它）。</li>
+  </ul>
+  <h3>三个"兄弟方法"的方向陷阱 ⭐</h3>
+  <pre><code>// 1) Class.isInstance(obj)：反射版 instanceof——类型是运行期变量时只能用它
+Class&lt;?&gt; type = Class.forName("java.lang.Integer");
+type.isInstance(42);                    // true；类型不是字面量时 instanceof 写不出来
+
+// 2) Class.isAssignableFrom(cls)：类型对类型，【父在左、子在右】
+Number.class.isAssignableFrom(Integer.class);   // true  —— Number 能装下 Integer
+Integer.class.isAssignableFrom(Number.class);   // false —— 方向反了必错
+// 助记：读作"左边的引用类型能否指向右边的实例"（和赋值语句 Number n = new Integer(1) 同向）
+
+// 3) o.getClass() == T.class：只认精确类型，不认子类
+Number n = 100;
+n instanceof Integer;           // true  —— instanceof 认子类
+n.getClass() == Integer.class;  // true  —— 恰好是精确类型时为真
+n.getClass() == Number.class;   // false —— getClass() 永不返回父类</code></pre>
+  <ul>
+    <li>选型口径：<strong>编译期已知类型写 instanceof</strong>（有恒假拦截保护）；<strong>类型是运行期变量才用 isInstance</strong>；<strong>框架里判断继承关系用 isAssignableFrom</strong>（Spring 的 <code>ClassUtils.isAssignableValue</code> 内核就是它）；<strong>equals 严格版用 getClass ==</strong>。</li>
+    <li>isInstance 之所以不享受恒假拦截：类型是变量，编译器无从证明"无交集"，只能运行期老老实实返回 false——呼应上文"恒假拦截"的边界：编译期就注定答案的拦下，运行期才知道答案的放行。</li>
+  </ul>
+  <h3>JDK 16：instanceof 模式匹配（JEP 394）</h3>
+  <pre><code>// 老写法：判型 + 强转，三行两步
+if (obj instanceof String) {
+    String s = (String) obj;
+    return s.isBlank();
+}
+
+// JDK 16+：模式变量，一步到位
+if (obj instanceof String s &amp;&amp; s.isBlank()) {
+    return s.length();
+}
+// 作用域是"流敏感"的：只在条件成立的分支里有效，甚至
+if (!(obj instanceof String s)) return null;
+return s.trim();          // 这里 s 依然可用（else 语义的反向推断）</code></pre>
+  <ul>
+    <li>模式变量的作用域由数据流分析决定（flow scoping），比普通变量声明更精细。</li>
+    <li>配合 JDK 21 的 switch 模式匹配（<code>case Integer i -&gt;</code>）基本消灭"判型强转"样板代码，完整演进见 <a href="14-新特性演进.html">第 14 章</a>。</li>
+  </ul>
+</section>
+
+<section id="covariant">
+  <h2><span class="no">08</span>协变返回类型与桥方法</h2>
+  <p><strong>协变返回（covariant return type，JDK 5 引入）</strong>：重写方法可以返回父类方法返回类型的<strong>子类型</strong>——"两小"之一。</p>
+  <pre><code>abstract class Shape {
+    abstract Shape copy();                 // 返回 Shape
+}
+class Circle extends Shape {
+    @Override
+    Circle copy() {                        // ✅ 返回收窄为 Circle（协变）
+        return new Circle();
+    }
+}
+
+// 典型应用：clone() 的正规重写
+class Point implements Cloneable {
+    @Override
+    public Point clone() {                 // Object.clone() 返回 Object，这里收窄
+        try { return (Point) super.clone(); }
+        catch (CloneNotSupportedException e) { throw new AssertionError(e); }
+    }
+}</code></pre>
+  <h3>底层：编译器悄悄生成的桥方法（bridge method）</h3>
+  <ul>
+    <li>JVM 层面方法签名包含返回类型，但<strong>虚分派要求父子签名严格一致</strong>。协变返回怎么兼容？javac 在子类里合成一个 <code>Shape copy()</code> 的<strong>桥方法</strong>，内部调用你写的 <code>Circle copy()</code>（ACC_BRIDGE | ACC_SYNTHETIC 标记）。</li>
+    <li>泛型擦除的协变同理：<code>Comparator&lt;String&gt;</code> 的 <code>compare(String,String)</code> 编译后签名是 <code>compare(Object,Object)</code>，桥方法负责转发——反编译 Comparator 匿名类就能看到两个 compare。</li>
+    <li>实战关联：注解扫描/反射遍历方法时看到重复方法名，别懵，用 <code>Method.isBridge()</code> 过滤（Spring、MyBatis 源码里都有这处理）。</li>
+  </ul>
+  <pre><code>$ javap -v Circle | grep -A4 "copy"
+  public Circle copy();              // 你写的版本：返回 Circle
+    Code: ... areturn
+
+  public Shape copy();               // 桥方法：签名与父类一致（虚分派槽位对齐）
+    flags: ACC_PUBLIC, ACC_BRIDGE, ACC_SYNTHETIC
+    Code:
+       0: aload_0
+       1: invokevirtual #x  // Method copy:()LCircle;   ← 转调真身
+       4: areturn</code></pre>
+  <div class="box note"><p>协变只针对<strong>返回类型</strong>；参数类型必须严格相同——参数"更窄"那就是重载，不是重写（且会因 @Override 报错）。协变数组是另一回事（数组协变 + 堆污染，见 <a href="09-泛型.html">第 09 章泛型</a>）。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">09</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：重写 equals → 为什么用 31 做乘数？</strong>→ 奇素数（冲突分布均匀 + 不丢低位）、<code>(i&lt;&lt;5)-i</code> 移位优化；String 的 hash 就是这个公式（第 01 章呼应）。</li>
+    <li><strong>追问链：hashCode 相等 equals 一定相等吗？</strong>→ 不一定（碰撞）；反问回去"equals 相等 hashCode 呢？"→ 必须相等，契约所在。</li>
+    <li><strong>追问链：两个 equals 相等的对象 hash 不同会怎样？</strong>→ HashMap 双桶分裂：put/get 各自定位到不同桶，取不到；HashSet 去重失效；该 Entry 成为"孤儿数据"。</li>
+    <li><strong>陷阱：重写 equals 参数写成 <code>MyClass o</code> 而非 <code>Object o</code></strong>→ 那是重载不是重写，List.contains 会走 Object 版本直接判地址，永远 false；@Override 能当场拦住。</li>
+    <li><strong>陷阱：子类重写后抛了更宽的 checked 异常</strong>→ 编译错误（"两小"）；但抛 RuntimeException 不受限——子类"偷偷"抛 unchecked 异常是合法却阴险的操作。</li>
+    <li><strong>陷阱：private/final/static 方法 + @Override</strong>→ private 不能被重写；final 重写编译错误；static 上写 @Override 直接编译错误（它只是隐藏）。</li>
+    <li><strong>追问：多态对 static 方法和字段为什么不生效？</strong>→ static 走 invokestatic、字段走 getfield，都是编译期静态绑定；只有 invokevirtual/invokeinterface 的实例方法进 vtable 动态分派。</li>
+    <li><strong>追问：虚分派有性能损耗吗？日常要不要为性能把方法都写成 final？</strong>→ 有但很小：一层间接寻址 + 阻碍内联。现代 JIT 对单态调用点做"去虚化"（类型守卫 + 内联）后开销基本归零；盲目 final 不可测且影响子类设计，Profile-Guided 的 JIT 比人猜得准——答"先测量再优化"是高级岗口径。</li>
+    <li><strong>追问：Timestamp 的 equals 事故说明什么设计原则？</strong>→ 继承体系里"加字段的子类"与 instanceof 宽松判等天然冲突；要么 final 类（String/Integer 都这么干），要么 getClass 严格版，要么放弃继承用组合——和"组合优先"是同一件事在判等问题上的投影。</li>
+    <li><strong>追问：为什么 JDK 5 允许协变返回？泛型擦除下怎么实现的？</strong>→ 为了链式 API 不强转；编译器桥方法保签名兼容。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">10</span>面试自查清单</h2>
+  <ol>
+    <li>能背"两同两小一大"并说出 checked/unchecked 异常在"两小"里的差别。</li>
+    <li>能解释构造器链（this/super 互斥、默认 super()、父类无无参构造器的编译错误）。</li>
+    <li>能手写"父类构造器调用被重写方法 → NPE"反例，并给出规避规则。</li>
+    <li>能说清组合优先于继承的理由，讲出 InstrumentedHashSet 双重计数反例。</li>
+    <li>能默写 equals 五契约 + hashCode 两约束，推演 HashMap 两步查找（先桶后 equals）。</li>
+    <li>能给出"只重写 equals → get 返回 null"的完整可运行反例和修复代码。</li>
+    <li>知道 instanceof 判 null 恒 false，会写 JDK 16 模式匹配（含流敏感作用域）。</li>
+    <li>能解释协变返回 + 桥方法，知道 Method.isBridge() 的实际用途。</li>
+    <li>字段/static 无多态：能现场写出 p.x 与 p.get() 输出不一致的例子。</li>
+    <li>重载决议三步 + remove(int)/remove(Object) 坑 + f(null) 选最具体版本。</li>
+    <li>能讲 invokevirtual 运行链路（类型指针 → 槽位 → 单态去虚化）与 Timestamp 不对称事故。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章在 AlgoMaster 蓝本与仓库笔记基础上，参考并合并了 <a href="https://javaguide.cn/java/basis/java-basic-questions-02.html">JavaGuide · Java 基础常见面试题（中）</a>的 ==/equals/hashCode 问答口径与深浅拷贝视角（重构改写）。</p></div>
+  <div class="pager">
+    <a href="02-面向对象.html">⬅ 上一章：面向对象基础</a>
+    <a class="next" href="04-抽象与接口.html">下一章：抽象与接口 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 03 章 继承与多态</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

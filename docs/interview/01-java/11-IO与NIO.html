@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 11 章 · IO 与 NIO — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#overview">IO 体系：字节流 vs 字符流</a>
+  <a href="#decorator">缓冲流与装饰器模式 ⭐</a>
+  <a href="#serialize">序列化与 serialVersionUID</a>
+  <a href="#nio">NIO 三大组件 ⭐</a>
+  <a href="#mmap">mmap 内存映射</a>
+  <a href="#direct">直接内存</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="10-Lambda与Stream.html">← 上一章：10 Lambda 与 Stream</a>
+  <a href="12-注解与反射.html">下一章：12 注解与反射 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 11 章 · IO 与 NIO</h1>
+    <div class="sub">字节流与字符流 · 装饰器模式 · 序列化陷阱 · Buffer / Channel / Selector · mmap · 直接内存 —— 从流的洋葱模型到 Netty 的地基</div>
+    <div class="meta">
+      <span>⭐ 高频：IO 设计模式 · 序列化陷阱 · NIO 三大组件</span>
+      <span>蓝本：AlgoMaster Java · IO &amp; NIO / Serialization</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span>已合并：Java/java 基础.md（IO 一节） ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>字节流和字符流有什么区别？分别什么时候用？</li>
+      <li>Java IO 体系里用到了哪些设计模式？⭐⭐（装饰器 / 适配器是必答）</li>
+      <li>BufferedInputStream 为什么快？默认缓冲区多大？</li>
+      <li>serialVersionUID 是做什么的？不一致会发生什么？⭐</li>
+      <li>transient 关键字的作用？静态变量会被序列化吗？</li>
+      <li>BIO、NIO、AIO 的区别？NIO 三大组件是什么？⭐⭐</li>
+      <li>Selector 为什么能用一个线程管理大量连接？</li>
+      <li>mmap 和普通 read 有什么区别？什么场景用 FileChannel.map？</li>
+      <li>什么是直接内存？和堆内存比有什么优劣？</li>
+    </ol>
+  </div>
+  <p>IO 这章的答题深度分三档：会用 API（入门）→ 能讲设计模式和序列化机制（中级）→ 能把 NIO 讲到 Buffer 状态机、Selector 事件循环、并主动关联 Netty 与零拷贝（高级）。零拷贝（sendfile）的完整原理在 <a href="../12-os/README.html">12-os 板块</a>，这里讲 Java 侧视角。</p>
+</section>
+
+<section id="overview">
+  <h2><span class="no">02</span>IO 体系：字节流 vs 字符流</h2>
+  <p>Java IO 按数据单位分两族、按方向各四基类（全是抽象类，全部实现 <code>Closeable</code>）：</p>
+  <table>
+    <tr><th></th><th>输入</th><th>输出</th><th>单位</th><th>适用</th></tr>
+    <tr><td>字节流</td><td><code>InputStream</code></td><td><code>OutputStream</code></td><td>byte（0~255）</td><td>一切数据：图片/视频/exe/压缩包；网络传输的底层单位</td></tr>
+    <tr><td>字符流</td><td><code>Reader</code></td><td><code>Writer</code></td><td>char（16 bit）</td><td>文本：需要按字符处理、涉及编码解码时</td></tr>
+  </table>
+  <ul>
+    <li><strong>字符流的本质 = 字节流 + 编码解码器</strong>：任何 Reader/Writer 内部都包着一个流 + Charset。<code>InputStreamReader</code> / <code>OutputStreamWriter</code> 就是字节流与字符流之间的桥梁。</li>
+    <li><strong>编码陷阱（笔记要点）</strong>：<code>FileReader</code> / <code>FileWriter</code> 使用<strong>平台默认编码</strong>，跨环境（开发机 UTF-8、容器 UTF-8、生产 GBK）读写文本会乱码——显式指定更安全。字符集：ASCII（英文 1 字节）、GBK（中文 2 字节）、Unicode（字符集标准）；互联网通用编码 UTF-8（变长 1~4 字节，中文 3 字节）。</li>
+  </ul>
+  <h3>常用具体流速查（按包装层次记）</h3>
+  <table>
+    <tr><th>层次</th><th>字节流</th><th>字符流</th><th>用途</th></tr>
+    <tr><td rowspan="4">节点流（直连数据源）</td><td><code>FileInputStream</code> / <code>FileOutputStream</code></td><td><code>FileReader</code> / <code>FileWriter</code></td><td>文件</td></tr>
+    <tr><td><code>ByteArrayInputStream</code> / <code>ByteArrayOutputStream</code></td><td><code>CharArrayReader</code> / <code>StringReader</code></td><td>内存数组/字符串（不需要关闭）</td></tr>
+    <tr><td><code>PipedInputStream</code> / <code>PipedOutputStream</code></td><td><code>PipedReader</code> / <code>PipedWriter</code></td><td>线程间管道通信</td></tr>
+    <tr><td><code>Socket</code> 的流</td><td>—</td><td>网络</td></tr>
+    <tr><td rowspan="3">处理流（包装增强）</td><td><code>BufferedInputStream</code> / <code>BufferedOutputStream</code></td><td><code>BufferedReader</code> / <code>BufferedWriter</code></td><td>缓冲（readLine 在 Reader 侧）</td></tr>
+    <tr><td><code>DataInputStream</code> / <code>DataOutputStream</code></td><td>—</td><td>基本类型读写</td></tr>
+    <tr><td><code>ObjectInputStream</code> / <code>ObjectOutputStream</code></td><td>—</td><td>对象序列化（见第 04 节）</td></tr>
+    <tr><td>转换/打印</td><td><code>PrintStream</code>（System.out）</td><td><code>PrintWriter</code>、<code>InputStreamReader</code> / <code>OutputStreamWriter</code></td><td>桥接与格式化输出</td></tr>
+  </table>
+  <h3>标准写法：显式编码 + try-with-resources</h3>
+  <pre><code>// try-with-resources：实现 Closeable 的资源自动 close（编译期生成 finally close）
+try (InputStream in = new FileInputStream("a.txt");
+     OutputStream out = new FileOutputStream("b.txt")) {
+    byte[] buf = new byte[8192];
+    int n;
+    while ((n = in.read(buf)) != -1) {     // read 返回实际读到字节数，-1 表示 EOF
+        out.write(buf, 0, n);
+    }
+}
+
+// 文本读写：InputStreamReader 显式指定字符集，别让平台默认编码决定行为
+try (BufferedReader reader = new BufferedReader(
+        new InputStreamReader(new FileInputStream("a.txt"), StandardCharsets.UTF_8))) {
+    String line;
+    while ((line = reader.readLine()) != null) { ... }
+}
+// JDK 11+ 更省事：Files.readString(path, StandardCharsets.UTF_8) / new FileReader(file, charset)</code></pre>
+  <div class="box note"><p>衍生族谱记法：字节流节点流（File/Socket/ByteArray）→ 过滤流层层包装（Buffered/Data/Object/Print）；字符流同理（FileReader → BufferedReader，PrintWriter）。<code>System.in</code> 本身就是 InputStream，<code>System.out</code> 是 PrintStream——打印流只做输出方便格式化。</p></div>
+</section>
+
+<section id="decorator">
+  <h2><span class="no">03</span>缓冲流与装饰器模式 ⭐</h2>
+  <h3>装饰器模式在 IO 里的体现</h3>
+  <p><strong>装饰器（Decorator）：不改变原对象、不改其类层次，通过包装给对象叠加职责。</strong>Java IO 的过滤流全部继承基类并持有基类引用——这就是教科书级的装饰器：</p>
+  <pre><code>// BufferedInputStream 的类骨架（简化）：
+public class FilterInputStream extends InputStream {     // 装饰器基类
+    protected volatile InputStream in;                   // 持有被装饰者
+    ...
+}
+public class BufferedInputStream extends FilterInputStream {
+    protected volatile byte[] buf;                       // 默认 8192（8KB）
+    ...
+}
+
+// 使用：一层层洋葱式包装，读写接口不变、能力叠加
+InputStream in = new BufferedInputStream(                // 第 2 层：加缓冲
+                 new FileInputStream("data.bin"));       // 第 1 层：真正干活（节点流）
+DataInputStream din = new DataInputStream(in);           // 第 3 层：加基本类型读写
+din.readInt();</code></pre>
+  <ul>
+    <li><strong>为什么缓冲流快</strong>：无缓冲时每个 <code>read()</code> 都是一次系统调用（用户态/内核态切换，微秒级）；BufferedInputStream 先一次性读满 8KB 缓冲，后续 read 从内存数组里拿——<strong>把 N 次 syscall 合并成 N/8192 次</strong>。缓冲区默认 8KB，构造器可传自定义大小。</li>
+    <li><strong>适配器模式</strong>：<code>InputStreamReader</code> / <code>OutputStreamWriter</code> 是字节流 ↔ 字符流之间的适配器（接口形状转换 + 编解码）。</li>
+    <li><strong>其他</strong>：NIO 里还能见到工厂（Channels/ByteBuffer 工厂方法）、观察者（Selector 的事件注册与就绪通知，也被称作 NIO 的核心设计）。</li>
+    <li>典型考题："设计模式里装饰器和代理的区别"——装饰器强调<strong>同接口叠加职责、多层包装、调用者明知</strong>；代理强调<strong>控制访问，增强对调用者透明</strong>（见第 12 章动态代理）。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：包装了缓冲流之后又直接读写节点流，或 <code>BufferedWriter</code> 不 <code>flush()</code>/不 close 就退出进程——缓冲区里的尾部数据会丢。close() 会级联触发内层流的 flush + close。</p></div>
+</section>
+
+<section id="serialize">
+  <h2><span class="no">04</span>序列化：Serializable、serialVersionUID、transient</h2>
+  <p><strong>序列化：把对象转成字节流，用于网络传输、中间件缓存、落库</strong>；反序列化是其逆过程。Java 原生方案：实现标记接口 <code>java.io.Serializable</code>，用 <code>ObjectOutputStream.writeObject()</code> / <code>ObjectInputStream.readObject()</code>（笔记要点）。</p>
+  <h3>serialVersionUID：版本指纹</h3>
+  <pre><code>public class User implements Serializable {
+    private static final long serialVersionUID = 1L;   // 强烈建议显式声明
+    private String name;
+    private transient String password;                  // 不参与序列化
+    // 反序列化后 password == null
+}</code></pre>
+  <ul>
+    <li>反序列化时 JVM 会比对字节流里的 serialVersionUID 与当前类的：不一致直接抛 <code>java.io.InvalidClassException</code>——这是"两端类版本不一致就报错"的机制。</li>
+    <li><strong>不显式声明会怎样</strong>：编译器按类结构（字段/方法/接口等）自动计算一个，一旦类有任何结构性改动（加个字段），指纹就变，旧数据全部反序列化失败。显式声明后，<strong>兼容性由开发者自己掌控</strong>：新增字段反序列化时为默认值，删掉的字段被忽略。</li>
+    <li><strong>transient</strong>：标记的字段不参与序列化（敏感信息密码、缓存字段、不可序列化的派生值）。</li>
+    <li><strong>静态变量不序列化</strong>：static 属于类不属于实例，序列化的是对象状态。</li>
+    <li>父类未实现 Serializable 时，父类字段不参与（且父类必须有无参构造器供反序列化链路初始化）。</li>
+  </ul>
+  <h3>ArrayList 的 writeObject 优化（源码级加分点）</h3>
+  <pre><code>// ArrayList 实现 Serializable，但 elementData 数组容量往往大于实际元素个数：
+// 若直接默认序列化，会把尾部一堆 null 也写进字节流，浪费空间。
+// 所以它提供了私有的 writeObject/readObject：
+private void writeObject(java.io.ObjectOutputStream s) throws IOException {
+    int expectedModCount = modCount;
+    s.defaultWriteObject();                 // 序列化元数据（含 size 字段）
+    s.writeInt(size);                       // 只写"有效元素个数"
+    for (int i = 0; i &lt; size; i++) {
+        s.writeObject(elementData[i]);      // 只写前 size 个非 null 元素
+    }
+    ...
+}
+// 教训：序列化协议可以定制——提供私有 writeObject/readObject 即可接管默认行为</code></pre>
+  <ul>
+    <li>同类机制：<code>readResolve()</code> 可以在反序列化后替换返回对象——<strong>单例/枚举防反序列化破坏</strong>靠它（枚举天然免疫，反序列化返回同一个实例）。</li>
+    <li><strong>替代方案</strong>：实际项目多用 JSON（Jackson）、Protobuf（跨语言、体积小）；Java 原生序列化因体积大、性能差、且存在<strong>反序列化漏洞（构造恶意字节流触发任意类构造/gadget 链）</strong>，在安全审计里是重点扣分项。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>："serialVersionUID 是类的版本指纹，显式声明是为了让兼容性由开发者控制；不一致抛 InvalidClassException。transient 和 static 不序列化。另外我知道 ArrayList 覆写了私有 writeObject 只写 size 个元素避免序列化冗余容量——序列化行为是可定制的。"最后一句是 7 年经验的分水岭。</p></div>
+</section>
+
+<section id="nio">
+  <h2><span class="no">05</span>NIO 三大组件：Buffer · Channel · Selector ⭐</h2>
+  <h3>先立认知：一次 IO = 等待就绪 + 数据拷贝</h3>
+  <p>（笔记要点）一次读取要两步：<strong>① 等待数据就绪</strong>（从网络/磁盘进内核缓冲区，慢）；<strong>② 拷贝数据</strong>（内核缓冲区进用户态，快）。三种 IO 模型就差在怎么处理第 ① 步：</p>
+  <table>
+    <tr><th></th><th>BIO（阻塞）</th><th>NIO（同步非阻塞 + 多路复用）</th><th>AIO（异步）</th></tr>
+    <tr><td>等待数据就绪</td><td>线程一直阻塞死等</td><td>不傻等：注册到 Selector，就绪才处理</td><td>发起后立刻返回，内核完成后回调</td></tr>
+    <tr><td>拷贝数据</td><td>自己拷</td><td>自己拷（就绪后同步 read/write）</td><td>内核直接拷到你给的缓冲区</td></tr>
+    <tr><td>线程模型</td><td>一连接一线程</td><td>一个线程管多连接</td><td>回调 / Future</td></tr>
+    <tr><td>Java 支持</td><td>java.io</td><td>java.nio（JDK 1.4+）</td><td>AsynchronousChannel（JDK 7+，Linux 上实际用 epoll 模拟，Netty 未采用）</td></tr>
+  </table>
+  <h3>Buffer：NIO 的数据容器</h3>
+  <pre><code>ByteBuffer buf = ByteBuffer.allocate(1024);   // 三个指针：capacity &gt;= limit &gt;= position
+// 写模式：position 指向下一个写入位
+channel.read(buf);        // 数据进 buffer
+// 写转读的关键一步：
+buf.flip();               // limit = position; position = 0 —— 切为读模式
+while (buf.hasRemaining()) {
+    channel2.write(buf);  // 从 position 读到 limit
+}
+buf.clear();              // 归位为写模式（内容不清，只是指针重置）</code></pre>
+  <ul>
+    <li><strong>flip 是必考点</strong>：写完不 flip 就读，读到的是未定义区域；clear 之后旧数据还在，只是逻辑上可覆盖。</li>
+    <li>Heap Buffer（<code>allocate</code>，堆内 byte[]）vs Direct Buffer（<code>allocateDirect</code>，堆外，见第 07 节）。</li>
+    <li>Buffer 不是线程安全的。</li>
+  </ul>
+  <h3>Channel：双向通道</h3>
+  <ul>
+    <li>Stream 是单向的（Input/Output 分家），<strong>Channel 双向</strong>，可同时读写，可异步，必须配合 Buffer 使用（不提供字节级 API）。</li>
+    <li>常用：FileChannel（文件，唯一不能配 Selector 的——文件始终"就绪"）、SocketChannel / ServerSocketChannel（TCP）、DatagramChannel（UDP）。</li>
+  </ul>
+  <h3>Selector：一个线程管多连接</h3>
+  <pre><code>// 骨架：Reactor 事件循环的雏形（笔记要点：Selector 是"事件复用器"，
+// 在一个阻塞点上同时等待很多通道的就绪事件，而不是每个通道各自阻塞或轮询）
+Selector selector = Selector.open();
+ServerSocketChannel server = ServerSocketChannel.open();
+server.bind(new InetSocketAddress(8080));
+server.configureBlocking(false);                       // 注册 Selector 的 Channel 必须非阻塞
+server.register(selector, SelectionKey.OP_ACCEPT);     // 关注"连接到达"事件
+
+while (true) {
+    selector.select();                                 // 唯一的阻塞点：等任一通道就绪
+    Set&lt;SelectionKey&gt; keys = selector.selectedKeys();   // 就绪事件集合
+    for (SelectionKey key : keys) {
+        if (key.isAcceptable()) { /* accept 新连接，注册 OP_READ */ }
+        if (key.isReadable())   { /* 从该 Channel 非阻塞 read 到 Buffer */ }
+        if (key.isWritable())   { /* 缓冲区可写时写出（一般不常驻注册 OP_WRITE） */ }
+    }
+}
+// 四种事件：OP_ACCEPT / OP_CONNECT / OP_READ / OP_WRITE</code></pre>
+  <ul>
+    <li><strong>为什么省线程</strong>：BIO 里 1 万个连接 = 1 万个线程各自阻塞在 read；NIO 里 1 万个 Channel 注册到 1 个 Selector，只有真正有数据的连接才会被 select() 返回——线程数与连接数解耦，这是 Netty 用少量 EventLoop 撑起海量连接的根本原因。</li>
+    <li>Selector 在 Linux 上的底层就是 <strong>IO 多路复用（select/poll/epoll）</strong>的封装；epoll 为什么高效（红黑树 + 就绪链表、回调而非遍历）在 <a href="../12-os/README.html">12-os 板块</a>展开。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>："NIO 三大组件：Buffer 是数据容器（capacity/position/limit 状态机，flip 切读写）；Channel 是双向通道，必须非阻塞地配 Buffer；Selector 是事件复用器，把'每连接一线程各自阻塞'变成'一个阻塞点等所有连接'，底层是 epoll。所以 NIO 的准确定义是同步非阻塞 + IO 多路复用——就绪通知是异步的，数据拷贝仍要自己同步做，这就是它和 AIO 的分界。"</p></div>
+</section>
+
+<section id="mmap">
+  <h2><span class="no">06</span>mmap 内存映射：FileChannel.map</h2>
+  <h3>和传统 read 的区别</h3>
+  <ul>
+    <li><strong>传统 read</strong>：磁盘 → 内核 page cache → <strong>拷贝到用户态缓冲区</strong> → JVM 堆内 byte[]。两次拷贝、一次 syscall。</li>
+    <li><strong>mmap</strong>：<code>FileChannel.map()</code> 把文件区域<strong>映射进虚拟地址空间</strong>，用户态和内核共享同一份 page cache——<strong>省掉"内核 → 用户态"那次拷贝</strong>，首次访问触发缺页中断由内核把数据加载进 page cache，之后读文件 = 读内存。</li>
+  </ul>
+  <pre><code>try (FileChannel ch = FileChannel.open(Path.of("big.data"), StandardOpenOption.READ)) {
+    MappedByteBuffer mbb = ch.map(FileChannel.MapMode.READ_ONLY, 0, ch.size());
+    // 读文件就像读内存：不需要 ch.read(buf)，也没有"拷贝到堆"这一步
+    while (mbb.hasRemaining()) {
+        byte b = mbb.get();
+    }
+    // MapMode.READ_WRITE 下对 mbb 的修改最终会写回文件（由 OS 按脏页刷盘策略决定时机）
+}</code></pre>
+  <ul>
+    <li><strong>适用场景</strong>：大文件的随机读写与修改、进程间共享内存；对<strong>顺序读</strong>提升有限。中间件实战：RocketMQ 的 CommitLog、Kafka 的索引文件都基于 mmap——把磁盘文件当内存数组操作。</li>
+    <li><strong>代价与注意</strong>：映射大小受 int 偏移限制（单次最多约 2GB，大文件要分段映射）；释放不可控（依赖 GC 回收 MappedByteBuffer 时经 Cleaner unmmap，显式释放要反射/Unsafe，长期持有会占用虚拟地址与 page cache）；修改写回时机由操作系统决定，崩溃前可能丢。</li>
+    <li><code>FileChannel.transferTo()/transferFrom()</code>（sendfile 零拷贝）与 mmap 的对比、零拷贝完整原理（Kafka 为什么快）归 <a href="../12-os/README.html">12-os 板块</a>，此处记住结论：mmap 少一次拷贝、适合随机读写；transferTo 连用户态都不经过、适合整块转发。</li>
+  </ul>
+</section>
+
+<section id="direct">
+  <h2><span class="no">07</span>直接内存：DirectByteBuffer</h2>
+  <ul>
+    <li><strong>是什么</strong>：JVM 堆外（native）内存，由 <code>ByteBuffer.allocateDirect()</code> 分配（返回 DirectByteBuffer）。</li>
+    <li><strong>为什么 IO 场景快</strong>：向 socket/文件写<strong>堆内</strong>数据时，GC 可能移动对象导致地址变化，JVM 无法保证内核能稳定持有这块地址，所以会先把堆内数据<strong>拷贝到一块堆外临时内存</strong>再交给内核——堆外缓冲天生地址稳定，<strong>省掉这次拷贝</strong>，socket 读写尤其受益。</li>
+    <li><strong>与 GC 的关系（一句带过）</strong>：直接内存不受堆 GC 直接管理，靠引用队列 + Cleaner（本质 Cleaner 是 PhantomReference 机制）在 DirectByteBuffer 被回收时释放 native 内存——回收滞后，分配过快会 <code>OutOfMemoryError: Direct buffer memory</code>，受 <code>-XX:MaxDirectMemorySize</code> 限制。GC 与堆外内存的完整分析在 <a href="../03-jvm/README.html">03-jvm 板块</a>。</li>
+    <li><strong>谁在重度使用</strong>：NIO 框架（Netty 的 PooledDirectByteBuf 池化堆外内存 + 引用计数手动释放，就是为规避"等 GC 才释放"的滞后）；RPC 框架序列化缓冲也常用堆外。</li>
+    <li><strong>选型口径</strong>：频繁 socket 读写、大块数据、复用缓冲 → direct；小数据、频繁创建用完即弃 → heap buffer 更省事（堆外分配/释放本身也不便宜，Netty 靠池化摊薄）。</li>
+  </ul>
+  <div class="box warn"><p><strong>排查经验</strong>：线上"堆很健康但进程 RSS 涨、最终 OOM（direct memory）"——先查 <code>MaxDirectMemorySize</code>、Netty 池化配置和有没有忘了 release 的 ByteBuf；用 NMT（NativeMemoryTracking）看 committed 分布。这是直接内存最高频的实战问法。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：装饰器 → IO 里还有别的模式吗</strong>→ 适配器（InputStreamReader 桥接字节/字符）、工厂（NIO 的 open/allocate 静态工厂）、观察者（Selector 事件通知）、门面（java.nio.file.Files 简化 API）。</li>
+    <li><strong>追问链：NIO 为什么快 → 是所有场景都快吗</strong>→ 只在"连接多且活跃度不高或需要高并发吞吐"时优势明显；连接少而活跃时事件循环的开销反而多余。文件 IO 场景 FileChannel 没有 Selector 加持，优势来自缓冲和零拷贝。</li>
+    <li><strong>追问链：序列化 → 单例被序列化破坏怎么办</strong>→ 提供 readResolve() 返回既有实例；或直接用枚举（JVM 层面保证）。</li>
+    <li><strong>陷阱：read() 返回 0 与 -1</strong>：非阻塞 Channel 的 read 返回 0 表示"暂时没数据"（正常），返回 -1 才是流结束——NIO 编程里把 0 当 EOF 是经典 bug。</li>
+    <li><strong>陷阱：写 Buffer 忘 flip</strong>：读写模式切换全靠 flip/clear/rewind，指针状态错误读到脏数据。</li>
+    <li><strong>陷阱：ObjectOutputStream 写到的类没实现 Serializable</strong>：运行时 NotSerializableException，编译期不查。</li>
+    <li><strong>陷阱：FileInputStream 重复打开未关闭</strong>：Linux 上表现 fd 泄漏（Too many open files）——用 try-with-resources 是纪律。</li>
+    <li><strong>场景题口径</strong>："设计一个日志/文件采集模块"——主动提 mmap 大文件读取、direct buffer 网络发送、BufferedOutputStream 批量刷盘三个工具的取舍。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>能画字节流/字符流四基类族谱，说明字符流 = 字节流 + 编解码，并指出 FileReader 的平台默认编码风险。</li>
+    <li>能解释 BufferedInputStream 快的原因（合并 syscall）+ 默认 8KB。</li>
+    <li>能写出装饰器的类结构（FilterInputStream 持有 InputStream）并区分装饰器与代理。</li>
+    <li>serialVersionUID 机制、显式声明的理由、InvalidClassException 时机都能讲清。</li>
+    <li>transient / static / 父类未序列化的行为 + ArrayList writeObject 优化。</li>
+    <li>能背 BIO/NIO/AIO 对比表，说清"一次 IO 两步"模型下三者各差在哪一步。</li>
+    <li>Buffer 三指针与 flip/clear 状态机能画图；Channel 双向、FileChannel 不进 Selector。</li>
+    <li>Selector 事件循环骨架能手写，并关联 epoll（12-os）与 Netty EventLoop。</li>
+    <li>mmap 少一次拷贝的原理、适用场景（大文件随机读写）与限制（2GB、释放不可控）。</li>
+    <li>直接内存：为什么 IO 快、GC 不管它、MaxDirectMemorySize、Netty 池化的动机。</li>
+  </ol>  <div class="box note"><p><strong>内容来源</strong>：参考并合并了 <a href="https://javaguide.cn/java/io/io-basis.html">JavaGuide · Java IO 基础知识</a>与 <a href="https://javaguide.cn/java/io/nio-basis.html">NIO 系统学习</a>的问答口径（重构改写非照抄）。</p></div>
+  <div class="pager">
+    <a href="10-Lambda与Stream.html">⬅ 上一章：10 Lambda 与 Stream</a>
+    <a class="next" href="12-注解与反射.html">下一章：12 注解与反射 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 11 章 IO 与 NIO</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 08 章 · 集合框架 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#overview">Collection 体系总览</a>
+  <a href="#list">ArrayList vs LinkedList</a>
+  <a href="#deque">Queue、Deque 与 Stack ⭐</a>
+  <a href="#priorityqueue">PriorityQueue 与堆 ⭐</a>
+  <a href="#hashmap">HashMap 源码剖析 ⭐⭐</a>
+  <a href="#jdk7-8">JDK 7 死循环与 JDK 8 改动</a>
+  <a href="#chm">ConcurrentHashMap ⭐⭐</a>
+  <a href="#treemap">TreeMap 与红黑树</a>
+  <a href="#lru">LinkedHashMap 与 LRU</a>
+  <a href="#failfast">fail-fast 与 fail-safe</a>
+  <a href="#cow">CopyOnWrite 容器</a>
+  <a href="#comparable">Comparable vs Comparator</a>
+  <a href="#scenarios">实战场景速查 ⭐</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="07-异常处理.html">⬅ 上一章：07 异常处理</a>
+  <a href="09-泛型.html">下一章：09 泛型 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 08 章 · 集合框架</h1>
+    <div class="sub">Collection 体系 · ArrayList/LinkedList · Queue/Deque/Stack · PriorityQueue 与堆 · HashMap 源码 · ConcurrentHashMap 演进 · fail-fast —— 01 板块最重的一章，几乎每场面试必问</div>
+    <div class="meta">
+      <span>⭐⭐ 必考：HashMap put/扩容/树化 · ConcurrentHashMap 分段锁→CAS+synchronized</span>
+      <span>蓝本：AlgoMaster Java · Collections Framework</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span class="tag exist">已合并：Java/java 基础.md（集合总览）✅</span>
+      <span>Queue/Deque/Stack · PriorityQueue 场景补全（2026-10-20）</span>
+      <span>TreeMap 实战场景补全（2026-10-21）</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>HashMap 的 put 流程完整讲一遍？put 一个已存在的 key 会发生什么？⭐⭐</li>
+      <li>HashMap 的容量为什么必须是 2 的幂？hash 扰动函数在解决什么问题？⭐⭐</li>
+      <li>负载因子为什么是 0.75？链表树化阈值为什么是 8、退化阈值为什么是 6？⭐</li>
+      <li>只重写 equals 不重写 hashCode 会怎样？equals 和 hashCode 分别在 put/get 的哪一步参与？</li>
+      <li>JDK 7 的 HashMap 并发下为什么会死循环？JDK 8 改了什么？HashMap 线程安全了吗？⭐⭐</li>
+      <li>ConcurrentHashMap JDK 7 和 JDK 8 实现有什么区别？JDK 8 还用分段锁吗？size() 怎么实现的？⭐⭐</li>
+      <li>ConcurrentHashMap 的 key/value 为什么不允许 null？</li>
+      <li>ArrayList 和 LinkedList 的区别？ArrayList 扩容机制？默认容量是多少？⭐</li>
+      <li>增强 for 循环里调用 list.remove 为什么抛异常？正确的删除姿势有哪些？⭐</li>
+      <li>TreeMap 底层是什么？LinkedHashMap 怎么实现 LRU？CopyOnWriteArrayList 适用什么场景？</li>
+      <li>TreeMap 你在项目里真正用过吗？什么场景非它不可，什么场景该换 ConcurrentSkipListMap 或干脆排序？⭐</li>
+      <li>Queue 的 add/offer、remove/poll、element/peek 有什么区别？BlockingQueue 又加了哪两套？⭐</li>
+      <li>ArrayDeque 底层怎么实现的？为什么栈和队列都推荐它，而不是 Stack / LinkedList？⭐</li>
+      <li>PriorityQueue 底层是什么数据结构？offer/poll 的复杂度？为什么迭代遍历不是有序的？⭐</li>
+      <li>求"最大的 K 个数"用大顶堆还是小顶堆？为什么？Top-K 完整解法？延时任务调度底层为什么也是堆？⭐</li>
+    </ol>
+  </div>
+  <p>集合是 Java 面试的"主板章节"：从这里往下能挖到数据结构（红黑树）、往上能挖到并发（CHM）、往业务能挖到选型与踩坑。7 年经验的打法：<strong>每个结论都落到源码常量与方法名上</strong>（putVal / treeifyBin / sizeCtl / modCount），并准备好"我们项目里怎么选、踩过什么坑"的一句话实战。</p>
+</section>
+
+<section id="overview">
+  <h2><span class="no">02</span>Collection 体系总览</h2>
+  <p>Java 集合有两棵树：<strong>Collection（存单个元素）</strong>和 <strong>Map（存键值对）</strong>，Map 不继承 Collection。先把体系图背下来，选型题才有骨架：</p>
+  <pre><code>Iterable
+└─ Collection
+   ├─ List（有序、可重复、有下标）
+   │   ├─ ArrayList     底层数组，随机访问 O(1)，线程不安全
+   │   ├─ LinkedList    双向链表（节点 = prev + item + next），线程不安全
+   │   └─ Vector        底层数组，方法级 synchronized，线程安全（遗留，基本弃用）
+   │       └─ Stack     继承 Vector，LIFO（遗留；多用 Deque/ArrayDeque）
+   ├─ Set（不重复）
+   │   ├─ HashSet       底层就是 HashMap（value 是固定哑对象），线程不安全
+   │   │   └─ LinkedHashSet  链表 + 哈希表，维护插入顺序（FIFO）
+   │   └─ SortedSet → TreeSet   底层 TreeMap（红黑树），按比较结果排序
+   └─ Queue / Deque
+       ├─ PriorityQueue     底层二叉小顶堆，插入/出队 O(log n)；不支持 null 和不可比较对象
+       └─ ArrayDeque        循环数组实现的双端队列，做栈/队列都优于 Stack/LinkedList
+
+Map
+├─ HashMap       数组 + 链表 + 红黑树（JDK 8+），线程不安全
+│   └─ LinkedHashMap   HashMap + 双向链表，可按插入序或访问序遍历
+├─ Hashtable     整表一把 synchronized 锁（遗留）
+├─ SortedMap → TreeMap    红黑树，key 有序
+└─ ConcurrentHashMap      JUC 并发安全 Map（本章 §08 专讲）</code></pre>
+  <div class="box note"><p>以上结构已合并自 <code>Java/java 基础.md</code> 的"集合"一节（ArrayList/LinkedList/Vector、HashSet 系、PriorityQueue、HashMap 树化与扩容条件、CHM 1.7/1.8 双版本口径），原笔记要点全部落在对应小节里。Queue/Deque/Stack 的展开见 §04，PriorityQueue 与堆见 §05，每种集合的业务用法速查见 §14；Queue 的并发家族（BlockingQueue 等）归 <a href="../02-concurrency/README.html">02-concurrency 板块</a>。</p></div>
+  <h3>选型速查（业务视角，面试常以"你会用什么"开场）</h3>
+  <table>
+    <tr><th>需求</th><th>首选</th><th>理由 / 备注</th></tr>
+    <tr><td>默认 List</td><td><code>ArrayList</code></td><td>连续内存、CPU 缓存友好、尾插均摊 O(1)</td></tr>
+    <tr><td>频繁头插/当队列、栈用</td><td><code>ArrayDeque</code> / <code>LinkedList</code></td><td>数组中段插删是 O(n)；栈别用 Stack（继承 Vector）</td></tr>
+    <tr><td>去重</td><td><code>HashSet</code></td><td>O(1) 判重，依赖 equals + hashCode</td></tr>
+    <tr><td>去重且保序</td><td><code>LinkedHashSet</code></td><td>多一条双向链表，代价是内存</td></tr>
+    <tr><td>排序 / 范围查询</td><td><code>TreeSet</code> / <code>TreeMap</code></td><td>红黑树 O(log n)，支持 floor/ceiling/subMap</td></tr>
+    <tr><td>key→value 映射</td><td><code>HashMap</code></td><td>O(1) 读写；需要插入序用 LinkedHashMap</td></tr>
+    <tr><td>Top-K / 按优先级出队</td><td><code>PriorityQueue</code></td><td>数组小顶堆，offer/poll O(log n)（§05）</td></tr>
+    <tr><td>并发读多写少的 List</td><td><code>CopyOnWriteArrayList</code></td><td>读无锁、写复制（§12）</td></tr>
+    <tr><td>并发 Map</td><td><code>ConcurrentHashMap</code></td><td>锁粒度到桶头（§08）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：先一句话给体系（"Collection 和 Map 两棵树，List/Set/Queue 三兄弟 + Map 四实现"），再按面试官点的那个实现往下钻。总览答得利落，面试官才会往深处问——这是"会的人"的信号。</p></div>
+</section>
+
+<section id="list">
+  <h2><span class="no">03</span>ArrayList vs LinkedList ⭐</h2>
+  <h3>ArrayList：动态数组</h3>
+  <ul>
+    <li><strong>默认容量 10，但是懒初始化</strong>：无参构造只是把 <code>elementData</code> 指向共享的空数组 <code>DEFAULTCAPACITY_EMPTY_ELEMENTDATA</code>，<strong>首次 add 才真正分配长度 10 的数组</strong>——所以 <code>new ArrayList&lt;&gt;()</code> 本身不占 10 个槽的内存。</li>
+    <li><strong>扩容 1.5 倍</strong>：<code>newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1)</code>，再 <code>Arrays.copyOf</code> 整体拷贝。均摊下来 add 是 O(1)；能预估大小就 <code>new ArrayList&lt;&gt;(n)</code> 一次到位，避免多次拷贝。</li>
+    <li>随机访问 <code>get(i)/set(i)</code> O(1)；中段插删要 <code>System.arraycopy</code> 移动后续元素，O(n)。</li>
+  </ul>
+  <pre><code>// JDK 8 ArrayList 扩容核心
+private void grow(int minCapacity) {
+    int oldCapacity = elementData.length;
+    int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);   // 1.5 倍：10 → 15 → 22 → 33 …
+    if (newCapacity - minCapacity &lt; 0)
+        newCapacity = minCapacity;                          // 一次 addAll 大集合时直接给够
+    elementData = Arrays.copyOf(elementData, newCapacity);  // 新数组 + 整体拷贝
+}</code></pre>
+  <h3>LinkedList：双向链表 + 双端队列</h3>
+  <ul>
+    <li>节点 <code>Node&lt;E&gt; { E item; Node&lt;E&gt; next; Node&lt;E&gt; prev; }</code>，同时实现了 <code>List</code> 和 <code>Deque</code>，可当队列/栈用。</li>
+    <li>头尾插删 O(1)；<strong>随机访问 O(n)</strong>——<code>get(i)</code> 内部会按 <code>i &lt; (size &gt;&gt; 1)</code> 决定从头还是从尾遍历，但这只是减半常数，量级没变。</li>
+    <li>每个节点多两个引用 + 节点对象头，内存开销大且地址不连续（缓存不友好）——<strong>"删中间元素"也要先 O(n) 定位</strong>，所以实际工程里 LinkedList 几乎全面输给 ArrayList。</li>
+  </ul>
+  <table>
+    <tr><th></th><th>ArrayList</th><th>LinkedList</th></tr>
+    <tr><td>底层</td><td>Object[] 动态数组</td><td>双向链表</td></tr>
+    <tr><td>随机访问</td><td>O(1)</td><td>O(n)</td></tr>
+    <tr><td>头插/头删</td><td>O(n)（整体后移）</td><td>O(1)</td></tr>
+    <tr><td>尾插</td><td>均摊 O(1)</td><td>O(1)</td></tr>
+    <tr><td>中段插删</td><td>O(n) 移动元素</td><td>O(n) 定位 + O(1) 改指针</td></tr>
+    <tr><td>内存</td><td>紧凑、有预留空位</td><td>每节点 2 个引用，不连续</td></tr>
+    <tr><td>线程安全</td><td>否</td><td>否</td></tr>
+  </table>
+  <div class="box warn"><p><strong>陷阱</strong>：" LinkedList 插入删除快" 是半对答案——只对<strong>已定位到节点</strong>的插删成立；按下标操作仍要先 O(n) 遍历。高级岗标准答案：默认 ArrayList；要队列/栈用 ArrayDeque；LinkedList 在真实项目里基本没有胜出场景，说出这句反而是加分。</p></div>
+  <h3>LinkedList 的真实使用场景：理论上有，实际都被替代了</h3>
+  <p>说"没有胜出场景"要能兜住追问——它不是一无是处，而是<strong>每个理论适配的场景都有更优解</strong>。把这张表讲出来，比一句"不用"有说服力得多：</p>
+  <table>
+    <tr><th>它理论上适合的场景</th><th>为什么成立</th><th>实际被谁替代</th></tr>
+    <tr><td>频繁头尾增删的队列 / 栈 / 双端</td><td>头尾插删 O(1)，且同时实现了 Deque 接口</td><td><code>ArrayDeque</code>（JDK 6）——循环数组、无锁、缓存友好，两端同样 O(1)</td></tr>
+    <tr><td>迭代中频繁删"当前元素"</td><td><code>ListIterator</code> 定位后 remove 是改两个指针 O(1)，无数组搬移</td><td><code>ArrayList.removeIf</code>——批量标记 + 一次压缩，整体 O(n) 反而更快</td></tr>
+    <tr><td>超大列表避免扩容拷贝尖刺</td><td>ArrayList 扩容要整体 copy + 申请一大块<strong>连续</strong>内存；链表每次只做小分配，单次操作耗时稳定（延迟敏感场景看重这点）</td><td>预估容量 <code>new ArrayList&lt;&gt;(n)</code> 一次到位；真有稳定延迟要求换分块结构</td></tr>
+    <tr><td>同一结构既要 List 又要 Deque</td><td>它是 JDK 里<strong>唯一</strong>同时实现 List 和 Deque 的通用类</td><td>真到这步通常说明该自己封装或换专门结构了</td></tr>
+  </table>
+  <div class="box note"><p><strong>口径升级</strong>："LinkedList 头尾 O(1) 所以适合做队列/栈"是 JDK 6 之前（没有 ArrayDeque 时代）的答案，背它会显得停留在老教材。现代口径："它的理论场景都有更好的替代——栈/队列归 ArrayDeque、列表归 ArrayList、批量删除归 removeIf，所以真实项目里我基本不用它；唯一不可替代点是 List + Deque 双接口，但那属于设计该改的信号。"</p></div>
+</section>
+
+<section id="deque">
+  <h2><span class="no">04</span>Queue、Deque 与 Stack ⭐</h2>
+  <h3>Queue 的两套 API：抛异常 vs 返回特殊值 ⭐</h3>
+  <table>
+    <tr><th>语义</th><th>抛异常版</th><th>返回特殊值版</th><th>满 / 空时的行为差异</th></tr>
+    <tr><td>入队</td><td><code>add(e)</code></td><td><code>offer(e)</code></td><td>容量受限队列已满：add 抛 <code>IllegalStateException</code> / offer 返回 false</td></tr>
+    <tr><td>出队</td><td><code>remove()</code></td><td><code>poll()</code></td><td>队空：remove 抛 <code>NoSuchElementException</code> / poll 返回 null</td></tr>
+    <tr><td>看队头</td><td><code>element()</code></td><td><code>peek()</code></td><td>队空：element 抛异常 / peek 返回 null</td></tr>
+  </table>
+  <ul>
+    <li><strong>追问升级</strong>：BlockingQueue 在此之上又加两套——<strong>阻塞版</strong> <code>put()/take()</code>（满了/空了就挂起）和<strong>超时版</strong> <code>offer(e, time, unit)/poll(time, unit)</code>。两套 + 阻塞两套 = "立即失败、立即返回、一直等、等一会"四种失败策略，能说全这四种是加分项（阻塞队列本体在 <a href="../02-concurrency/README.html">02-concurrency</a> 展开）。</li>
+    <li><strong>实践口径</strong>：业务代码统一用 offer/poll/peek，让"失败"成为可判断的返回值，而不是拿异常做流程控制。</li>
+  </ul>
+  <h3>Deque：双端队列，一个结构两种用法</h3>
+  <ul>
+    <li>Deque = Double Ended Queue，两头都能进出：<code>addFirst/addLast、pollFirst/pollLast、peekFirst/peekLast</code>。</li>
+    <li>它<strong>内嵌了栈语义和队列语义</strong>：push/pop/peek 就是 addFirst/removeFirst/peekFirst；offer/poll/peek 就是 addLast/pollFirst/peekFirst——"用 Deque 当栈或队列"只是同一结构的两种视角，接口只是把用法收窄。</li>
+    <li><strong>首选实现 ArrayDeque</strong>：底层循环数组，两端插删 O(1)；无容量上限，满了翻倍。</li>
+  </ul>
+  <pre><code>// JDK 8 ArrayDeque：循环数组 + head/tail 两个指针
+transient Object[] elements;    // 长度恒为 2 的幂（默认 16；传初始大小会向上取到 2 的幂）
+transient int head;             // 指向第一个元素
+transient int tail;             // 指向最后一个元素的下一格
+
+public void addFirst(E e) {
+    if (e == null) throw new NullPointerException();            // 禁 null：poll/peek 用 null 表示"空"
+    elements[head = (head - 1) &amp; (elements.length - 1)] = e;    // head 左移一格，与掩码 &amp; 实现环绕
+    if (head == tail) doubleCapacity();                         // 两指针相遇即满，容量翻倍
+}</code></pre>
+  <ul>
+    <li>环绕示例：head=0 时 <code>(0 - 1) &amp; 15</code> = 15，"向左出界"自动绕回数组尾——这就是"循环数组"的由来；<code>&amp; (length - 1)</code> 能替代取模的前提同样是长度为 2 的幂（与 HashMap 的取模优化同源）。</li>
+    <li>新版 JDK 的 ArrayDeque 改用取模实现、初始容量留一个空槽，实现细节有变，但"循环数组 + 双指针 + 禁 null"的骨架没变，面试按 JDK 8 口径答即可。</li>
+    <li><strong>为什么禁止 null</strong>：<code>poll()/peek()</code> 约定用返回 null 表示"没有元素"，如果允许存 null 就无法区分"取到了 null"和"队列为空"——LinkedList 当队列用时也应遵守这个约定。</li>
+  </ul>
+  <h3>Stack 为什么被弃用：继承 Vector 的反面教材 ⭐</h3>
+  <table>
+    <tr><th></th><th>Stack（遗留，别用）</th><th>Deque + ArrayDeque（官方推荐）</th></tr>
+    <tr><td>锁</td><td>继承 Vector，所有方法 synchronized，整表一把锁</td><td>无锁</td></tr>
+    <tr><td>封装</td><td>暴露 get(i)/insertElementAt 等任意位置 API，破坏 LIFO 语义</td><td>只有双端操作，语义纯粹</td></tr>
+    <tr><td>null</td><td>允许（Vector 允许）</td><td>禁止（null 是"空"的哨兵）</td></tr>
+    <tr><td>迭代顺序</td><td>从栈底到栈顶，与操作直觉相反</td><td>从头到尾，即从栈顶往下</td></tr>
+  </table>
+  <ul>
+    <li>Stack 是"为了复用而继承"的经典事故：想要 Vector 的数组能力，结果把不该公开的能力（随机访问、任意位置插删）全暴露了出来——<strong>组合优于继承</strong>的活教材，Javadoc 明确建议改用 Deque。这个升华比背 API 更值钱。</li>
+  </ul>
+  <h3>实战使用场景：栈 / 队列 / 双端各管一摊</h3>
+  <pre><code>// 栈：撤销/重做、括号匹配、非递归 DFS、最近访问历史（浏览器后退）
+Deque&lt;Integer&gt; stack = new ArrayDeque&lt;&gt;();
+stack.push(1);        // = addFirst，栈顶进
+stack.pop();          // = removeFirst，栈顶出（空则抛 NoSuchElementException）
+stack.peek();         // = peekFirst（空返回 null）
+
+// 队列：BFS 层序遍历、进程内任务按序缓冲、批处理流水
+Queue&lt;Integer&gt; queue = new ArrayDeque&lt;&gt;();
+queue.offer(1);       // 尾进
+queue.poll();         // 头出（空返回 null）
+
+// 双端：滑动窗口最大值用"单调双端队列"——头弹出窗口外的、尾弹出比新元素小的
+Deque&lt;Integer&gt; dq = new ArrayDeque&lt;&gt;();
+dq.peekFirst(); dq.pollFirst(); dq.pollLast(); dq.offerLast(v);</code></pre>
+  <ul>
+    <li><strong>栈场景</strong>：方法调用栈、表达式求值（编译器）、括号与标签配对（HTML/JSON 解析）、撤销栈、DFS 非递归化、单调栈（"下一个更大元素"类题，归 <a href="../05-dsa/README.html">05-dsa</a>）。</li>
+    <li><strong>队列场景</strong>：BFS、日志/事件按序消费、生产者-消费者的进程内版（并发与背压上 BlockingQueue）。</li>
+    <li><strong>双端场景</strong>：滑动窗口最大值；ForkJoinPool 的工作窃取（owning 线程从一端取、窃取者从另一端偷——双端队列天然支持）。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：ArrayDeque 是<strong>无界</strong>的——<code>new ArrayDeque&lt;&gt;()</code> 没有容量上限，构造传的只是初始数组大小。要做有界队列/背压，用 ArrayBlockingQueue（02-concurrency）。</p></div>
+  <div class="box tip"><p><strong>答题口径</strong>："Stack 和 LinkedList（当栈/队列用）都过时了，现代写法一律 Deque 接口 + ArrayDeque 实现——循环数组、两端 O(1)、无锁、连续内存缓存友好。"一句话把"为什么"说完，再补 Queue 两套 API 的行为差异。</p></div>
+</section>
+
+<section id="priorityqueue">
+  <h2><span class="no">05</span>PriorityQueue 与堆 ⭐</h2>
+  <h3>底层：数组表示的二叉小顶堆</h3>
+  <ul>
+    <li>PriorityQueue 既不是链表也不是树对象图，就是一个 <code>Object[] queue</code> 按<strong>完全二叉树的层序</strong>存放的小顶堆：下标 n 的元素，<code>parent = (n - 1) &gt;&gt;&gt; 1</code>，左孩子 <code>2n + 1</code>，右孩子 <code>2n + 2</code>。</li>
+    <li>堆性质：每个父节点 ≤ 它的孩子（小顶）；因此 <strong>queue[0] 永远是当前最小值，peek O(1)</strong>；但数组整体不是有序的——这是"迭代乱序"问题的根源（见下文陷阱）。</li>
+    <li>基本约束：默认初始容量 <strong>11</strong>；无界（自动扩容）；<strong>不允许 null</strong>；元素必须实现 <code>Comparable</code> 或构造时传 <code>Comparator</code>，否则运行时 ClassCastException——首个元素不参与比较，<strong>第二次 offer 才炸</strong>，报错时机是个细节考点。</li>
+    <li>线程不安全——并发场景换 PriorityBlockingQueue（<a href="../02-concurrency/README.html">02-concurrency</a>）。</li>
+  </ul>
+  <h3>offer / poll：上浮 siftUp 与下沉 siftDown</h3>
+  <pre><code>// offer 的核心：新元素放尾部，一路与父节点比较，小则上浮 —— 最多走树高 O(log n)
+private void siftUpComparable(int k, E x) {
+    Comparable&lt;? super E&gt; key = (Comparable&lt;? super E&gt;) x;
+    while (k &gt; 0) {
+        int parent = (k - 1) &gt;&gt;&gt; 1;          // 父节点下标
+        Object e = queue[parent];
+        if (key.compareTo((E) e) &gt;= 0)        // 不比父亲小 → 堆性质已满足，停
+            break;
+        queue[k] = e;                         // 父亲下来占自己的位
+        k = parent;                           // 自己升到父亲的位置
+    }
+    queue[k] = key;                           // 落定
+}
+
+// poll 对称：取走 queue[0]，用尾元素补位，siftDown 与"较小的孩子"交换下沉 —— O(log n)
+// peek 只读 queue[0]，O(1)</code></pre>
+  <ul>
+    <li><strong>建堆是 O(n) 不是 O(n log n)</strong>：构造器 <code>PriorityQueue(Collection)</code> 走 heapify——从最后一个非叶节点（<code>(size &gt;&gt;&gt; 1) - 1</code>）倒序逐个 siftDown。绝大多数节点在底层、下沉高度小，按高度加权和正好是 O(n)。逐个 offer 才是 O(n log n)。这是算法面经典追问。</li>
+  </ul>
+  <h3>扩容：与 ArrayList 不一样的"两段式" ⭐</h3>
+  <pre><code>private void grow(int minCapacity) {
+    int oldCapacity = queue.length;
+    int newCapacity = oldCapacity + ((oldCapacity &lt; 64) ?
+                                     (oldCapacity + 2) :    // 容量 &lt; 64：约翻倍（+ 自身 + 2）
+                                     (oldCapacity &gt;&gt; 1));   // 达到 64 后：1.5 倍
+    queue = Arrays.copyOf(queue, newCapacity);
+}</code></pre>
+  <ul>
+    <li>细节对比题：<strong>ArrayList 从 10 起步恒定 1.5 倍；PriorityQueue 从 11 起步、64 之前翻倍、64 之后 1.5 倍</strong>——小堆翻倍减少扩容次数，大堆 1.5 倍省内存，两段式在时间与空间之间切换。</li>
+  </ul>
+  <h3>两个必考陷阱</h3>
+  <ul>
+    <li><strong>迭代顺序 ≠ 优先级顺序</strong>：iterator 按底层数组下标遍历，只保证"父 ≤ 子"，不保证全局有序。要按优先级消费必须逐个 <code>poll()</code>（或 <code>Arrays.sort(toArray())</code>）——"for 循环打印 PriorityQueue 发现不是有序的"是真实高频困惑。</li>
+    <li><strong>remove(Object) / contains 是 O(n)</strong>：堆只为"取最值"而生，不服务于任意查找与删除。频繁"修改优先级 / 删中间元素"的调度场景，要么自己维护"元素 → 下标"映射做 IndexedHeap，要么换 TreeSet。</li>
+  </ul>
+  <h3>实战场景：哪些业务在用堆 ⭐⭐</h3>
+  <table>
+    <tr><th>场景</th><th>怎么用堆</th><th>复杂度</th></tr>
+    <tr><td>Top-K：求最大的 K 个</td><td>维护 K 大小的<strong>小顶堆</strong>（堆顶 = 当前 K 个里最小的，是最先被挤出去的门槛）；新元素比堆顶大才进</td><td>O(n log k)，优于全排序 O(n log n)</td></tr>
+    <tr><td>Top-K：求最小的 K 个</td><td>反过来用<strong>大顶堆</strong>：<code>new PriorityQueue&lt;&gt;(k, Comparator.reverseOrder())</code>——"求大用小堆、求小用大堆"是反直觉考点</td><td>O(n log k)</td></tr>
+    <tr><td>合并 K 个有序链表/日志段</td><td>各链的头节点进小顶堆，poll 出全局最小、再补对应链的下一个——多路归并，外部排序、ES/Lucene 段合并的雏形</td><td>O(N log k)</td></tr>
+    <tr><td>延时/定时任务调度</td><td>按触发时间排序的堆：<code>Timer</code> 的 TaskQueue、<code>ScheduledThreadPoolExecutor</code> 的 DelayedWorkQueue 都是小顶堆（变体），取最早到期任务</td><td>入队/取最早 O(log n)</td></tr>
+    <tr><td>线程池按优先级消费</td><td><code>new ThreadPoolExecutor(..., new PriorityBlockingQueue&lt;&gt;(n, cmp))</code>，任务实现 Comparable 按优先级排队</td><td>O(log n)</td></tr>
+    <tr><td>图算法</td><td>Dijkstra / Prim 按距离、权重取最小节点（配懒删除）</td><td>O((V+E) log V)</td></tr>
+    <tr><td>流式中位数 / 分位数</td><td>对顶堆：大顶堆放较小一半 + 小顶堆放较大一半，两堆大小差 ≤ 1</td><td>插入 O(log n)，查中位数 O(1)</td></tr>
+  </table>
+  <pre><code>// Top-K 模板：流式数据里维护"最大的 K 个"（热点商品、慢接口 Top10、热搜榜）
+Queue&lt;Integer&gt; heap = new PriorityQueue&lt;&gt;(k);            // 小顶堆
+for (int x : nums) {
+    if (heap.size() &lt; k) {
+        heap.offer(x);
+    } else if (x &gt; heap.peek()) {        // 只比"K 个里最小的"（门槛）大才有资格进
+        heap.poll();
+        heap.offer(x);
+    }
+}
+// 业务化：把元素换成记录、传 Comparator.comparingLong(Record::getCost) 即可套用</code></pre>
+  <div class="box tip"><p><strong>答题骨架</strong>："底层是数组小顶堆，offer/poll 上浮下沉 O(log n)，peek O(1)，remove/contains O(n)；迭代不有序，按优先级出必须 poll；不允许 null，线程不安全。求最大 K 用小顶堆——堆顶是门槛；延时任务调度（Timer、ScheduledThreadPoolExecutor）底层就是同款堆。"场景能报出 3 个以上，这题就稳了。</p></div>
+</section>
+
+<section id="hashmap">
+  <h2><span class="no">06</span>HashMap 源码剖析 ⭐⭐（必考）</h2>
+  <h3>底层结构与关键常量</h3>
+  <pre><code>// JDK 8 HashMap：数组 + 链表 + 红黑树
+static final int DEFAULT_INITIAL_CAPACITY = 1 &lt;&lt; 4;     // 16，默认容量
+static final int MAXIMUM_CAPACITY = 1 &lt;&lt; 30;             // 上限约 10.7 亿
+static final float DEFAULT_LOAD_FACTOR = 0.75f;          // 负载因子
+static final int TREEIFY_THRESHOLD = 8;                  // 链长 &gt;= 8 尝试树化
+static final int UNTREEIFY_THRESHOLD = 6;                // 扩容拆分后链长 &lt;= 6 退化为链表
+static final int MIN_TREEIFY_CAPACITY = 64;              // 表容量 &lt; 64 时树化退让给扩容
+transient Node&lt;K,V&gt;[] table;                             // 哈希桶数组（懒创建）
+transient int size;                                      // 键值对总数
+int threshold;                                           // 扩容阈值 = capacity × loadFactor</code></pre>
+  <ul>
+    <li>JDK 7：<strong>数组 + 链表</strong>，头插法；JDK 8：<strong>数组 + 链表 + 红黑树</strong>，尾插法。JDK 9 起（JEP 180 的延续优化）无需展开。</li>
+    <li>哈希冲突让某个桶链表过长时，查询退化为 O(n)；树化后 O(log n)——红黑树是对<strong>哈希劣化（坏 hashCode 或哈希碰撞攻击）</strong>的兜底。</li>
+  </ul>
+  <h3>hash 扰动函数：为什么不是直接用 hashCode</h3>
+  <pre><code>static final int hash(Object key) {
+    int h;
+    return (key == null) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16);
+}</code></pre>
+  <ul>
+    <li>定位桶用的是<strong>低几位</strong>（<code>hash &amp; (n-1)</code> 只取低位）。若直接用原始 hashCode，高位不参与运算——很多类的 hashCode 高位差异大、低位相似，冲突会集中。</li>
+    <li><strong>高 16 位异或到低 16 位</strong>：让高位也影响桶定位，近似"花小代价混合各位信息"，显著降低小容量下的冲突率。用异或而不是与/或，是因为与会偏 0、或会偏 1，异或分布均匀。</li>
+    <li>注意 <code>key == null</code> 返回 hash 0，所以 <strong>HashMap 允许一个 null key</strong>，固定落在 0 号桶。</li>
+  </ul>
+  <h3>put 流程（putVal 逐步拆解）⭐⭐</h3>
+  <pre><code>final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+    Node&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; int n, i;
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;                    // ① 表空：懒初始化，首次 put 建表
+    if ((p = tab[i = (n - 1) &amp; hash]) == null)
+        tab[i] = newNode(hash, key, value, null);       // ② 桶空：直接放新节点
+    else {
+        Node&lt;K,V&gt; e; K k;
+        if (p.hash == hash &amp;&amp;
+            ((k = p.key) == key || (key != null &amp;&amp; key.equals(k))))
+            e = p;                                      // ③ 头节点就是目标 key：记录待覆盖
+        else if (p instanceof TreeNode)
+            e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(this, tab, hash, key, value);  // ④ 红黑树插入
+        else {
+            for (int binCount = 0; ; ++binCount) {      // ⑤ 沿链表找：JDK 8 尾插
+                if ((e = p.next) == null) {
+                    p.next = newNode(hash, key, value, null);   // 挂到链尾
+                    if (binCount &gt;= TREEIFY_THRESHOLD - 1)      // ⑥ 链长达到 8
+                        treeifyBin(tab, hash);                  //    尝试树化（容量&lt;64 先扩容）
+                    break;
+                }
+                if (e.hash == hash &amp;&amp;
+                    ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))
+                    break;                               // 链上命中目标 key
+                p = e;
+            }
+        }
+        if (e != null) {                                 // key 已存在：覆盖并返回 oldValue
+            V oldValue = e.value;
+            if (!onlyIfAbsent || oldValue == null) e.value = value;
+            afterNodeAccess(e);                          // LinkedHashMap 访问回调
+            return oldValue;
+        }
+    }
+    ++modCount;
+    if (++size &gt; threshold)                             // ⑦ 超过阈值：扩容
+        resize();
+    afterNodeInsertion(evict);                           // LinkedHashMap 删老回调（LRU 用）
+    return null;                                         // 全新 key 才走到这
+}</code></pre>
+  <div class="box tip"><p><strong>答题骨架（背这 7 步）</strong>：①表空先 resize 建表 → ②<code>(n-1) &amp; hash</code> 定位桶、桶空直插 → ③头节点 key 相同（hash 相等 + == 或 equals）则覆盖 → ④红黑树走 putTreeVal → ⑤否则链表<strong>尾插</strong>遍历 → ⑥链长到 8 调 treeifyBin（容量不足 64 优先扩容） → ⑦<code>++size &gt; threshold</code> 再 resize。补一句"modCount++ 供迭代器 fail-fast 检查"就是源码级完成度。</p></div>
+  <h3>容量为什么必须是 2 的幂 ⭐</h3>
+  <ul>
+    <li><strong>取模优化</strong>：<code>hash % n</code> 等价于 <code>hash &amp; (n - 1)</code> 的前提是 n 是 2 的幂。位运算比除法快，且此时 n-1 是全 1 的掩码（如 n=16 → 0b1111），每一位都能用上，<strong>散列更均匀</strong>；若 n 不是 2 的幂，掩码有 0 位，某些桶永远分不到元素。</li>
+    <li><strong>扩容定位 O(1)</strong>：容量翻倍意味着掩码多出一位高位。旧表迁移时<strong>不需要重算 hash</strong>，只看 <code>e.hash &amp; oldCap</code>：该位是 0 → 留在原下标 j；是 1 → 落到 <code>j + oldCap</code>。一条链最多拆成两条，迁移成本大幅下降。</li>
+    <li>构造时传入的容量不是 2 的幂也无所谓：<code>tableSizeFor(n)</code> 向上取最近的 2 的幂（<code>new HashMap&lt;&gt;(17)</code> 实际 32）。</li>
+  </ul>
+  <pre><code>// JDK 8 resize() 迁移核心：不重算 hash，按新增那一位拆两条链
+do {
+    if ((e.hash &amp; oldCap) == 0) {        // 新增位是 0：留在原下标 j
+        ...
+    } else {                              // 新增位是 1：落到 j + oldCap
+        ...
+    }
+} while ((e = next) != null);</code></pre>
+  <h3>负载因子与扩容</h3>
+  <ul>
+    <li><strong>threshold = capacity × loadFactor</strong>（默认 16 × 0.75 = 12）：size 超过它就扩容，新容量 = 旧容量 &lt;&lt; 1（翻倍）。</li>
+    <li><strong>为什么是 0.75</strong>：空间与时间的折中——太大则冲突率高（查询变慢），太小则频繁扩容（浪费内存、拷贝多）。0.75 配合容量 2 的幂，还能让阈值保持整数。源码注释里还给了泊松分布依据：负载 0.5 期望下，单个桶链长达到 8 的概率约 0.00000006。</li>
+    <li>构造器传初始容量是实战优化：<strong>已知要放 n 个元素时给 <code>(int) (n / 0.75f) + 1</code></strong>（Guava <code>Maps.newHashMapWithExpectedSize</code> 同理），避免反复扩容拷贝——大 Map 场景（本地缓存预载）收益明显。</li>
+  </ul>
+  <h3>树化与退化：8 和 6 的算术 ⭐</h3>
+  <ul>
+    <li><strong>树化两个条件同时满足</strong>：链长 ≥ 8（TREEIFY_THRESHOLD）<strong>且</strong> table 容量 ≥ 64（MIN_TREEIFY_CAPACITY）；容量不足时 <code>treeifyBin</code> 会<strong>优先扩容</strong>——早期冲突大概率靠扩容摊薄就能解决，红黑树节点内存是普通 Node 的两倍，是最后手段。</li>
+    <li><strong>为什么是 8</strong>：理想散列下桶内链长服从泊松分布（参数约 0.5），链长到 8 的概率约千万分之六——正常情况几乎不会树化，<strong>树化本身是哈希劣化 / 碰撞攻击的兜底信号</strong>，阈值 8 就是"到这基本不是运气问题"的统计边界。</li>
+    <li><strong>退化阈值 6（UNTREEIFY_THRESHOLD）</strong>：扩容拆树时，拆出的链长 ≤ 6 就变回链表。取 6 而不是 8 是留 2 的缓冲带，避免链长在 7~8 之间反复增删导致<strong>树 ⇄ 链来回转换</strong>的结构抖动。</li>
+  </ul>
+  <h3>get 流程与比较顺序（第二问必到）</h3>
+  <pre><code>// getNode 的三分支，与 put 对称：
+① (n - 1) &amp; hash 定位桶，桶空 → null
+② 头节点匹配（first.hash == hash &amp;&amp; (== || equals)）→ 直接返回
+③ 头节点是 TreeNode → getTreeNode（O(log n)）
+   否则沿链表逐个比对 → 命中返回，链尾未中返回 null</code></pre>
+  <ul>
+    <li><strong>比较顺序是三层短路</strong>：先比 <code>hash</code>（int，不等直接下一个），再 <code>==</code>（同一引用直接命中），最后 <code>equals</code>（才是真正的对象比较）——"先 hash 后 equals"不只是定位问题，还是桶内比对的短路优化。追问"为什么还要比 hash"就答这个：hash 不等 equals 必不等，省掉昂贵调用。</li>
+    <li>所以一个 key 能被 get 到，要求<strong>入桶时的 hashCode 与查询时的 hashCode 完全一致</strong>——可变 key 的"丢失"本质就是这两次 hash 对不上。</li>
+  </ul>
+  <h3>equals / hashCode 与桶定位 ⭐</h3>
+  <ul>
+    <li><strong>hashCode（经扰动）决定落在哪个桶</strong>，<strong>== / equals 决定桶内是不是同一个 key</strong>。put 与 get 各用一次这套定位，两边必须完全一致。</li>
+    <li>约定（Object 规范）：<code>equals相等 ⇒ hashCode 必须相等</code>；反之不要求（hash 相等只说明同桶，可能是冲突）。因此<strong>重写 equals 必须同时重写 hashCode</strong>。</li>
+    <li><strong>只重写 equals 的经典事故</strong>：两个"相等"对象因 hashCode 不同落进不同的桶——<code>map.get(obj2)</code> 返回 null、<code>set.contains(obj2)</code> 为 false，明明 equals 说它们相等。HashMap 还会因此"越存越多"（去重失效）。</li>
+    <li>好的 hashCode 要<strong>分布均匀且稳定</strong>：把参与 equals 的字段都掺进来（<code>Objects.hash(...)</code>），不可变对象最好缓存 hash（String 就这么干，HashMap 的 key 选不可变对象也是这个原因——key 入桶后再被改内容，hash 对不上就"丢"了）。</li>
+  </ul>
+  <div class="box warn"><p><strong>追问预判</strong>："key 是可变对象会怎样？"——入桶后修改参与 hash 的字段，对象的 hashCode 变了但节点还在旧桶，get 按新 hash 去找自然找不到，这个 entry 就像"丢失"了（除非改回原值）。所以 Map/Set 的 key 必须不可变（String、Integer、不可变 DTO）。</p></div>
+</section>
+
+<section id="jdk7-8">
+  <h2><span class="no">07</span>JDK 7 死循环与 JDK 8 改动 ⭐⭐</h2>
+  <h3>死循环怎么形成的（头插法 + 并发扩容）</h3>
+  <p>JDK 7 的 transfer（扩容迁移）用<strong>头插法</strong>——为了"新插入的数据更热、放链头更快被找到"，但这个顺序反转在并发下能成环：</p>
+  <pre><code>// JDK 7 HashMap.transfer()：头插法
+while (null != e) {
+    Entry&lt;K,V&gt; next = e.next;   // ① 先记住下一个
+    e.next = newTable[i];       // ② 头插：e 指向新桶当前头
+    newTable[i] = e;            // ③ e 成为新桶头
+    e = next;                   // ④ 继续处理下一个
+}</code></pre>
+  <p>推演（桶内链 A → B，扩容后仍落在同桶，头插反转为 B → A）：</p>
+  <ol>
+    <li>线程 1 执行完 ①（记下 <code>e=A, next=B</code>）后<strong>挂起</strong>；</li>
+    <li>线程 2 独自完成整个扩容：新表里变成 <strong>B → A</strong>（头插把顺序倒了）；</li>
+    <li>线程 1 恢复，拿着旧的引用继续：把 A 头插进新表（A.next = B，即 A → B），再把 B 头插（B.next = A）——<strong>A.next = B 且 B.next = A，环形链表形成</strong>；</li>
+    <li>之后任何一次 get 落到这个桶且没命中，遍历就出不去：<strong>CPU 100%，死循环</strong>（不是死锁，没有锁）。</li>
+  </ol>
+  <h3>JDK 8 改了什么</h3>
+  <table>
+    <tr><th></th><th>JDK 7</th><th>JDK 8</th></tr>
+    <tr><td>结构</td><td>数组 + 链表</td><td>数组 + 链表 + 红黑树</td></tr>
+    <tr><td>插入方式</td><td>头插（并发扩容可成环）</td><td><strong>尾插</strong>（保持顺序，扩容迁移不成环）</td></tr>
+    <tr><td>扩容迁移</td><td>重算下标（hash &amp; (n-1)）</td><td><code>hash &amp; oldCap</code> 判断：原位 或 原位 + oldCap</td></tr>
+    <tr><td>节点类型</td><td>Entry</td><td>Node / TreeNode</td></tr>
+    <tr><td>链表查询</td><td>O(n)</td><td>长链 O(log n)</td></tr>
+  </table>
+  <div class="box warn"><p><strong>必考陷阱</strong>："JDK 8 改尾插后 HashMap 线程安全了吗？"——<strong>没有</strong>。死循环修掉了，但并发 put 仍会<strong>覆盖丢数据</strong>（两个线程同时判断同一个空桶、都写入，先写的丢）、size 不准、扩容窗口丢更新。HashMap 从未线程安全，并发场景的答案是 ConcurrentHashMap，别答"加 synchronized 修饰"（它不是方法级锁的问题）。</p></div>
+</section>
+
+<section id="chm">
+  <h2><span class="no">08</span>ConcurrentHashMap ⭐⭐（必考）</h2>
+  <h3>为什么需要它：HashMap 并发三宗罪</h3>
+  <ul>
+    <li>JDK 7 并发扩容<strong>死循环</strong>（§07）；并发 put <strong>数据覆盖丢失</strong>；size 失真。Hashtable 的解法是整表一把锁——读读互斥、读写互斥，并发度等于 1，早已淘汰。</li>
+  </ul>
+  <h3>JDK 7：Segment 分段锁</h3>
+  <pre><code>// JDK 7：ConcurrentHashMap = Segment 数组（默认 16 段）
+// Segment extends ReentrantLock，每段独立一把锁，护住自己的 HashEntry 数组
+put 流程：
+① 第一次 hash：定位 key 属于哪个 Segment（get 用 UNSAFE 读，无锁）
+② 锁住这个 Segment（ReentrantLock.lock()）
+③ 第二次 hash：在段内 HashEntry 数组里定位桶，链表头插/覆盖
+④ 解锁
+
+get：全程无锁（value/next 用 volatile 保证可见性）
+size：先不加锁试 2 次，不一致再锁住所有段统计</code></pre>
+  <ul>
+    <li><strong>并发度 = 段数</strong>（默认 16，构造时可指定）：不同段的写互不阻塞，理论上同时支持 16 个线程写。</li>
+    <li>局限：段是静态划分，容量规划复杂；定位要两次 hash；单段内部还是锁整段链表数组。</li>
+  </ul>
+  <h3>JDK 8：Node 数组 + CAS + synchronized（锁粒度到桶头）</h3>
+  <pre><code>// JDK 8 putVal 主流程（简化）
+final V putVal(K key, V value, boolean onlyIfAbsent) {
+    if (key == null || value == null) throw new NullPointerException();  // ① 都不许 null
+    int hash = spread(key.hashCode());                  // 扰动：(h ^ (h &gt;&gt;&gt; 16)) &amp; HASH_BITS
+    for (Node&lt;K,V&gt;[] tab = table;;) {
+        if (tab == null || (n = tab.length) == 0)
+            tab = initTable();                          // ② CAS 改 sizeCtl 抢初始化权
+        else if ((f = tabAt(tab, i = (n - 1) &amp; hash)) == null) {
+            if (casTabAt(tab, i, null, new Node&lt;K,V&gt;(hash, key, value)))
+                break;                                  // ③ 空桶：CAS 无锁插入，失败自旋重试
+        }
+        else if (f.hash == MOVED)
+            tab = helpTransfer(tab, f);                 // ④ 正在扩容（ForwardingNode）：帮着一起搬
+        else {
+            synchronized (f) {                          // ⑤ 非空桶：只锁桶头节点
+                // 链表尾插 / 红黑树插入，逻辑同 HashMap 但全程持桶锁
+            }
+            ...
+        }
+    }
+    addCount(1L, binCount);                             // ⑥ baseCount + CounterCell 计数
+    return null;
+}</code></pre>
+  <table>
+    <tr><th></th><th>JDK 7</th><th>JDK 8</th></tr>
+    <tr><td>结构</td><td>Segment[] + HashEntry 链表</td><td>Node[] + 链表 + 红黑树</td></tr>
+    <tr><td>锁粒度</td><td>段（默认 16 段，ReentrantLock）</td><td><strong>单个桶头节点</strong>（synchronized）</td></tr>
+    <tr><td>初始化</td><td>构造即建段</td><td>懒初始化，CAS 抢 <code>sizeCtl</code></td></tr>
+    <tr><td>空桶写入</td><td>也要锁段</td><td>CAS 无锁</td></tr>
+    <tr><td>size 统计</td><td>先试算再锁全段</td><td>baseCount + CounterCell[]（LongAdder 思想）</td></tr>
+    <tr><td>并发度</td><td>固定 16（构造定死）</td><td>≈ 桶数，随扩容增长</td></tr>
+  </table>
+  <ul>
+    <li><strong>为什么敢用 synchronized</strong>：JDK 6 之后 synchronized 升级为偏向锁/轻量级锁，锁单个桶头冲突概率低、多数情况停留在轻量级，性能不输 ReentrantLock 且省内存、 JVM 还能继续优化。</li>
+    <li><strong>sizeCtl</strong> 是多义控制字：正数 = 下次扩容阈值；-1 = 正在初始化；其余负数 = 正在扩容的线程标识。</li>
+    <li><strong>size() 实现</strong>：<code>baseCount</code> 无争用时 CAS 累加；争用激烈时把增量散到 <code>CounterCell[]</code> 各格（LongAdder 分段计数思想），size = baseCount + 所有 cell 之和——<strong>弱一致</strong>，拿到的是近似值（统计瞬间可能仍在变），换来写吞吐。</li>
+    <li><strong>扩容支持多线程协助</strong>：迁移完的桶放 ForwardingNode（hash=MOVED），其他线程碰到就调 helpTransfer 分段帮忙搬，get 遇到也会转发到新表。</li>
+  </ul>
+  <h3>key / value 为什么都不允许 null ⭐</h3>
+  <p>核心是<strong>二义性无法消解</strong>：<code>get(key)</code> 返回 null，分不清"key 不存在"还是"value 就是 null"。HashMap 单线程可以用 <code>containsKey</code> 补判——两次调用之间状态不可能变；<strong>并发下 containsKey 和 get 之间别的线程可能已写入/删除</strong>，这个补判不再可靠，二义性彻底无法消除，所以从 API 上直接禁止。</p>
+  <div class="box tip"><p><strong>答题口径</strong>：先给两个版本的"结构 + 锁粒度 + 并发度"三句话对比，再补 size 的 LongAdder 思想和 null 二义性——这三层下来基本到追问天花板。追问"get 要加锁吗"：不用，Node 的 val 和 next 都是 volatile，保证可见性与happens-before。并发容器全景（BlockingQueue、CopyOnWrite 写时复制的并发细节）见 <a href="../02-concurrency/README.html">02-concurrency 板块</a>。</p></div>
+</section>
+
+<section id="treemap">
+  <h2><span class="no">09</span>TreeMap 与红黑树</h2>
+  <h3>红黑树是什么（先答数据结构，再答 Java 实现）</h3>
+  <ul>
+    <li>一颗<strong>自平衡二叉搜索树</strong>，靠 5 条性质维持"最长路径 ≤ 2 × 最短路径"：节点非红即黑；根黑；叶（NIL）黑；红节点的孩子必黑（无连续红）；<strong>任一节点到其所有叶子的黑高相等</strong>。</li>
+    <li>增删查稳定 <strong>O(log n)</strong>——不像 AVL 那样严格平衡（AVL 查询略快但插删旋转多），红黑树是"查询与修改的折中"，所以被 TreeMap、HashMap 树化、JDK 的排序实现大量采用。</li>
+    <li>平衡手段：变色 + 左右旋转（插删后从事发点向上修复）。</li>
+  </ul>
+  <h3>TreeMap 要点</h3>
+  <ul>
+    <li>底层就是一颗红黑树（Entry 有 left/right/parent/color），key 必须可比较：构造时传 <code>Comparator</code>，否则 key 必须实现 <code>Comparable</code>，两者都没有抛 ClassCastException。</li>
+    <li><strong>不允许 null key</strong>（无法比较；value 可以 null）。</li>
+    <li>插入/删除/查找 O(log n)，<strong>遍历严格按比较序</strong>——这是它与 HashMap 的本质差异，也是"要排序选它"的原因。</li>
+    <li>招牌 API（范围查询场景的答案）：<code>firstKey / lastKey / floorKey / ceilingKey / subMap / headMap / tailMap / navigableKeySet</code>。</li>
+    <li>实战：时间戳索引（floorKey 找"不晚于 t 的最近版本"）、区间命中、排行榜取 TopN 前缀。</li>
+  </ul>
+  <h3>具体开发里什么时候真的用它（7 年经验口径）</h3>
+  <p>先纠一个常见答法：TreeMap <strong>不是缓存，也不能简化成"要排序就选它"</strong>。它的定位是<strong>有序索引</strong>——只有当你要问"比某个值小的最近一个是谁 / 谁落在这个区间里 / 按比较序扫一段"时，它才是正确答案；如果只是想在输出时排个序，<code>List.sort()</code> 更快更省内存。下面这些是我在项目里真用过的场景，也是被问"你用过吗"时能接住的答案：</p>
+  <table>
+    <tr><th>场景</th><th>key / 结构怎么摆</th><th>关键 API</th></tr>
+    <tr><td>① 一致性哈希选节点（RPC 灰度、分片路由、缓存亲和）</td><td>虚拟节点环 <code>TreeMap&lt;Long, Node&gt;</code>，hash 落在环上顺时针找</td><td><code>ceilingEntry</code> + 环尾回绕 <code>firstEntry</code></td></tr>
+    <tr><td>② 版本化配置（配置中心、费率表、灰度策略）</td><td>key = <strong>生效时间戳</strong>，value = 该版本的配置快照</td><td><code>floorEntry(now)</code></td></tr>
+    <tr><td>③ 阶梯计价 / 档位命中（满减、运价、税率、提成）</td><td>key = <strong>档位下界</strong>，floorEntry 拿到金额所在档</td><td><code>floorEntry</code> / <code>floorKey</code></td></tr>
+    <tr><td>④ 区间冲突检测（号段分配、排班/会议室、券有效期、IP 段）</td><td>有序存区间，查<strong>前驱 + 后继</strong>是否压到新区间</td><td><code>floor</code>/<code>ceiling</code> + <code>TreeSet</code></td></tr>
+    <tr><td>⑤ 滑动窗口限流 / 时间片聚合（监控、去重）</td><td>key = 秒级/分钟级时间桶，批量丢弃过期桶</td><td><code>headMap(cutoff, false).clear()</code></td></tr>
+    <tr><td>⑥ 字典序前缀扫描 / 分页续扫</td><td>前缀区间 <code>[prefix, prefix + '\uffff')</code>，只扫一段</td><td><code>subMap</code> / <code>navigableKeySet().subSet</code></td></tr>
+    <tr><td>⑦ 排行榜分段取 TopN（小数据量、要求强一致）</td><td>按分数倒序，遍历前 K 个</td><td><code>descendingMap</code></td></tr>
+  </table>
+  <pre><code>// ① 一致性哈希环：Dubbo ConsistentHashLoadBalance 同款结构（TreeMap&lt;Long, Invoker&gt; + ceilingEntry）
+TreeMap&lt;Long, String&gt; ring = new TreeMap&lt;&gt;();
+for (String node : nodes) {
+    for (int i = 0; i &lt; 160; i++) {                    // 每节点 160 个虚拟节点，摊平数据倾斜
+        ring.put(hash(node + "#" + i), node);          // key 用 long，不是 byte[]/String
+    }
+}
+String pick(String key) {
+    Map.Entry&lt;Long, String&gt; e = ring.ceilingEntry(hash(key));  // 顺时针第一个 ≥ hash 的节点
+    return (e != null ? e : ring.firstEntry()).getValue();     // 越过环尾回绕到环头
+}
+
+// ② 版本化配置：key = 生效时间戳，取"不晚于 now 的最近一版"
+NavigableMap&lt;Long, RateConfig&gt; versions = new TreeMap&lt;&gt;();
+RateConfig current = Optional.ofNullable(versions.floorEntry(now))
+        .map(Map.Entry::getValue)
+        .orElse(RateConfig.DEFAULT);                   // 早于首版 → 兜底默认值，别 NPE
+
+// ③ 阶梯计价：key = 档位下界，一行定位档位（档位配置化，不用 if-else 链）
+TreeMap&lt;Long, BigDecimal&gt; tiers = new TreeMap&lt;&gt;();   // 0→1.00, 10_000→0.90, 50_000→0.80
+BigDecimal rate = tiers.floorEntry(amount).getValue(); // 首档 key=0 保证 floorEntry 非空
+
+// ④ 时间段/号段冲突检测：查前驱 + 后继，O(log n) 代替两两比对 O(n²)
+TreeSet&lt;Slot&gt; booked = new TreeSet&lt;&gt;(Comparator.comparingLong(Slot::start));
+Slot prev = booked.floor(newSlot);                     // 起点 ≤ 新起点：它的 end 压过来就冲突
+Slot next = booked.ceiling(newSlot);                   // 起点 ≥ 新起点：它被新区间包住就冲突
+if ((prev != null &amp;&amp; prev.end &gt;= newSlot.start)
+        || (next != null &amp;&amp; next.start &lt;= newSlot.end)) {
+    throw new IllegalStateException("号段重叠");
+}
+booked.add(newSlot);
+// ⚠️ comparator 只比 start 时，同起点的两个区间会被 Set 当成同一个元素（静默吞掉）
+
+// ⑤ 滑动窗口计数：时间桶 + 惰性批量过期（并发场景把 TreeMap 换成 ConcurrentSkipListMap）
+NavigableMap&lt;Long, AtomicLong&gt; buckets = new ConcurrentSkipListMap&lt;&gt;();
+buckets.computeIfAbsent(now / 1000, k -&gt; new AtomicLong()).incrementAndGet();
+buckets.headMap(now / 1000 - WINDOW_SECONDS, false).clear();  // 一次性丢弃窗口外的桶</code></pre>
+  <div class="box warn"><p><strong>什么时候不该用（被问"有什么坑"就答这些）</strong>：① <strong>并发写</strong>——TreeMap 无锁，多线程 put 会破坏红黑树结构，生产并发索引换 <code>ConcurrentSkipListMap</code>（跳表 + CAS，迭代弱一致，仍支持范围查询）；② <strong>单纯排序输出</strong>——ArrayList + sort 常数更小、内存连续；③ <strong>只取最值 / Top-K</strong>——PriorityQueue 更对路；④ <strong>缓存与 TTL</strong>——TreeMap 不淘汰，缓存用 Caffeine；⑤ <strong>可变 key</strong>——放进去后改字段，树中位置就错了，<code>floorKey</code> 找不到、<code>remove</code> 删不掉，比 HashMap 的可变 key 更隐蔽；⑥ <strong>subMap 是视图</strong>——持有原表引用，直接返回给外部长期持有 = 潜在内存泄漏，要返回就 <code>new TreeMap&lt;&gt;(subMap)</code> 拷一份；⑦ <strong>百万级 key 且内存敏感</strong>——每个 Entry 多 left/right/parent/color，比 HashMap 重，要评估。</p></div>
+  <div class="box tip"><p><strong>答题口径（一句话立住）</strong>："TreeMap 我当<strong>有序索引</strong>用，不当容器用——配置按生效时间做版本索引取 <code>floorEntry</code>、费率按档位下界取档、号段/排班用前驱后继判重叠、一致性哈希用 <code>ceilingEntry</code> 找顺时针第一个节点。并发场景直接换 <code>ConcurrentSkipListMap</code>，纯排序输出用 <code>List.sort()</code>。" 这段话答完，"为什么不用 HashMap"和"为什么不自己排个序"两个追问都会被提前关掉。</p></div>
+  <div class="box note"><p><strong>追问预判 · 一致性哈希</strong>："为什么不用 <code>hash % N</code>？"——N 一变几乎全部 key 都要重新映射，缓存/分片集体失效；环上扩缩容只影响相邻一段（约 1/N 的数据）。再追"节点性能不均怎么办"——按权重分配虚拟节点数量；追"环上元素怎么遍历"——<code>ceilingEntry</code> 找不到时回绕 <code>firstEntry</code>，这是环状语义的代码体现。</p></div>
+  <div class="box note"><p><strong>追问预判</strong>："红黑树和跳表怎么选？"——Redis 的 ZSet 用跳表（实现简单、范围遍历天然顺序、并发实现更容易），Java 生态（TreeMap、ConcurrentSkipListMap——跳表版并发 Map）两者都有。答"复杂度都是 O(log n)，选型看实现复杂度与并发友好度"即可。红黑树的插入删除细节在 <a href="../05-dsa/README.html">05-dsa 板块</a>展开。</p></div>
+</section>
+
+<section id="lru">
+  <h2><span class="no">10</span>LinkedHashMap 与 LRU</h2>
+  <h3>结构：HashMap + 一条双向链表</h3>
+  <ul>
+    <li>在 HashMap 的散列骨架上，给每个 Entry 加 before/after 两个引用，串成一条贯穿全表的双向链表——<strong>迭代顺序不再由桶位置决定</strong>，而由这条链决定。</li>
+    <li><code>accessOrder</code> 构造参数（默认 false）：<strong>false = 插入序</strong>（FIFO）；<strong>true = 访问序</strong>——get/put 命中的节点会被移到链尾（借助 HashMap 留的 <code>afterNodeAccess</code> 回调实现，自己没写多少代码）。</li>
+    <li>链头 = 最老/最久未用，链尾 = 最新/最近使用——<strong>这正是 LRU 的形态</strong>。</li>
+  </ul>
+  <h3>三行核心实现 LRU 容器</h3>
+  <pre><code>class LRUCache&lt;K, V&gt; extends LinkedHashMap&lt;K, V&gt; {
+    private final int capacity;
+    LRUCache(int capacity) {
+        super(16, 0.75f, true);            // accessOrder = true：访问即挪到链尾
+        this.capacity = capacity;
+    }
+    @Override
+    protected boolean removeEldestEntry(Map.Entry&lt;K,V&gt; eldest) {
+        return size() &gt; capacity;          // 每次 put 后回调：true 则删链头（最久未用）
+    }
+}</code></pre>
+  <ul>
+    <li>原理链：访问序维护（afterNodeAccess）+ 插入后钩子（afterNodeInsertion → removeEldestEntry）= O(1) 的 LRU 驱逐。</li>
+    <li><strong>局限</strong>：非线程安全；并发版要么 Collections.synchronizedMap 包装（锁整表），要么手写"ConcurrentHashMap + 双向链表 + 段锁/reentrant 锁"，工业级实现参考 Caffeine（W-TinyLFU，比朴素 LRU 抗扫描污染）。</li>
+  </ul>
+  <div class="box tip"><p><strong>面试分工</strong>：LinkedHashMap 的 accessOrder / removeEldestEntry 机制是<strong>本章考点</strong>；"手写 LRU（双向链表 + HashMap）"是算法题，完整实现与变体（O(1) get/put、带 TTL）在 <a href="../05-dsa/README.html">05-dsa 板块</a>。被问手写时主动说一句"生产上我直接用 Caffeine"能带出实战感。</p></div>
+</section>
+
+<section id="failfast">
+  <h2><span class="no">11</span>fail-fast 与 fail-safe ⭐</h2>
+  <h3>fail-fast：modCount 机制</h3>
+  <ul>
+    <li>ArrayList/HashMap 等的结构性修改（增删、扩容，set 不算）都会 <code>modCount++</code>；迭代器创建时记下 <code>expectedModCount = modCount</code>，每次 <code>next()/remove()</code> 先比对，不一致立刻抛 <code>ConcurrentModificationException</code>（CME）。</li>
+    <li>设计意图：<strong>快速失败暴露"迭代中被改"的错误用法</strong>（单线程误用或多线程修改），而不是默默给出错乱结果。CME 是"尽量发现"的检测，不保证一定抛——它不拦截并发修改本身。</li>
+    <li><strong>增强 for 是迭代器语法糖</strong>，所以在增强 for 里调 <code>list.remove()</code> 走的是集合的方法（只改 modCount 不改 expectedModCount），下一次 next() 必炸：</li>
+  </ul>
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;(List.of("a", "b", "c"));
+for (String s : list) {
+    if ("b".equals(s)) list.remove(s);     // 💥 ConcurrentModificationException
+}
+
+// 正解一：迭代器自己的 remove（内部同步 expectedModCount = modCount）
+for (Iterator&lt;String&gt; it = list.iterator(); it.hasNext(); ) {
+    if ("b".equals(it.next())) it.remove();
+}
+
+// 正解二（最推荐）：JDK 8 removeIf，内部批量标记 + 一次性压缩
+list.removeIf(s -&gt; "b".equals(s));
+
+// 正解三：下标倒序删（正序删会漏判后移元素）
+for (int i = list.size() - 1; i &gt;= 0; i--) {
+    if (cond.test(list.get(i))) list.remove(i);
+}
+
+// 正解四：并发场景直接换 CopyOnWriteArrayList（§12）</code></pre>
+  <div class="box warn"><p><strong>经典深坑</strong>：删"倒数第二个元素"时增强 for <strong>不抛异常但也没删干净后续判断</strong>——删除后 size 变小，游标恰好和 size 相等，hasNext() 返回 false 直接退出检查。这解释了"CME 时有时无"，能说清这个特例是源码级理解。另注意 <code>forEach</code>（Lambda 版）内部同样比对 modCount，一样会炸。</p></div>
+  <h3>fail-safe：弱一致迭代</h3>
+  <ul>
+    <li>并发容器（ConcurrentHashMap、CopyOnWriteArrayList 等）的迭代器<strong>不抛 CME</strong>：创建时直接/快照式遍历，<strong>不保证看到迭代开始后的修改</strong>（弱一致性，weakly consistent）。</li>
+    <li>COW 系是"快照强一致"（拿到的是创建时刻的副本）；CHM 是"尽量走最新但容忍并发变化"。代价都不是数据损坏，而是<strong>读到的可能是旧值</strong>——最终一致。</li>
+  </ul>
+</section>
+
+<section id="cow">
+  <h2><span class="no">12</span>CopyOnWrite 容器</h2>
+  <pre><code>// CopyOnWriteArrayList.add 核心逻辑
+public boolean add(E e) {
+    synchronized (lock) {                        // 写：全局锁（JDK 8 是锁对象，JDK 11+ 是 ReentrantLock）
+        Object[] es = getArray();
+        es = Arrays.copyOf(es, es.length + 1);   // 复制整个底层数组
+        es[es.length - 1] = e;
+        setArray(es);                            // volatile 写，整体替换引用
+        return true;
+    }
+}
+// 读：无锁，直接 getArray()[i]，永远拿到某个完整版本的快照</code></pre>
+  <ul>
+    <li><strong>读写分离</strong>：读永远不加锁（数组引用 volatile，读到的是某一刻的完整快照）；写锁住后<strong>复制新数组</strong>改完再原子换引用——旧数组仍在被读方使用，所以读方零干扰。</li>
+    <li><strong>适用</strong>：读多写极少、数据量不大、能容忍读到旧值——白名单/黑名单配置、事件监听器列表（Listener 注册基本不变、触发极频繁）。</li>
+    <li><strong>不适用</strong>：写频繁或大列表——每次写 O(n) 复制 + 等量内存垃圾，GC 压力大；迭代器不支持 remove；只是最终一致。</li>
+    <li>家族：CopyOnWriteArraySet（基于 COWAL 去重）。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：一句原理（写时复制、读无锁快照）+ 一句适用（读多写少配置类）+ 一句代价（写 O(n) 复制、内存翻倍、弱一致）。追问"为什么读不用加锁"：数组引用是 volatile 的，且数组一旦发布不再修改，读到的一定是完整版本——不变性替代了锁。</p></div>
+</section>
+
+<section id="comparable">
+  <h2><span class="no">13</span>Comparable vs Comparator</h2>
+  <table>
+    <tr><th></th><th>Comparable</th><th>Comparator</th></tr>
+    <tr><td>包</td><td><code>java.lang</code></td><td><code>java.util</code></td></tr>
+    <tr><td>语义</td><td>自然顺序（内在的、唯一的）</td><td>定制顺序（外部多套）</td></tr>
+    <tr><td>方法</td><td><code>int compareTo(T o)</code></td><td><code>int compare(T o1, T o2)</code></td></tr>
+    <tr><td>侵入性</td><td>要改类本身</td><td>不改类，按需组合</td></tr>
+    <tr><td>使用方</td><td>Collections.sort(list)、TreeMap/TreeSet 无 Comparator 时</td><td>sort(list, cmp)、TreeMap 构造、Stream sorted(cmp)、优先队列</td></tr>
+    <tr><td>组合能力</td><td>无</td><td>comparing / thenComparing / reversed / nullsFirst</td></tr>
+  </table>
+  <pre><code>// Comparable：自然顺序，内聚在类里
+public class User implements Comparable&lt;User&gt; {
+    private int age;
+    @Override public int compareTo(User o) {
+        return Integer.compare(this.age, o.age);   // 别用相减（溢出坑：大数相减溢出）
+    }
+}
+
+// Comparator：外部定制，可叠加多级排序
+Comparator&lt;User&gt; byAgeThenName =
+        Comparator.comparingInt(User::getAge)      // 第一关键字
+                  .thenComparing(User::getName)    // 第二关键字
+                  .reversed();                     // 整体反转
+users.sort(byAgeThenName);</code></pre>
+  <ul>
+    <li>返回值语义：负 = 前者小，0 = 相等，正 = 前者大。<strong>与 equals 的一致性</strong>：TreeMap/TreeSet 只认 compare/compareTo 的 0 为"相等"——compareTo 返回 0 的两个对象即使 equals 为 false 也会被当作同一个 key 去重，这是 TreeSet"去重口径"的陷阱。</li>
+    <li>推荐用 <code>Comparator.comparingXxx</code> 而不是手写相减/相减比较器（<code>(a, b) -&gt; a.age - b.age</code> 在极端值下整型溢出，是真实线上事故来源）。</li>
+    <li>PriorityQueue 不传 Comparator 时要求元素 Comparable，否则运行时 ClassCastException；且 PriorityQueue 不允许 null 元素。</li>
+  </ul>
+</section>
+
+<section id="scenarios">
+  <h2><span class="no">14</span>实战场景速查：每种集合在业务里怎么用 ⭐</h2>
+  <p>场景题的本质是"你真用过集合吗"。下面按家族列<strong>业务场景 → 为什么是它</strong>，每个实现至少准备一个能代入自己项目的例子——"我们订单导出里就是这么用的"比复杂度表更有说服力：</p>
+  <h3>List 家族：默认 ArrayList，其他要想清楚</h3>
+  <table>
+    <tr><th>实现</th><th>实际场景</th><th>为什么是它</th></tr>
+    <tr><td><code>ArrayList</code></td><td>① 数据库查询结果承接（MyBatis/JPA 返回的就是它）② JSON/Excel 反序列化目标类型 ③ 绝大多数"有序可重复"业务列表：订单明细、待办项、导出行</td><td>连续内存 + 随机访问 O(1) + 尾插均摊 O(1)；能预估大小就给初始容量</td></tr>
+    <tr><td><code>LinkedList</code></td><td>真实项目几乎不用；理论适配的场景（队列/栈、迭代中删除、无扩容尖刺）逐一被 ArrayDeque / removeIf / 预估容量替代，展开见 §03</td><td>当栈/队列有 ArrayDeque，中段插删要先 O(n) 定位，节点内存开销大</td></tr>
+    <tr><td><code>CopyOnWriteArrayList</code></td><td>事件监听器列表、白名单/规则配置——读极频繁、写极少</td><td>读无锁快照，写复制（§12）</td></tr>
+  </table>
+  <h3>Set 家族：判重与集合运算</h3>
+  <table>
+    <tr><th>实现</th><th>实际场景</th><th>为什么是它</th></tr>
+    <tr><td><code>HashSet</code></td><td>① 接口幂等判重（支付回调里的 orderNo 处理集）② 导入/爬取数据去重 ③ 黑白名单 O(1) 命中判断 ④ 差集/交集：<code>removeAll/retainAll</code></td><td>判重 O(1)，集合运算一行；依赖 equals/hashCode 一致</td></tr>
+    <tr><td><code>LinkedHashSet</code></td><td>去重且保留首次出现顺序：报表列去重导出、触达名单按"首次到达"排序</td><td>哈希速度 + 双向链表维护插入序，代价是内存</td></tr>
+    <tr><td><code>TreeSet</code></td><td>按分数去重排序、时间段/号段冲突检测（floor/ceiling 找相邻元素）、标签按字典序输出</td><td>红黑树有序 + 邻近查询 O(log n)</td></tr>
+  </table>
+  <h3>Queue / Deque 家族：只关心"先来后到"与"最值"</h3>
+  <table>
+    <tr><th>实现</th><th>实际场景</th><th>为什么是它</th></tr>
+    <tr><td><code>ArrayDeque</code>（当栈）</td><td>撤销/重做、括号与标签配对、非递归 DFS、最近访问历史</td><td>LIFO + 无锁 + 循环数组，全面优于 Stack（§04）</td></tr>
+    <tr><td><code>ArrayDeque</code>（当队列）</td><td>BFS、进程内任务缓冲按序消费、批处理流水</td><td>FIFO + 无锁，比 LinkedList 快得多</td></tr>
+    <tr><td><code>PriorityQueue</code></td><td>Top-K（热点商品、慢接口 Top10、热搜榜）、优先级工单/消息、多路归并；延时调度生产上用 Timer/ScheduledThreadPoolExecutor，底层同款堆（§05）</td><td>频繁"取最值"的场景堆是最优解；不关心完整顺序</td></tr>
+    <tr><td><code>BlockingQueue</code> 系</td><td>线程池任务队列、生产者-消费者、削峰填谷</td><td>并发阻塞语义，归 <a href="../02-concurrency/README.html">02-concurrency</a></td></tr>
+  </table>
+  <h3>Map 家族：从缓存到索引</h3>
+  <table>
+    <tr><th>实现</th><th>实际场景</th><th>为什么是它</th></tr>
+    <tr><td><code>HashMap</code></td><td>① id → 实体索引（userId → User）② 计数器（词频/QPS，<code>merge</code>）③ 分组承接（<code>groupingBy</code>）④ 配置字典</td><td>O(1) 读写，默认答案；key 用不可变对象</td></tr>
+    <tr><td><code>LinkedHashMap</code></td><td>① LRU 本地缓存（removeEldestEntry 三行实现，§10）② 需要保序输出的字段拼装/协议组装</td><td>哈希速度 + 可预期的迭代序</td></tr>
+    <tr><td><code>TreeMap</code></td><td>① 时间版本索引（floorKey 找"不晚于 t 的最近配置版本"，配置中心/费率表套路）② 阶梯计价/档位命中（floorEntry 金额档）③ 号段与时间段冲突检测（前驱判重叠）④ 一致性哈希选节点（虚拟节点环 + ceilingEntry，Dubbo 同款）⑤ 排行榜分段取（subMap/descendingMap）⑥ 按字典序前缀扫描</td><td>有序 + 邻近/范围查询 API 最全（§09）</td></tr>
+    <tr><td><code>ConcurrentHashMap</code></td><td>高并发缓存/注册表、并发计数（LongAdder 思想）</td><td>锁粒度到桶头，写吞吐高（§08）</td></tr>
+    <tr><td><code>WeakHashMap</code></td><td>弱 key 元数据缓存：key 无其他强引用即自动清理（JDK 内部常见）</td><td>防"缓存把对象钉死不释放"</td></tr>
+  </table>
+  <pre><code>// 四个高频惯用法（能现场写出来就是"真用过"）
+// ① 计数：merge 一行替代 containsKey 三行（词频、QPS 统计）
+counter.merge(word, 1, Integer::sum);
+
+// ② 分组：groupingBy 底层就是 computeIfAbsent + ArrayList
+Map&lt;String, List&lt;Order&gt;&gt; byUser =
+        orders.stream().collect(Collectors.groupingBy(Order::getUserId));
+
+// ③ 差集：候选集剔除黑名单（HashSet 集合运算）
+candidates.removeAll(blacklist);
+
+// ④ 版本索引：TreeMap.floorKey 找"不晚于 t 的最近配置版本"
+NavigableMap&lt;Long, Config&gt; versions = new TreeMap&lt;&gt;();   // key = 生效时间戳
+Long ts = versions.floorKey(now);
+Config cfg = (ts == null) ? Config.defaults() : versions.get(ts);
+
+// ⑤ 一致性哈希：环上顺时针取第一个节点（Dubbo ConsistentHashLoadBalance 同款）
+Map.Entry&lt;Long, String&gt; e = ring.ceilingEntry(hash(key));
+String node = (e != null ? e : ring.firstEntry()).getValue();   // 环尾回绕</code></pre>
+  <div class="box note"><p><strong>加分项</strong>：key 是枚举时用 <code>EnumMap</code>（内部就是数组下标，无 hash 计算无扩容）、枚举集合用 <code>EnumSet</code>（位向量）——枚举场景的正确答案不是 HashMap/HashSet，主动提一句就能体现 API 熟练度。</p></div>
+  <div class="box tip"><p><strong>选型三问法（收口）</strong>：① 要不要顺序？——无序 HashSet/HashMap，插入序 Linked*，排序与范围 Tree*；② 要不要去重/映射？——去重 Set，键值 Map；③ 单线程还是并发？——并发进 java.util.concurrent 包，读多写少上 COW。三问答完，选型题自动收敛到唯一答案。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">15</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：HashMap → 为什么容量 2 的幂 → 那指定 17 会怎样</strong>→ tableSizeFor 向上取 32；再追"阈值什么时候生效"→ 构造时先存 threshold，首次 put 才建表并重算 threshold = newCap × 0.75。</li>
+    <li><strong>追问链：put → 如果两个 key hash 相同但 equals 不同</strong>→ 同一个桶里链着（正常冲突）；如果 hash 相同且 equals 相同 → 覆盖旧 value 返回 oldValue。<strong>hash 相同是冲突、equals 相同才是同一个 key</strong>，这两个概念要拆开说。</li>
+    <li><strong>追问链：树化 → 为什么先看容量 64</strong>→ 小表冲突大概率是"桶太少"而不是"hash 太坏"，扩容摊薄成本远低于红黑树节点（内存双倍、维护复杂）；64 = 4 × 16，给了 2 次翻倍机会。</li>
+    <li><strong>追问链：CHM → get 为什么不加锁</strong>→ Node.val/next 为 volatile，读到的引用链要么是完整旧版本要么是完整新版本；再追"正在扩容时 get"→ 碰到 ForwardingNode 会转发到新表继续找。</li>
+    <li><strong>追问链：fail-fast → 单线程也会抛 CME 吗</strong>→ 会（迭代中自己调集合的 add/remove 就是），fail-fast 不只防多线程，本质防"迭代中被结构性修改"。</li>
+    <li><strong>陷阱：HashSet add 重复元素的返回值</strong>——底层 map.put 返回旧 value 非 null 时 add 返回 false，add 失败不是异常而是布尔。</li>
+    <li><strong>陷阱：Arrays.asList 返回的 List</strong>——定长视图，add/remove 抛 UnsupportedOperationException，set 可以；<code>new ArrayList&lt;&gt;(Arrays.asList(...))</code> 或 <code>List.of(...)</code>（同样不可变）按需选。</li>
+    <li><strong>陷阱：subMap/subList 是视图</strong>——修改视图直接影响原表；原表结构性修改后视图操作抛 CME。</li>
+    <li><strong>陷阱：HashMap 遍历时删除</strong>——同 fail-fast 规则，正解 entrySet 迭代器 remove / removeIf。</li>
+    <li><strong>场景题口径</strong>："几万级 QPS 的本地缓存用什么"→ Caffeine（W-TinyLFU），说得出它与朴素 LRU 的差异（抗扫描污染）就是亮点。</li>
+    <li><strong>追问链：PriorityQueue 迭代 → 为什么遍历不是有序的</strong>→ 底层是堆数组，只保证父 ≤ 子，不保证左右子树之间有序；要按优先级消费必须逐个 poll（或 Arrays.sort(toArray())）。</li>
+    <li><strong>追问链：Top-K → 数据量内存放不下呢</strong>→ 堆只留 K 个元素，天然适合流式/超大数据；再追"多机"→ 各机先出本地 Top-K 再合并（分治 + 多路归并，MapReduce 思想）。</li>
+    <li><strong>追问链：ArrayDeque → 为什么不允许 null</strong>→ poll/peek 约定用返回 null 表示"没有元素"，允许存 null 就无法区分"取到了 null"和"队列为空"；同理 PriorityQueue 也禁 null。</li>
+    <li><strong>陷阱：Stack 的 get(i)/insertElementAt</strong>——继承 Vector 暴露了任意位置访问，破坏 LIFO 语义，是"组合优于继承"的官方教材；现代代码一律 Deque + ArrayDeque。</li>
+    <li><strong>陷阱：PriorityQueue 是无界的</strong>——初始容量只是数组初值不是上限，塞多了是 OOM 不是"拒绝入队"；要有界/背压用 ArrayBlockingQueue（02-concurrency）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">16</span>面试自查清单</h2>
+  <ol>
+    <li>能白板画出 Collection + Map 两棵树，说出每个实现的底层结构与线程安全性。</li>
+    <li>ArrayList 默认容量 10（懒初始化）、1.5 倍扩容源码、和 LinkedList 的复杂度对比表能默写。</li>
+    <li>HashMap put 流程 7 步骨架脱口而出，含尾插、树化分支、modCount。</li>
+    <li>hash 扰动 <code>(h = key.hashCode()) ^ (h &gt;&gt;&gt; 16)</code> 能写出并解释高低位混合动机。</li>
+    <li>容量 2 的幂的两大理由（&amp;(n-1) 取模、扩容原位/+oldCap）能展开。</li>
+    <li>树化条件（链长 8 + 容量 ≥ 64）、退化 6、泊松分布依据、0.75 的权衡都能讲。</li>
+    <li>equals/hashCode 在桶定位中的分工、只重写 equals 的事故、可变 key 的丢失问题能说清。</li>
+    <li>JDK 7 头插死循环的成环推演 + JDK 8 尾插/树化/迁移优化 + "仍不线程安全"的结论。</li>
+    <li>CHM 两版实现对比（Segment → CAS+synchronized 锁桶头）、sizeCtl、baseCount+CounterCell、null 二义性。</li>
+    <li>fail-fast 原理（modCount/expectedModCount）、增强 for 删除的四种正解、COW 的读写分离与适用边界。</li>
+    <li>TreeMap 红黑树性质与 O(log n)、范围查询 API；LinkedHashMap accessOrder + removeEldestEntry 三行 LRU。</li>
+    <li>TreeMap 的真实业务场景（版本索引 / 阶梯档位 / 区间冲突 / 一致性哈希）与边界（并发换 CSLM、纯排序用 sort、可变 key 与 subMap 视图陷阱）。</li>
+    <li>Comparable 与 Comparator 选型，及"compareTo 的 0 即去重"的 TreeSet 陷阱。</li>
+    <li>get 流程三分支 + 桶内"hash → == → equals"三层短路的比较顺序。</li>
+    <li>Queue 两套 API（抛异常 vs 返回特殊值）+ BlockingQueue 的阻塞/超时版；栈和队列的现代写法都是 ArrayDeque。</li>
+    <li>ArrayDeque 循环数组 + head/tail 原理、禁 null 的原因、为什么取代 Stack 与 LinkedList（当栈/队列用时）。</li>
+    <li>PriorityQueue：数组小顶堆、siftUp/siftDown O(log n)、默认容量 11、两段式扩容、迭代无序、remove O(n)、建堆 O(n)、"求大 K 用小顶堆"、延时任务调度同款结构。</li>
+    <li>每种常用集合能报出一个真实业务场景 + "有序 / 去重 / 并发"三问选型法。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章在 AlgoMaster 蓝本与仓库笔记基础上，参考并合并了 <a href="https://javaguide.cn/java/collection/java-collection-questions-01.html">JavaGuide · Java 集合常见面试题（上）</a>、<a href="https://javaguide.cn/java/collection/java-collection-questions-02.html">（下：Queue/BlockingQueue 口径）</a>与 <a href="https://javaguide.cn/java/collection/hashmap-source-code.html">HashMap 源码分析</a>的问答深度（重构改写）；Queue/PriorityQueue 场景部分结合模型知识补全（2026-10-20）。</p></div>
+  <div class="pager">
+    <a href="07-异常处理.html">⬅ 上一章：07 异常处理</a>
+    <a class="next" href="09-泛型.html">下一章：09 泛型 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 08 章 集合框架</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

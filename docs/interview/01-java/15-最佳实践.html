@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 15 章 · 最佳实践 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#create">静态工厂 vs 构造器</a>
+  <a href="#singleton">单例：枚举写法 ⭐</a>
+  <a href="#builder">Builder 模式</a>
+  <a href="#fp">浮点与可变性</a>
+  <a href="#compose">组合优于继承 ⭐</a>
+  <a href="#exception">异常实践回顾</a>
+  <a href="#alibaba">阿里手册高频条款</a>
+  <a href="#junit">JUnit 5 单测基础</a>
+  <a href="#quality">怎么聊代码质量</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="14-新特性演进.html">上一章：14 新特性演进</a>
+  <a href="../02-concurrency/README.html">下一板块：02 并发编程 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 15 章 · 最佳实践</h1>
+    <div class="sub">Effective Java 精选 · 阿里手册高频条款 · JUnit 5 —— 这一章考的不是知识，是 7 年养成的代码品味</div>
+    <div class="meta">
+      <span>⭐ 高频：静态工厂 · 枚举单例 · 组合 vs 继承 · 线程池禁 Executors</span>
+      <span>蓝本：AlgoMaster Java · Best Practices</span>
+      <span>JavaGuide 合并 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>创建对象有哪些方式？静态工厂方法相比构造器有什么优势？⭐</li>
+      <li>为什么 Effective Java 说"单元素枚举是最佳单例"？它解决了什么攻击面？</li>
+      <li>Builder 模式解决什么问题？和重叠构造器、JavaBeans 写法比一比。Lombok @Builder 有什么坑？</li>
+      <li>为什么"组合优于继承"？举一个继承破坏封装的例子。⭐</li>
+      <li>阿里规约为什么强制 POJO 属性用包装类型？equals 为什么要常量在前？</li>
+      <li>为什么禁止用 Executors 创建线程池？底层原因是什么？</li>
+      <li>你平时怎么写单元测试？参数化测试怎么写？覆盖率多少算够？</li>
+      <li>给你一个陌生项目，你怎么评估它的代码质量？</li>
+    </ol>
+  </div>
+  <p>本章定位是<strong>软素质 + 工程素养</strong>：前 14 章证明你"懂原理"，这一章证明你"写过很多代码、带过/code review 过很多别人的代码"。答题时多带<strong>真实场景和踩坑细节</strong>（"我们线上出过一次…所以我们团队规定…"），比背条目值钱得多。</p>
+</section>
+
+<section id="create">
+  <h2><span class="no">02</span>创建对象的方式：静态工厂 vs 构造器</h2>
+  <p>Effective Java 条目 1：<strong>考虑用静态工厂方法代替构造器</strong>。注意这不是 GoF 的"工厂方法模式"，就是一个普通的 public static 方法返回实例。</p>
+  <pre><code>// <span class="cm">JDK 里到处是教科书案例：</span>
+public static Boolean valueOf(boolean b)            // <span class="cm">返回缓存单例，不 new</span>
+public static Integer valueOf(int i)                // <span class="cm">命中 IntegerCache 就不 new</span>
+LocalDate.of(2026, 10, 17)                          // <span class="cm">比 new LocalDate(...) 可读（虽然它构造器是私有）</span>
+List.of("a", "b")                                   // <span class="cm">返回不可变集合，具体实现类由 JDK 决定</span>
+BigInteger.probablePrime(bits, rnd)                 // <span class="cm">名字说明了一切： probable（可能是素数）</span></code></pre>
+  <h3>五大优势（背诵骨架）</h3>
+  <ol>
+    <li><strong>有名字，可读性强</strong>：<code>probablePrime(100, rnd)</code> vs <code>new BigInteger(...)</code>，语义差一条街；同名不同参的构造器没法区分，静态工厂可以起不同名字（<code>ofSeconds</code> / <code>ofMinutes</code>）。</li>
+    <li><strong>不必每次都创建新对象</strong>：可以缓存（Boolean/Integer）、可以做成享元，也能顺势实现单例/实例受控（instance-controlled）。</li>
+    <li><strong>可以返回原类型的子类</strong>：调用方只面向接口 <code>List</code>，JDK 按数据量返回 <code>List12</code> 或 <code>ListN</code>；<code>EnumSet.of()</code> 按枚举数量在 RegularEnumSet / JumboEnumSet 之间挑——实现细节完全私有。</li>
+    <li><strong>返回类型可以随入参变化</strong>：同样的方法签名，不同参数返回不同实现类。</li>
+    <li><strong>返回的类在编写时可以不存在</strong>：服务提供者框架（JDBC SPI：DriverManager → Connection），面向接口 + 反射加载实现——这条能顺势聊到框架是怎么解耦的。</li>
+  </ol>
+  <h3>两个代价</h3>
+  <ul>
+    <li>类没有 public/protected 构造器就<strong>不能被子类化</strong>——但这反而是鼓励组合的推力。</li>
+    <li>静态工厂和其他静态方法"长得没区别"，所以要靠<strong>命名约定</strong>：<code>from / of / valueOf / instance / getInstance / create / newInstance / getType / newType</code>。看到这些名字就要想到"这是个工厂"。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：被问"new 之外还有哪些创建对象的方式"先给全景（静态工厂 / 反射 Class.newInstance / clone / 反序列化 / Unsafe.allocateInstance），再重点讲静态工厂五大优势——全景证明知识面，展开证明熟练度。</p></div>
+</section>
+
+<section id="singleton">
+  <h2><span class="no">03</span>单例的枚举写法 ⭐</h2>
+  <pre><code>public enum Router {
+    INSTANCE;                                              // <span class="cm">唯一实例，JVM 保证</span>
+
+    private final Map&lt;String, Endpoint&gt; routes = new ConcurrentHashMap&lt;&gt;();
+
+    public void register(String path, Endpoint ep) { routes.put(path, ep); }
+    public Endpoint route(String path) { return routes.get(path); }
+}
+
+// <span class="cm">使用：天然线程安全，无锁、无双重检查</span>
+Router.INSTANCE.route("/order/create");</code></pre>
+  <h3>为什么 Effective Java 条目 3 说它是"最佳单例"</h3>
+  <ul>
+    <li><strong>线程安全免费</strong>：枚举实例在类加载的初始化阶段由 JVM 创建，JVM 类加载机制保证唯一性与初始化的线程安全——不需要 volatile + 双重检查锁（DCL 细节在 <a href="../02-concurrency/README.html">02 并发板块</a>）。</li>
+    <li><strong>防反射攻击</strong>：反射 <code>Constructor.newInstance()</code> 内部对枚举有专门检查，直接抛 <code>IllegalArgumentException: Cannot reflectively create enum objects</code>——普通私有构造器单例可以靠 <code>setAccessible(true)</code> 破防。</li>
+    <li><strong>防反序列化破坏</strong>：枚举的序列化机制特殊（按 name 定位，<code>valueOf</code> 返回同一实例），readResolve 都不用写；普通单例反序列化会凭空造出第二个实例。</li>
+    <li>一行声明 + 无缝带状态和方法，可读性也是几种写法里最好的。</li>
+  </ul>
+  <h3>几种单例写法横向对比</h3>
+  <table>
+    <tr><th>写法</th><th>线程安全</th><th>懒加载</th><th>防反射</th><th>防反序列化</th><th>备注</th></tr>
+    <tr><td>饿汉（static final 直接 new）</td><td>✔</td><td>△ 类初始化级</td><td>✘</td><td>✘</td><td>简单；类初始化时创建</td></tr>
+    <tr><td>懒汉 + synchronized 方法</td><td>✔</td><td>✔ 实例访问级</td><td>✘</td><td>✘</td><td>每次调用都锁，性能差</td></tr>
+    <tr><td>DCL（volatile）⭐</td><td>✔</td><td>✔ 实例访问级</td><td>✘</td><td>✘</td><td>面试最爱；必须讲 volatile 防指令重排</td></tr>
+    <tr><td>静态内部类 Holder</td><td>✔</td><td>✔ 实例访问级</td><td>✘</td><td>✘</td><td>借类加载惰性初始化，优雅</td></tr>
+    <tr><td><strong>枚举</strong></td><td>✔</td><td>△ 类初始化级（同饿汉）</td><td>✔</td><td>✔</td><td>Effective Java 首选</td></tr>
+  </table>
+  <div class="box note"><p><strong>"懒加载"这一列有两个粒度，必须先拆开</strong>：<strong>类初始化级</strong>＝实例在单例类自己的 <code>&lt;clinit&gt;</code> 里创建，该<strong>类</strong>首次被主动使用就 new（饿汉、枚举）；<strong>实例访问级</strong>＝实例字段延迟到 <code>getInstance()</code>（或另一个只在 <code>getInstance()</code> 里被碰到的 Holder 类）里才创建，因此可以先用该类的其他静态方法而不创建实例（懒汉、DCL、Holder）。所以"枚举是懒加载"只对了一半——它确实"不用不创建"，但<strong>并不比饿汉更懒</strong>。</p></div>
+
+  <h3>枚举单例到底算不算"懒汉"？（口径校正）⭐</h3>
+  <p>懒汉式的标志是<strong>代码里自己写 <code>if (instance == null)</code> 控制创建时机</strong>；枚举没有一行检查代码，它的"晚创建"完全来自 JVM 的<strong>类初始化时机</strong>——是"白捡的懒"，不是懒汉模式。三种写法的差别看代码最清楚：</p>
+  <pre><code>// 饿汉：实例住在自己类的 &lt;clinit&gt; 里 —— 调 helper() 也会顺手把它创建出来
+class Eager {
+    private static final Eager INSTANCE = new Eager();
+    static void helper() { }          // 只想用工具方法，实例已被创建
+}
+
+// Holder：实例住在 H 里 —— 只有 getInstance() 会碰到 H，真正的实例级懒加载
+class Holder {
+    private static final class H { static final Holder INSTANCE = new Holder(); }
+    static Holder getInstance() { return H.INSTANCE; }
+    static void helper() { }          // 不碰 H，实例不会创建
+}
+
+// 枚举：INSTANCE 就是枚举类自己的 &lt;clinit&gt; —— 与饿汉同一粒度
+enum Router { INSTANCE }              // 谁主动使用 Router，谁就创建它
+</code></pre>
+  <p>结论：<strong>枚举的"懒"= 类初始化级，和饿汉式同一粒度；真正更细的懒只有 Holder</strong>。Effective Java 推荐枚举的理由从来不是"更懒"，而是<strong>免费线程安全 + 防反射 + 防反序列化 + 代码最少</strong>——这三条护城河才是答题重点。</p>
+
+  <h3>哪些操作会提前把它创建出来</h3>
+  <ul>
+    <li><strong>经典 switch</strong>：javac 为 <code>switch (router)</code> 生成的合成 SwitchMap 类会调 <code>Router.values()</code>——哪怕分支里根本没碰 <code>INSTANCE</code>，类初始化照样发生。"我只写了个 switch，单例怎么已经建好了"就是它（JDK 21 的 pattern switch 走 invokedynamic，机制不同，但同样要拿到枚举常量）。</li>
+    <li><code>Router.values()</code> / <code>Router.valueOf("INSTANCE")</code> / <code>EnumSet.allOf(Router.class)</code> / <code>Class.getEnumConstants()</code>：都会触发类初始化。</li>
+    <li>框架把枚举常量注册进字典/容器（枚举扫描、字典翻译）同理。</li>
+    <li>反之，<code>Router.class</code>、<code>Class.forName(name, false, loader)</code>、编译期常量（<code>static final int</code>）的引用<strong>不会</strong>触发初始化——<strong>"类加载"和"类初始化"是两件事</strong>，这也是"到底加载时创建还是使用时创建"这个争论的根源。</li>
+  </ul>
+  <div class="box warn"><p><strong>两个真坑</strong>：① <strong>枚举构造器里别做重活</strong>（建连接池、读配置、发远程调用）——构造抛异常会让类进入 erroneous 状态，之后每次访问都是 <code>NoClassDefFoundError</code> 且无法恢复；② <strong>多 ClassLoader 环境（Tomcat webapp、OSGi、热部署）单例不再单例</strong>——"JVM 保证唯一"只保证<strong>每个类加载器内</strong>唯一，跨类加载器会各有一份，要靠容器或外部存储兜底。</p></div>
+  <div class="box warn"><p><strong>陷阱</strong>："懒汉 DCL 为什么必须 volatile"是这道题的标准追问——new 分三步（分配内存 → 初始化 → 引用赋值），重排后别的线程可能拿到"已赋值未初始化"的半成品对象。另外别把 Spring 的单例 Bean 和这里混淆：Spring 是容器托管的单例（每容器一个），不防反射、不防反序列化，是另一种粒度。</p></div>
+</section>
+
+<section id="builder">
+  <h2><span class="no">04</span>Builder 模式：多参数创建的救星</h2>
+  <p>Effective Java 条目 2。<strong>痛点</strong>：参数一多，两种传统写法都疼——<strong>重叠构造器（telescoping）</strong>：2 参、3 参、5 参构造器叠罗汉，调用方读不懂 <code>new Order(1, "SKU001", 2, null, null, false)</code> 里每个位子是什么；<strong>JavaBeans（set 链）</strong>：可读但构造过程中对象处于<strong>半初始化状态</strong>，且没法做不可变、没法校验"必填组合"。</p>
+  <pre><code>OrderCreateRequest req = new OrderCreateRequest.Builder(uid, "SKU001")   // <span class="cm">必填进构造器</span>
+        .quantity(2)                    // <span class="cm">可选参数链式设置，参数名自解释</span>
+        .couponCode("DOUBLE11")
+        .build();                       // <span class="cm">build 时做最终校验，产出不可变对象</span>
+
+public class OrderCreateRequest {
+    private final long userId;          // <span class="cm">全 final —— 产物不可变</span>
+    private final String sku;
+    private final int quantity;
+    private final String couponCode;
+
+    private OrderCreateRequest(Builder b) {
+        this.userId = b.userId; this.sku = b.sku;
+        this.quantity = b.quantity; this.couponCode = b.couponCode;
+    }
+    public static final class Builder {
+        private final long userId;      // <span class="cm">必填：非 final 字段的区别一目了然</span>
+        private final String sku;
+        private int quantity = 1;       // <span class="cm">可选：给默认值</span>
+        private String couponCode;
+        public Builder(long userId, String sku) {
+            this.userId = Objects.requireNonNull(userId);
+            this.sku = Objects.requireNonNull(sku);
+        }
+        public Builder quantity(int v) { this.quantity = v; return this; }
+        public Builder couponCode(String v) { this.couponCode = v; return this; }
+        public OrderCreateRequest build() { return new OrderCreateRequest(this); }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>Builder 是"安全 + 可读 + 不可变"三者兼得的方案</strong>；代价是样板代码，所以生产里几乎都配 Lombok <code>@Builder</code>（或 Records + 手写紧凑校验）。</li>
+    <li>JDK / 框架里认脸：<code>StringBuilder</code>、<code>Stream.Builder</code>、<code>HttpRequest.newBuilder()</code>（JDK 11 HTTP Client）、OkHttp、ProtoBuf——builder 在"多参数构造 + 可变构建过程"场景是通用语言。</li>
+    <li>与 record 搭配：字段少于 4~5 个直接用 record + 紧凑构造器校验；参数多、有可选值、构建过程分步才上 builder。</li>
+  </ul>
+  <div class="box warn"><p><strong>Lombok @Builder 的坑（实战题）</strong>：@Builder 会生成"全参私有构造器"，把默认无参构造器挤掉——MyBatis / Jackson 反序列化时直接报错。修法是 <code>@Builder</code> + <code>@NoArgsConstructor</code> + <code>@AllArgsConstructor</code> 三件套。踩过并修过这个坑，说出来就是 7 年的成色。</p></div>
+</section>
+
+<section id="fp">
+  <h2><span class="no">05</span>避免浮点精确计算 &amp; 最小化可变性</h2>
+  <h3>金额永远不要用 double（Effective Java 条目 60）</h3>
+  <p>float/double 是二进制浮点（IEEE 754），无法精确表示 0.1 这类十进制小数，误差会在加减乘除和比较里累积——<strong>钱丢在精度里是最不可原谅的线上事故</strong>。两条正解（细节与陷阱在 <a href="01-基础语法.html#casting">第 01 章浮点精度</a>）：</p>
+  <pre><code>// <span class="cm">① BigDecimal，务必用字符串构造；比大小用 compareTo 不用 equals（equals 连 scale 一起比）</span>
+new BigDecimal("19.90").add(new BigDecimal("0.10"));
+
+// <span class="cm">② 高并发支付系统更常见的做法：放大为 long 的"分"，整数运算，性能好一个数量级</span>
+long priceCents = 1990;
+long total = priceCents * 3;              // <span class="cm">展示时再除以 100 格式化</span></code></pre>
+  <h3>最小化可变性（Effective Java 条目 17）</h3>
+  <ul>
+    <li><strong>手段</strong>：类声明 final（或所有构造器私有）、字段全部 final、不提供 setter、构造时初始化完所有字段、可变成员<strong>防御性拷贝</strong>（返回 <code>new Date(d.getTime())</code>、入参 <code>List.copyOf(items)</code>）。</li>
+    <li><strong>好处</strong>：不可变对象天然线程安全、可自由共享、hashCode 可缓存、当 Map key 可靠——String / LocalDate / record 全是这条条目的落地（呼应 <a href="13-日期时间.html#design">第 13 章不可变设计</a>）。</li>
+    <li><strong>代价</strong>：每个不同的值都要一个新对象。频繁变更的场景用 builder 一次性构建，或用可变的 companion 类在内部攒、对外仍暴露不可变视图。</li>
+    <li>面试一句话：<strong>"能不可变就不可变，需要变才可变，变了谁负责说清楚"</strong>——record 让这条从"纪律"变成了"默认"。</li>
+  </ul>
+</section>
+
+<section id="compose">
+  <h2><span class="no">06</span>组合优于继承 ⭐（Effective Java 条目 18）</h2>
+  <p><strong>核心论点：继承打破了封装。</strong>子类正确运行依赖父类的<strong>实现细节</strong>（self-use 自用性），父类下个版本换实现，子类无感知地坏掉——这不是理论风险，JDK 自己都踩过（HashSet 之于 AbstractCollection）。</p>
+  <h3>经典反例：InstrumentedHashSet</h3>
+  <pre><code>public class InstrumentedHashSet&lt;E&gt; extends HashSet&lt;E&gt; {
+    private int addCount = 0;
+
+    @Override public boolean add(E e) { addCount++; return super.add(e); }
+
+    @Override public boolean addAll(Collection&lt;? extends E&gt; c) {
+        addCount += c.size();
+        return super.addAll(c);     // <span class="cm">父类 addAll 内部逐个回调 this.add → addCount 被加了两次！</span>
+    }
+}
+
+Set&lt;Integer&gt; s = new InstrumentedHashSet&lt;&gt;();
+s.addAll(List.of(1, 2, 3));         // <span class="cm">期望 addCount=3，实际 6</span></code></pre>
+  <h3>组合 + 转发（装饰器思想）</h3>
+  <pre><code>public class InstrumentedSet&lt;E&gt; {          // <span class="cm">has-a，不是 is-a</span>
+    private final Set&lt;E&gt; s;                 // <span class="cm">持有任意 Set 实现，行为自己全权负责</span>
+    private int addCount = 0;
+
+    public InstrumentedSet(Set&lt;E&gt; s) { this.s = s; }
+
+    public boolean add(E e) { addCount++; return s.add(e); }
+    public boolean addAll(Collection&lt;? extends E&gt; c) {
+        addCount += c.size();
+        for (E e : c) s.add(e);             // <span class="cm">不依赖 s 的内部实现，怎么改都不会重复计数</span>
+        return true;
+    }
+    public int getAddCount() { return addCount; }
+}</code></pre>
+  <ul>
+    <li>组合版<strong>不依赖被包装类的任何实现细节</strong>，还能按需注入不同实现（HashSet / TreeSet / 不可变 Set），这就是 <code>Collections.unmodifiableList()</code> / <code>synchronizedList()</code> 的写法（转发包装类 forwarder）。</li>
+    <li><strong>什么时候才用继承</strong>：确凿的 is-a 关系 + 父类是<strong>为继承而设计</strong>的（文档写明自用性，或本身就是抽象骨架如 <code>AbstractList</code>）。跨包继承普通具体类，基本都该改成组合。</li>
+    <li>追问链预判：→ "那接口 default 方法算继承吗" → 接口是规范的多实现，风险小得多；→ "包装类层级太深怎么办" → 这正是组合的缺点（不适配回调/对象身份），JDK 也因此给了 List 接口直接实现类的建议。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：先给结论"默认组合，继承是特例"，再讲 HashSet 双重计数的例子（这个例子讲顺了，这条就是送分题），最后补一句实战："我们团队 Review 里看到 override 具体类方法，默认会问一句能不能改成组合/装饰器。"</p></div>
+</section>
+
+<section id="exception">
+  <h2><span class="no">07</span>异常最佳实践回顾（一分钟版）</h2>
+  <ul>
+    <li><strong>只用于异常情况，不做流程控制</strong>：异常构造成本高（填栈），用异常跳出循环/找元素是反模式——"peek 异常"写接口慢一半就是这么来的。</li>
+    <li><strong>不吞异常</strong>：<code>catch (Exception e) {}</code> 空块是头号大罪；至少记日志带上下文，<strong>保留异常链</strong> <code>new BizException("订单状态非法", e)</code>，否则现场全丢。</li>
+    <li><strong>捕获要具体</strong>：先 catch 子类后父类；抓 Exception 兜底的位置要放在边界层（RPC handler / 定时任务外层），不是随处都抓。</li>
+    <li><strong>try-with-resources 关资源</strong>：实现 AutoCloseable 的资源（流、连接、锁）别手动 finally close——漏关、覆盖原始异常都是坑。</li>
+    <li><strong>受检 vs 非受检</strong>：可恢复且调用方能处理的用受检；编程错误/不可恢复用 RuntimeException（现代框架趋势是后者 + 全局异常处理）。</li>
+  </ul>
+  <p>细节（异常表、finally 执行顺序、栈轨迹丢失场景）在 <a href="07-异常处理.html">第 07 章 异常处理</a>，本章只保留答题时的"口头禅"版本。</p>
+</section>
+
+<section id="alibaba">
+  <h2><span class="no">08</span>阿里巴巴 Java 开发手册高频条款</h2>
+  <table>
+    <tr><th>条款（分级）</th><th>内容</th><th>为什么 / 底层原因</th></tr>
+    <tr><td>POJO 属性用包装类型（强制）</td><td>POJO / RPC 参数返回值用包装类，局部变量用基本类型</td><td>DB 可空列映射 null 而非 0；<code>0</code> 和 <code>null</code> 语义不同——"查询失败返回 0" 会被当成"查到 0 元"（呼应 <a href="01-基础语法.html#boxing">第 01 章</a>拆箱 NPE）</td></tr>
+    <tr><td>equals 常量在前（强制）</td><td><code>"PAID".equals(status)</code>，或 <code>Objects.equals</code></td><td>变量为 null 时不会 NPE；写反了 <code>status.equals("PAID")</code> 就埋雷</td></tr>
+    <tr><td>禁 Executors 创建线程池（强制）⭐</td><td>用 <code>new ThreadPoolExecutor(...)</code> 显式 seven 参数</td><td><code>newFixedThreadPool</code>/<code>newScheduledThreadPool</code> 队列是<strong>无界 LinkedBlockingQueue</strong>（Integer.MAX_VALUE），任务堆积 → OOM；<code>newCachedThreadPool</code> 最大线程数 Integer.MAX_VALUE，线程爆炸 → OOM。原理与参数怎么配见 <a href="../02-concurrency/README.html">02 Java 并发编程</a></td></tr>
+    <tr><td>禁魔法值（强制）</td><td>状态码 "PAID"、阈值 3 这种裸值不许直接写</td><td>常量类 / 枚举，一改全改；可搜索可维护</td></tr>
+    <tr><td>循环内字符串拼接（强制）</td><td>用 StringBuilder（能预估容量更佳）</td><td>String + 每轮产生临时对象（原理在 <a href="01-基础语法.html#builder">第 01 章</a>）</td></tr>
+    <tr><td>foreach 里增删元素（强制）</td><td>用 <code>Iterator.remove()</code> 或 <code>removeIf()</code></td><td>fail-fast 机制：modCount 变了抛 ConcurrentModificationException</td></tr>
+    <tr><td>rollbackFor（推荐）</td><td><code>@Transactional(rollbackFor = Exception.class)</code></td><td>Spring 默认只回滚 RuntimeException/Error，受检异常吞掉不回滚（深入在 04-spring）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>怎么在面试里用</strong>：不要说"我读过阿里手册"，要说<strong>条款 + 原因 + 团队落地方式</strong>："我们把手册做成了 Sonar/IDE 检查规则，违规合并请求直接卡住"——从"读过"升级成"工程化落地过"。</p></div>
+</section>
+
+<section id="junit">
+  <h2><span class="no">09</span>JUnit 5 单测基础</h2>
+  <h3>核心注解速查</h3>
+  <table>
+    <tr><th>注解</th><th>作用</th><th>备注</th></tr>
+    <tr><td><code>@Test</code></td><td>标记测试方法</td><td>方法可包私有（JUnit 5 不再强制 public）</td></tr>
+    <tr><td><code>@BeforeEach</code> / <code>@AfterEach</code></td><td>每个测试方法前后各跑一次</td><td>替代 JUnit 4 的 @Before/@After；造干净的被测对象</td></tr>
+    <tr><td><code>@BeforeAll</code> / <code>@AfterAll</code></td><td>整个测试类前后各跑一次</td><td><strong>必须 static</strong>（除非 <code>@TestInstance(PER_CLASS)</code>）；放重资源的建与销</td></tr>
+    <tr><td><code>@ParameterizedTest</code></td><td>参数化测试</td><td>配 @ValueSource / @CsvSource / @MethodSource</td></tr>
+    <tr><td><code>@Nested</code></td><td>内嵌分组测试类</td><td>按场景分组，共享外层状态</td></tr>
+    <tr><td><code>@DisplayName</code> / <code>@Disabled</code></td><td>显示名 / 跳过</td><td>报告可读性</td></tr>
+  </table>
+  <h3>一个完整的测试类（AAA 结构）</h3>
+  <pre><code>@DisplayName("折扣计算器")
+class DiscountCalculatorTest {
+
+    private DiscountCalculator calc;
+
+    @BeforeEach
+    void setUp() {                       // <span class="cm">Arrange 前置：每个用例拿到全新被测对象</span>
+        calc = new DiscountCalculator();
+    }
+
+    @Test
+    @DisplayName("VIP 用户享 8 折")
+    void vipUserGets20PercentOff() {
+        // <span class="cm">Act</span>
+        BigDecimal result = calc.apply(new BigDecimal("100"), UserType.VIP);
+        // <span class="cm">Assert</span>
+        assertEquals(new BigDecimal("80.00"), result);
+    }
+
+    @Test
+    @DisplayName("负数价格抛参数异常")
+    void negativePriceThrows() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -&gt; calc.apply(new BigDecimal("-1"), UserType.NORMAL));
+        assertTrue(ex.getMessage().contains("price"));
+    }
+
+    @Test
+    void multiAssertionsTogether() {     // <span class="cm">assertAll：一组断言都执行，不会第一个失败就跳过后面的</span>
+        assertAll("订单折扣",
+            () -&gt; assertEquals(new BigDecimal("80.00"), calc.apply(new BigDecimal("100"), UserType.VIP)),
+            () -&gt; assertEquals(new BigDecimal("100.00"), calc.apply(new BigDecimal("100"), UserType.NORMAL)));
+    }
+}</code></pre>
+  <h3>参数化测试：一行一个用例，消灭复制粘贴</h3>
+  <pre><code>@ParameterizedTest(name = "[{index}] {0} 下单 {1} 元 → {2}")
+@CsvSource({
+    "NORMAL, 100, 100.00",
+    "VIP,    100,  80.00",
+    "SVIP,   100,  60.00"
+})
+void applyDiscountByUserType(UserType type, String price, String expected) {
+    assertEquals(new BigDecimal(expected), calc.apply(new BigDecimal(price), type));
+}
+
+// <span class="cm">复杂对象用 @MethodSource 指向一个返回 Stream 的静态工厂方法</span>
+@ParameterizedTest
+@MethodSource("edgeCases")
+void edgeCases(OrderCase c) { assertEquals(c.expected, calc.apply(c.price, c.type)); }
+static Stream&lt;OrderCase&gt; edgeCases() {
+    return Stream.of(new OrderCase("0", NORMAL, "0.00"),
+                     new OrderCase("0.01", SVIP, "0.01"));
+}</code></pre>
+  <ul>
+    <li>断言够用的场景用 JUnit 自带；真实项目里更常见 <strong>AssertJ</strong>（流式断言 <code>assertThat(list).hasSize(3).contains(x)</code>）+ <strong>Mockito</strong>（<code>when/verify</code> 隔离依赖）——面试提一句生态即可。</li>
+    <li>测试方法论口径：<strong>优先测边界和异常分支</strong>（null、0、负数、极大值、并发冲突），AAA 结构，方法名即文档（中文 @DisplayName 也行）；不测私有方法——私有方法复杂到想单测，说明类该拆了。</li>
+  </ul>
+</section>
+
+<section id="quality">
+  <h2><span class="no">10</span>7 年工程师怎么聊"代码质量"</h2>
+  <p>面试场景题："给你一个陌生项目 / 你怎么保证团队的代码质量？"——按这六维答，每一维都能带一句自己团队的落法：</p>
+  <ol>
+    <li><strong>可读性</strong>：命名说清意图（为什么存在而不是做什么）；方法一屏读完；圈复杂度 &gt;10 就拆（Sonar 有阈值）；注释解释 why 而不是翻译 what。</li>
+    <li><strong>结构与边界</strong>：分层清晰、依赖单向（api → service → dao），模块边界稳定；越界依赖是 Review 重点。</li>
+    <li><strong>重复与抽象</strong>：DRY，但警惕过度抽象——<strong>重复的成本是线性罚，错误抽象的成本是复利罚</strong>（Sandi Metz），两次重复忍、第三次再抽象（三次法则）。</li>
+    <li><strong>测试</strong>：核心链路（资金、状态流转）单测是底线；看<strong>变更覆盖率（diff coverage）</strong>比看全量覆盖率诚实；"覆盖率 100% 但没有断言"的测试比没测试更危险。</li>
+    <li><strong>自动化门禁</strong>：CI 上 SonarQube / CheckStyle / 依赖漏洞扫描（OWASP），Blocker 不清零不许合；规范靠工具不靠自觉——把阿里手册配成规则就是例子。</li>
+    <li><strong>可持续演进</strong>：技术债有台账、有还款窗口（每次大需求顺带重构相关模块）；Review 文化卡的是<strong>设计问题</strong>（边界、异常处理、并发安全），风格问题交给格式化工具。</li>
+  </ol>
+  <div class="box tip"><p><strong>高分答法示例</strong>："我评估陌生项目分两步：先跑工具拿数据——Sonar 热点、依赖树里的老版本和安全漏洞、构建时长、测试覆盖与变更覆盖；再抽核心模块读代码——异常怎么处理、并发怎么保护、边界是否清晰。数据告诉我风险在哪，读码告诉我团队习惯是什么。最后给结论时会区分'必须马上修'和'记账排期'，不追求一次性完美。"——有方法、有数据、有优先级，这是高级岗要的味道。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">11</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：静态工厂 vs 工厂方法模式？</strong>→ 前者是"类里的一个静态方法"（编码习惯），后者是 GoF 创建模式（父类定接口、子类决定实例化谁）；静态工厂 + 接口 + 函数式 Supplier（如 <code>Supplier&lt;Cache&gt;</code> 注入）很多时候替代了工厂模式。</li>
+    <li><strong>追问链：枚举单例是懒加载吗？</strong>→ <strong>严格说不是"懒汉"</strong>：它是"类初始化级延迟"——枚举类首次被主动使用（读 <code>INSTANCE</code>、<code>values()</code>、经典 switch、<code>EnumSet.allOf</code>…）时由 JVM 在 <code>&lt;clinit&gt;</code> 里创建，与饿汉式<strong>同一粒度</strong>，并不比饿汉更懒；真正的实例级懒加载是 Holder（实例住在另一个只在 <code>getInstance()</code> 里被碰到的类）。答"是"会被追"那和饿汉有什么区别"，答"不是"又漏了类加载时机——先把两种粒度拆开再答，最稳。</li>
+    <li><strong>陷阱：Builder 会稀释不可变吗？</strong>→ 不会，Builder 只是构建期的可变中间态，build 出来的对象全 final；但如果 Builder 被复用（build 后继续改再 build），产物之间互不影响，别共享 Builder。</li>
+    <li><strong>追问：防御性拷贝 vs 不可变对象？</strong>→ 不可变是"根治"（字段不可变就无漏可防）；防御性拷贝是"兜底"（字段只能可变时，进出口各拷一次：构造入参 List.copyOf、getter 返回副本或不可变视图）。EnumMap/Map key 那些坑都源于此。</li>
+    <li><strong>追问：单测覆盖率多少算够？</strong>→ 没有圣数。我的口径：核心链路 70%+ 且必须覆盖异常分支；全量覆盖率作趋势看（不降），变更覆盖率作门禁卡。</li>
+    <li><strong>陷阱：BigDecimal.equals 的 scale 陷阱</strong>——<code>new BigDecimal("1.0").equals(new BigDecimal("1.00"))</code> 是 false，比大小永远 compareTo（第 01 章讲过，最后再提醒一次，因为真的高频）。</li>
+    <li><strong>追问：私有方法怎么测？</strong>→ 不测私有测公开行为；真想测说明职责该拆成新类了——这个回答本身就是设计品味的展示。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">12</span>面试自查清单</h2>
+  <ol>
+    <li>静态工厂五大优势 + 两个代价 + 命名约定，能配 JDK 真实例子讲。</li>
+    <li>枚举单例三大护城河（类加载线程安全 / 防反射 / 防反序列化）脱口而出，并知道 DCL 为什么要 volatile。</li>
+    <li>能写出 Builder 的骨架，说清它相对重叠构造器和 JavaBeans 的优势，会讲 Lombok @Builder 的坑。</li>
+    <li>InstrumentedHashSet 双重计数例子能白板写出来，组合/转发版能口述。</li>
+    <li>金额计算两套方案（BigDecimal 字符串构造 / long 分）及各自适用场景。</li>
+    <li>阿里手册 7 条高频条款都能说"条款 + 原因 + 团队怎么落地"。</li>
+    <li>JUnit 5：注解语义（尤其 @BeforeAll 要 static）、能写参数化测试、知道 AssertJ/Mockito 的位置。</li>
+    <li>聊代码质量有六维框架 + 工具门禁 + 一段自己的评估方法。</li>
+  </ol>
+  <div class="box tip">
+    <p><strong>如果只记 10 条</strong>（全章压缩版，面试前最后一遍）：</p>
+    <ol>
+      <li>创建对象优先静态工厂：有名字、可缓存、可返回子类、可做实例受控。</li>
+      <li>单例用枚举；懒加载 DCL 必须 volatile。</li>
+      <li>多参数构建用 Builder，产物不可变；Lombok @Builder 记得补无参构造。</li>
+      <li>金额禁 double：BigDecimal 字符串构造 + compareTo，或 long 分。</li>
+      <li>能不可变就不可变（record）；可变字段进出口防御性拷贝。</li>
+      <li>默认组合，继承仅限 is-a 且父类为继承而设计；HashSet 例子常备。</li>
+      <li>异常：不吞、具体捕、带 cause、try-with-resources、不做流程控制。</li>
+      <li>POJO 用包装类型、equals 常量在前、禁魔法值、foreach 不增删。</li>
+      <li>线程池禁 Executors 快捷方法——手动 new ThreadPoolExecutor 并说得清七个参数。</li>
+      <li>单测测边界与异常，AAA + 参数化；覆盖率看趋势与变更覆盖，质量靠门禁不靠自觉。</li>
+    </ol>
+  </div>
+  <div class="box note"><p><strong>内容来源</strong>：在 Effective Java 口径与阿里规约基础上，参考合并 <a href="https://javaguide.cn/java/basis/java-basic-questions-03.html">JavaGuide · Java 基础面试（下）</a>相关条目（重构改写）。</p></div>
+  <div class="pager">
+    <a href="14-新特性演进.html">⬅ 上一章：新特性演进</a>
+    <a class="next" href="../02-concurrency/README.html">下一板块：02 Java 并发编程 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 15 章 最佳实践（本板块完）</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

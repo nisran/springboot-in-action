@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 · Java 语言核心 — Java 后端面试知识地图</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .chapters{list-style:none;padding:0;margin:16px 0}
+  .chapters li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;margin:8px 0}
+  .chapters .ch-no{display:inline-block;min-width:46px;font-weight:700;color:var(--primary)}
+  .chapters .ch-title{font-weight:600}
+  .chapters .ch-desc{color:var(--muted);font-size:14px;margin-top:2px}
+  .tag{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .tag.plan{background:var(--amber-soft);color:var(--amber)}
+  .tag.exist{background:var(--green-soft);color:var(--green)}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="../README.html">⬅ Java 面试知识地图</a></div>
+  <a href="#focus">学习重点</a>
+  <a href="#toc">章节目录</a>
+  <a href="#checklist">面试自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">相邻板块</div>
+  <a href="../02-concurrency/README.html">02 Java 并发编程 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>01 · Java 语言核心</h1>
+    <div class="sub">集合源码 · Lambda/Stream · 新特性演进 —— 一面必考的语言功底</div>
+    <div class="meta">
+      <span>蓝本：AlgoMaster Java · 27 节 442 讲</span>
+      <span class="tag exist">已有笔记：Java/java 基础.md ✅ 已并入</span>
+      <span class="tag exist">✅ 15 章内容已写完</span>
+    </div>
+  </div>
+</header>
+
+<section id="focus">
+  <h2><span class="no">01</span>学习重点</h2>
+  <ul>
+    <li>面试三大高频区：<strong>集合源码（HashMap / ConcurrentHashMap）</strong>、<strong>Lambda / Stream</strong>、<strong>Java 8→21 新特性</strong></li>
+    <li>每章结构：知识点 → 面试问法 → 高质量回答要点 → 代码佐证</li>
+  </ul>
+  <div class="box note">
+    <p>已有笔记 <a href="../../Java/java%20基础.md">Java/java 基础.md</a>，写章节时把可用内容并入，缺口补齐。</p>
+  </div>
+</section>
+
+<section id="toc">
+  <h2><span class="no">02</span>章节目录</h2>
+  <ul class="chapters">
+    <li><span class="ch-no">01</span><a class="ch-title" href="01-基础语法.html">基础语法与类型系统</a><div class="ch-desc">变量 / 基本类型 vs 引用类型 / 类型转换 / String 不可变性 ⭐ / StringBuilder / 常量池</div></li>
+    <li><span class="ch-no">02</span><a class="ch-title" href="02-面向对象.html">面向对象基础</a><div class="ch-desc">类与对象 / 构造器 / this / static / final / 初始化块 / 内部类 / 匿名类</div></li>
+    <li><span class="ch-no">03</span><a class="ch-title" href="03-继承与多态.html">继承与多态</a><div class="ch-desc">extends / super / 重写规则 / 构造器链 / Object 方法 / instanceof / 协变返回</div></li>
+    <li><span class="ch-no">04</span><a class="ch-title" href="04-抽象与接口.html">抽象与接口</a><div class="ch-desc">抽象类 vs 接口 ⭐ / default·static·private 方法 / 函数式接口 / record ⭐ / sealed ⭐</div></li>
+    <li><span class="ch-no">05</span><a class="ch-title" href="05-封装与不可变.html">封装与不可变</a><div class="ch-desc">访问修饰符 / Immutable Class 怎么写 ⭐</div></li>
+    <li><span class="ch-no">06</span><a class="ch-title" href="06-包与模块.html">包与模块</a><div class="ch-desc">package / import / 静态导入 / JPMS（了解）</div></li>
+    <li><span class="ch-no">07</span><a class="ch-title" href="07-异常处理.html">异常处理</a><div class="ch-desc">checked vs unchecked ⭐ / finally 陷阱 / 自定义异常 / try-with-resources / 异常链</div></li>
+    <li><span class="ch-no">08</span><a class="ch-title" href="08-集合框架.html">集合框架</a> ⭐⭐<div class="ch-desc">ArrayList vs LinkedList / HashMap 源码（扩容、树化、hash 扰动）⭐ / ConcurrentHashMap（分段锁→CAS+synchronized）⭐ / TreeMap / fail-fast 与 fail-safe / Comparable vs Comparator</div></li>
+    <li><span class="ch-no">09</span><a class="ch-title" href="09-泛型.html">泛型</a><div class="ch-desc">泛型类与方法 / 有界类型 / 通配符 PECS ⭐ / 类型擦除 ⭐</div></li>
+    <li><span class="ch-no">10</span><a class="ch-title" href="10-Lambda与Stream.html">Lambda 与 Stream</a> ⭐<div class="ch-desc">Lambda / 四大函数式接口 / 方法引用 / 惰性求值 / Collector / 并行流陷阱 / Optional</div></li>
+    <li><span class="ch-no">11</span><a class="ch-title" href="11-IO与NIO.html">IO 与 NIO</a><div class="ch-desc">字节流 vs 字符流 / 缓冲流 / 序列化 / NIO 三大组件 / mmap</div></li>
+    <li><span class="ch-no">12</span><a class="ch-title" href="12-注解与反射.html">注解与反射</a><div class="ch-desc">内置注解 / 自定义注解 / 保留策略 / 反射 API / 为 AOP 与框架打基础 ⭐</div></li>
+    <li><span class="ch-no">13</span><a class="ch-title" href="13-日期时间.html">日期时间 API</a><div class="ch-desc">LocalDate 家族 / Instant / Duration vs Period / 对比 Date-SimpleDateFormat 线程安全</div></li>
+    <li><span class="ch-no">14</span><a class="ch-title" href="14-新特性演进.html">新特性演进 Java 8 → 21+</a> ⭐<div class="ch-desc">Lambda/Stream（8）/ var（10）/ switch 表达式（14）/ 文本块（15）/ record（16）/ sealed（17）/ 虚拟线程入口（21，详见 <a href="../02-concurrency/README.html">02-concurrency</a>）/ 模式匹配</div></li>
+    <li><span class="ch-no">15</span><a class="ch-title" href="15-最佳实践.html">最佳实践</a><div class="ch-desc">Effective Java 高频条目 / 常见坑 / JUnit 单测基础</div></li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">03</span>面试自查清单（高频 Top 10）</h2>
+  <ol>
+    <li>HashMap 的底层结构与扩容机制？为什么容量是 2 的幂？</li>
+    <li>HashMap 线程安全吗？ConcurrentHashMap 怎么保证安全？</li>
+    <li>== 与 equals / hashCode 的契约 ⭐</li>
+    <li>String 为什么设计成不可变？</li>
+    <li>接口和抽象类怎么选？</li>
+    <li>异常体系与最佳实践？</li>
+    <li>泛型擦除会带来什么问题？</li>
+    <li>Stream 的中间/终端操作有哪些？并行流什么时候不能用？</li>
+    <li>Java 8 之后你常用的语言特性？</li>
+    <li>深拷贝 vs 浅拷贝，怎么实现深拷贝？</li>
+  </ol>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · 01 Java 语言核心</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+</script>
+</body>
+</html>

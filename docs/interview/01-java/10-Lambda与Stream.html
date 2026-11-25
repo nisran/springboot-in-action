@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 10 章 · Lambda 与 Stream — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#lambda">Lambda 语法与本质 ⭐</a>
+  <a href="#funcintf">四大函数式接口 ⭐</a>
+  <a href="#methodref">方法引用四种</a>
+  <a href="#create">Stream 的创建</a>
+  <a href="#ops">中间操作 vs 终端操作 ⭐</a>
+  <a href="#lazy">惰性求值与短路</a>
+  <a href="#collector">Collector 收集器</a>
+  <a href="#parallel">并行流陷阱 ⭐</a>
+  <a href="#optional">Optional 正确用法</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="09-泛型.html">← 上一章：09 泛型</a>
+  <a href="11-IO与NIO.html">下一章：11 IO 与 NIO →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 10 章 · Lambda 与 Stream</h1>
+    <div class="sub">函数式接口 · Lambda 的 invokedynamic 本质 · 方法引用 · Stream 惰性求值与短路 · Collector · 并行流陷阱 · Optional —— Java 8 递来的函数式武器，也是高级岗的必挖深水区</div>
+    <div class="meta">
+      <span>⭐ 高频：Lambda 本质 · 中间/终端操作 · 并行流陷阱</span>
+      <span>蓝本：AlgoMaster Java · Lambdas &amp; Streams / Optional</span>      <span>JavaGuide 合并 ✅</span>
+
+      <span>已合并：Java/java 基础.md（Java 8 特性一节） ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>Lambda 的本质是什么？它和匿名内部类是一回事吗？⭐⭐</li>
+      <li>为什么 Lambda 只能引用外部的 final（或 effectively final）变量？</li>
+      <li>Function、Predicate、Consumer、Supplier 分别是什么？各举一个使用场景。⭐</li>
+      <li>方法引用有哪四种写法？</li>
+      <li>Stream 的中间操作和终端操作有什么区别？什么是惰性求值？⭐⭐</li>
+      <li>哪些操作是短路操作？findAny 和 findFirst 有什么区别？</li>
+      <li>Collectors.groupingBy 怎么做分组统计？toMap 有什么坑？</li>
+      <li>并行流的底层是什么线程池？有哪些典型陷阱？⭐⭐</li>
+      <li>Optional 的设计意图是什么？为什么不适合做字段和方法参数？</li>
+    </ol>
+  </div>
+  <p>这一章是区分"用过 Java 8"和"理解 Java 8"的分水岭。普通回答止步于 API 用法；高级岗要能讲出 <strong>invokedynamic、LambdaMetafactory、ForkJoinPool、短路求值的实现语义</strong>。答题策略：API 题 + 一句底层机制 + 一个实战踩坑。</p>
+</section>
+
+<section id="lambda">
+  <h2><span class="no">02</span>Lambda 语法与本质 ⭐</h2>
+  <p><strong>一句话定义：Lambda 表达式是函数式接口（Functional Interface）的实例。</strong>函数式接口 = 有且只有一个抽象方法（SAM，Single Abstract Method）的接口，<code>@FunctionalInterface</code> 注解只是编译期检查，不加也不影响（如 <code>Runnable</code>、<code>Comparator</code> 早就满足条件）。</p>
+  <pre><code>// 三种等价写法，右侧两种是语法糖的糖：
+Runnable r1 = new Runnable() { public void run() { System.out.println("hi"); } };
+Runnable r2 = () -&gt; System.out.println("hi");
+Runnable r3 = System.out::println;   // 方法引用（见第 04 节）</code></pre>
+  <h3>本质：不是匿名类的语法糖，而是 invokedynamic</h3>
+  <p>反编译 <code>javap -v</code> 一个含 Lambda 的类，看不到 <code>Outer$1.class</code> 这样的匿名类产物，只看到一条字节码指令：</p>
+  <pre><code>// javap -v LambdaDemo.class 的关键输出：
+public static void main(java.lang.String[]);
+  Code:
+    invokedynamic #x, 0   // InvokeDynamic #0:run:()Ljava/lang/Runnable;
+                      // ↑ 一条动态调用指令，指向 BootstrapMethods 里的引导方法
+
+BootstrapMethods:
+  0: #x REF_invokeStatic java/lang/invoke/LambdaMetafactory.metafactory(
+         MethodHandles$Lookup, String, MethodType, MethodType, MethodHandle, MethodType)
+   // 引导方法：LambdaMetafactory</code></pre>
+  <ul>
+    <li><strong>执行流程</strong>：JVM 首次执行到 <code>invokedynamic</code> 时，调用引导方法 <code>LambdaMetafactory.metafactory(...)</code>，由它<strong>在运行时动态生成</strong>一个实现函数式接口的类（JDK 8 用 ASM 生成内部类；JDK 15+ 改用 Hidden Class），并返回一个调用点（CallSite），此后调用直接绑定到这个轻量类上。</li>
+    <li><strong>为什么这样设计</strong>：把"Lambda 如何实现"的决策从编译期推迟到运行期。编译器只写死"这里是函数式接口实例"，JDK 厂商可以自由演进实现策略（内部类 → hidden class → 未来 VM 原生优化），而无需改任何已编译的代码。若当初绑死匿名类语法糖，就没有这个演进空间。</li>
+  </ul>
+  <table>
+    <tr><th>维度</th><th>匿名内部类</th><th>Lambda</th></tr>
+    <tr><td>编译产物</td><td>生成 <code>Outer$1.class</code>，编译期固定</td><td>无独立 class 文件，运行时由 LambdaMetafactory 动态生成</td></tr>
+    <tr><td>字节码指令</td><td><code>new</code> + <code>dup</code> + <code>invokespecial</code>&lt;init&gt;</td><td><code>invokedynamic</code></td></tr>
+    <tr><td>this 指向</td><td>匿名类实例自身（<code>Outer.this</code> 才是外部类）</td><td>外围实例（没有自己的 this，词法作用域）</td></tr>
+    <tr><td>变量捕获</td><td>要求 final</td><td>要求 effectively final（语义相同）</td></tr>
+    <tr><td>内存/性能</td><td>每个匿名类一份类元数据</td><td>无捕获的 Lambda 可全局单例复用（JDK 缓存）</td></tr>
+  </table>
+  <h3>为什么只能捕获 effectively final 变量</h3>
+  <p>已有笔记里的结论 + 原因：<strong>Lambda 捕获的是局部变量的副本</strong>。局部变量在栈帧里，方法返回栈帧即销毁，而 Lambda 可能在之后才执行（如异步线程、Stream 惰性求值），所以它拿到的必须是拷贝。如果允许原变量后续被修改，拷贝和原值就会不一致，语义不可靠——干脆要求 effectively final（不必显式写 <code>final</code>，只要事实不再赋值即可）。</p>
+  <div class="box note"><p>成员变量没有这个限制：实例存在堆里，Lambda 持有的是外围对象的引用，读写的是同一份内存。这也解释了"Lambda 里改成员变量编译通过、改局部变量编译失败"的经典疑问。</p></div>
+  <div class="box tip"><p><strong>答题口径</strong>："Lambda 是函数式接口的实例，编译成 invokedynamic 指令，运行时由 LambdaMetafactory 生成实现类，不是匿名类的语法糖。区别体现在：没有独立 class 文件、this 语义不同、实现策略可演进。"能说出 metafactory 和 hidden class 演进，就是高级岗水准。</p></div>
+</section>
+
+<section id="funcintf">
+  <h2><span class="no">03</span>四大函数式接口 ⭐</h2>
+  <p><code>java.util.function</code> 包有几十个接口，但万变不离四个原型，其余都是它们的" arity 扩展 + 原始类型特化"：</p>
+  <table>
+    <tr><th>接口</th><th>抽象方法</th><th>语义</th><th>典型场景</th></tr>
+    <tr><td><code>Function&lt;T,R&gt;</code></td><td><code>R apply(T t)</code></td><td>输入 T 映射输出 R</td><td><code>map</code> 的入参、转换器</td></tr>
+    <tr><td><code>Predicate&lt;T&gt;</code></td><td><code>boolean test(T t)</code></td><td>断言真假</td><td><code>filter</code> 的入参、校验规则</td></tr>
+    <tr><td><code>Consumer&lt;T&gt;</code></td><td><code>void accept(T t)</code></td><td>消费不返回</td><td><code>forEach</code> 的入参、回调</td></tr>
+    <tr><td><code>Supplier&lt;T&gt;</code></td><td><code>T get()</code></td><td>无输入只产出</td><td>工厂、懒加载、<code>orElseGet</code> 的入参</td></tr>
+  </table>
+  <pre><code>Function&lt;String, Integer&gt; len = String::length;
+Integer n = len.apply("hello");                       // 5
+Function&lt;Integer, Integer&gt; square = x -&gt; x * x;
+System.out.println(len.andThen(square).apply("ab")); // 2 -&gt; 4，compose 则先执行参数那个
+
+Predicate&lt;String&gt; isEmpty = String::isEmpty;
+System.out.println(isEmpty.negate().test("abc"));    // true，还有 and / or 默认组合方法
+
+Consumer&lt;String&gt; printer = System.out::println;
+printer.andThen(s -&gt; log.info("printed {}", s)).accept("hi");  // 顺序执行两个消费
+
+Supplier&lt;List&lt;String&gt;&gt; factory = ArrayList::new;      // 工厂：延迟到 get() 才创建
+List&lt;String&gt; list = factory.get();</code></pre>
+  <ul>
+    <li><strong>扩展家族</strong>：BiFunction&lt;T,U,R&gt;（两个入参）、UnaryOperator&lt;T&gt;（同型映射，Function 特化）、BiConsumer、BooleanSupplier 等。</li>
+    <li><strong>原始类型特化</strong>：<code>IntFunction</code>、<code>ToIntFunction</code>、<code>IntPredicate</code>、<code>IntSupplier</code>… 存在的意义是<strong>避免装箱拆箱</strong>——<code>IntStream</code> 全家桶就是靠它们做到无装箱数值计算的。</li>
+    <li>JDK 8 接口的 <code>default</code> / <code>static</code> 方法不计入 SAM 计数，<code>equals</code> 等来自 Object 的签名也不计入。</li>
+  </ul>
+  <div class="box tip"><p><strong>记忆口诀</strong>：Function 有进有出、Predicate 有进出布尔、Consumer 有进无出、Supplier 无进有出。再追问就往"特化避免装箱"和"默认组合方法（andThen/compose/negate）"上引。</p></div>
+</section>
+
+<section id="methodref">
+  <h2><span class="no">04</span>方法引用四种</h2>
+  <p>方法引用是 Lambda 的极简写法：当 Lambda 体只是"转发调用一个已存在方法"时，可以直接用 <code>::</code> 引用它。底层与 Lambda 完全相同（同样走 invokedynamic + LambdaMetafactory）。</p>
+  <table>
+    <tr><th>类型</th><th>写法</th><th>等价 Lambda</th></tr>
+    <tr><td>静态方法引用</td><td><code>Integer::parseInt</code></td><td><code>s -&gt; Integer.parseInt(s)</code></td></tr>
+    <tr><td>特定对象的实例方法</td><td><code>System.out::println</code></td><td><code>s -&gt; System.out.println(s)</code></td></tr>
+    <tr><td>类的实例方法（第一个参数当接收者）</td><td><code>String::toUpperCase</code></td><td><code>str -&gt; str.toUpperCase()</code></td></tr>
+    <tr><td>构造器引用</td><td><code>ArrayList::new</code>、<code>int[]::new</code></td><td><code>() -&gt; new ArrayList&lt;&gt;()</code></td></tr>
+  </table>
+  <pre><code>// 第三种最容易懵：String::toUpperCase 用在 map 里，流中的每个元素就是"接收者"
+Stream.of("a", "b").map(String::toUpperCase).forEach(System.out::println);  // A B
+
+// 构造器引用配合 toArray 极常用：
+List&lt;String&gt; src = List.of("a", "b");
+ArrayList&lt;String&gt; copy = src.stream().collect(Collectors.toCollection(ArrayList::new));
+String[] arr = src.stream().toArray(String[]::new);</code></pre>
+  <div class="box warn"><p><strong>易错</strong>：<code>String::toUpperCase</code> 和 <code>str::toUpperCase</code>（局部变量 str）是两种不同引用——前者是"类 + 实例方法"（参数做接收者），后者是"对象 + 实例方法"（固定接收者）。面试口述时说清"接收者是谁"就不会被绕晕。</p></div>
+</section>
+
+<section id="create">
+  <h2><span class="no">05</span>Stream 的创建</h2>
+  <table>
+    <tr><th>来源</th><th>API</th><th>说明</th></tr>
+    <tr><td>集合</td><td><code>collection.stream()</code> / <code>parallelStream()</code></td><td>最常用；Collection 接口默认方法</td></tr>
+    <tr><td>数组</td><td><code>Arrays.stream(arr)</code></td><td>int[] 会得到 IntStream（无装箱）</td></tr>
+    <tr><td>静态工厂</td><td><code>Stream.of(...)</code> / <code>Stream.empty()</code></td><td>少量元素</td></tr>
+    <tr><td>无限流</td><td><code>Stream.iterate(seed, f)</code> / <code>Stream.generate(sup)</code></td><td>必须配 <code>limit</code> 等短路操作截断；iterate 三参重载可带条件（JDK 9+）</td></tr>
+    <tr><td>数值区间</td><td><code>IntStream.range(0, n)</code> / <code>rangeClosed</code></td><td>替代 for 循环，无装箱</td></tr>
+    <tr><td>文件</td><td><code>Files.lines(path)</code></td><td>惰性按行读，必须放 try-with-resources 关闭</td></tr>
+    <tr><td>其他</td><td><code>Pattern.compile(re).splitAsStream(s)</code>、<code>Stream.concat</code>、<code>Random.ints()</code></td><td>按需取用</td></tr>
+  </table>
+  <pre><code>// 无限流典型用法：生成前 10 个斐波那契数
+Stream.iterate(new int[]{0, 1}, a -&gt; new int[]{a[1], a[0] + a[1]})
+      .limit(10)
+      .map(a -&gt; a[0])
+      .forEach(System.out::println);</code></pre>
+  <div class="box warn"><p><strong>流是一次性的</strong>：每个 Stream 只能被一个终端操作消费，重复使用抛 <code>IllegalStateException: stream has already been operated upon or closed</code>。流不是数据结构，是"数据源上的操作管道"。</p></div>
+</section>
+
+<section id="ops">
+  <h2><span class="no">06</span>中间操作 vs 终端操作 ⭐</h2>
+  <p><strong>分类的黄金标准：返回 Stream 的是中间操作（可以继续链），返回其他类型或 void 的是终端操作（管道到此结束）。</strong>更重要的是语义差异：中间操作是<strong>惰性</strong>的，只记录描述（什么 filter、什么 map），不触发计算；终端操作才驱动整个管道跑起来。</p>
+  <table>
+    <tr><th>类别</th><th>方法</th><th>说明</th></tr>
+    <tr><td rowspan="7">中间（惰性）</td><td><code>filter(Predicate)</code></td><td>过滤，无状态</td></tr>
+    <tr><td><code>map(Function)</code> / <code>mapToXxx</code></td><td>一对一映射，无状态</td></tr>
+    <tr><td><code>flatMap(Function)</code></td><td>一对多拍平（map 的元素是流时用它），无状态</td></tr>
+    <tr><td><code>distinct()</code></td><td>去重，<strong>有状态</strong>（要记住见过的元素）</td></tr>
+    <tr><td><code>sorted()</code></td><td>排序，<strong>有状态</strong>（必须拿到全部元素才能排）</td></tr>
+    <tr><td><code>peek(Consumer)</code></td><td>窥探每个元素（调试用），无状态</td></tr>
+    <tr><td><code>limit(n)</code> / <code>skip(n)</code></td><td>截断/跳过，有状态 + <strong>短路</strong>（limit 见 limit 的并发版见 09 节）</td></tr>
+    <tr><td rowspan="5">终端（触发）</td><td><code>forEach</code> / <code>forEachOrdered</code></td><td>逐个消费；后者保证遇遇顺序（并行流代价大）</td></tr>
+    <tr><td><code>collect(Collector)</code></td><td>归约成集合/聚合结果，最常用</td></tr>
+    <tr><td><code>reduce(identity, BinaryOperator)</code></td><td>累积归约成单个值</td></tr>
+    <tr><td><code>count</code> / <code>min</code> / <code>max</code></td><td>聚合（内部就是 reduce）</td></tr>
+    <tr><td><code>findAny</code> / <code>findFirst</code> / <code>anyMatch</code> / <code>allMatch</code> / <code>noneMatch</code> / <code>toArray</code></td><td>查找与匹配，前五者<strong>短路</strong></td></tr>
+  </table>
+  <ul>
+    <li><strong>有状态 vs 无状态</strong>：无状态中间操作可以逐元素流水线处理；有状态（sorted/distinct/limit）需要缓存元素甚至等全量到齐，并行流下代价更高、可能多轮数据搬运。</li>
+    <li><strong>findAny vs findFirst</strong>：串行流下行为基本一致；并行流下 findAny 允许返回任意一个（哪个线程先命中就返回谁，性能更好），findFirst 必须返回遇到顺序中的第一个（要协调，约束更强）。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>："返回 Stream 的是中间操作，惰性只记账；终端操作触发遍历，把整条管道融合成一次遍历执行（loop fusion），中间不会生成中间集合。"最后这句 loop fusion 是拉开差距的关键。</p></div>
+</section>
+
+<section id="lazy">
+  <h2><span class="no">07</span>惰性求值与短路</h2>
+  <h3>惰性求值：没有终端操作，一行都不会执行</h3>
+  <pre><code>List&lt;String&gt; names = List.of("tom", "jerry", "spike");
+
+names.stream()
+     .peek(s -&gt; System.out.println("peek: " + s))   // 什么都不会打印！
+     .filter(s -&gt; s.length() &gt; 2);
+
+names.stream()
+     .peek(s -&gt; System.out.println("peek: " + s))   // 打印 3 行
+     .filter(s -&gt; s.length() &gt; 2)
+     .count();                                        // count 是终端操作，驱动执行</code></pre>
+  <p>执行时也不是"先 filter 完所有元素，再 map 所有元素"，而是<strong>逐元素垂直执行</strong>：元素一个个穿过整条管道，<code>filter</code> 拦下的元素根本不会走到后面的 <code>map</code>。所以链式写法的"表观多次遍历"实际是一次遍历，中间零临时集合。</p>
+  <h3>短路操作：满足条件立即收工</h3>
+  <pre><code>int firstEven = IntStream.range(0, 1_000_000)
+        .peek(i -&gt; System.out.println("check " + i))
+        .filter(i -&gt; i % 2 == 0)
+        .findFirst()
+        .orElse(-1);
+// 只打印 check 0 就返回了：filter 放行第一个元素后，findFirst 短路终止整个管道</code></pre>
+  <ul>
+    <li><strong>终端短路</strong>：<code>findAny</code> / <code>findFirst</code> / <code>anyMatch</code> / <code>allMatch</code> / <code>noneMatch</code>——拿到结果就通知所有环节停止拉取元素。</li>
+    <li><strong>中间短路</strong>：<code>limit(n)</code>（这也是无限流能安全使用的原因）；<code>skip</code> 在串行下也具有"跳过即丢弃"的短路语义。</li>
+    <li>无限流 + limit 是惰性/短路最经典的组合考点：<code>Stream.iterate</code> 本身不产生任何数据，全靠管道按需拉取。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：把副作用放进 <code>peek</code> 用于生产逻辑是反模式（peek 的设计意图是调试）；更别指望"没写终端操作的 peek 会执行"。副作用应放到 <code>forEach</code> / <code>collect</code> 里。</p></div>
+</section>
+
+<section id="collector">
+  <h2><span class="no">08</span>Collector 收集器</h2>
+  <p><code>Collectors</code> 工具类是终端操作 <code>collect</code> 的弹药库。Collector 内部是五个协同组件：supplier（建容器）/ accumulator（累加）/ combiner（并行合并）/ finisher（最终转换）/ characteristics（特征位）——能说出这个结构就是源码级回答。</p>
+  <h3>常用收集器速查</h3>
+  <table>
+    <tr><th>需求</th><th>API</th><th>备注</th></tr>
+    <tr><td>收 List / Set</td><td><code>toList()</code> / <code>toSet()</code> / <code>toCollection(ArrayList::new)</code></td><td>toList 返回的 List 不要依赖可变性（JDK 16+ 返回的实现不可变）</td></tr>
+    <tr><td>收 Map</td><td><code>toMap(k, v)</code></td><td>key 冲突抛 <code>IllegalStateException</code>；value 为 null 抛 NPE——要传第三个参数 merge 函数</td></tr>
+    <tr><td>拼接字符串</td><td><code>joining(", ")</code> / <code>joining(sep, prefix, suffix)</code></td><td>底层 StringBuilder</td></tr>
+    <tr><td>分组</td><td><code>groupingBy(classifier)</code></td><td>返回 Map&lt;K, List&lt;T&gt;&gt;；可传下游收集器做多级加工</td></tr>
+    <tr><td>分区</td><td><code>partitioningBy(predicate)</code></td><td>groupingBy 的布尔特例，key 只有 true/false 两组</td></tr>
+    <tr><td>聚合</td><td><code>counting()</code> / <code>summingInt</code> / <code>averagingDouble</code> / <code>maxBy</code></td><td>常作为 groupingBy 的下游</td></tr>
+    <tr><td>再加工</td><td><code>mapping(fn, downstream)</code> / <code>reducing(...)</code> / <code>collectingAndThen(c, fn)</code></td><td>下游套下游，组合出复杂统计</td></tr>
+  </table>
+  <h3>groupingBy 分组统计（高频手写题）</h3>
+  <pre><code>record Employee(String name, String dept, int salary) {}
+List&lt;Employee&gt; emps = List.of(
+    new Employee("tom", "dev", 20000),
+    new Employee("jerry", "dev", 25000),
+    new Employee("spike", "ops", 18000));
+
+// 1. 基础分组：部门 -&gt; 人员列表
+Map&lt;String, List&lt;Employee&gt;&gt; byDept = emps.stream()
+        .collect(Collectors.groupingBy(Employee::dept));
+
+// 2. 分组统计人数：部门 -&gt; 人数
+Map&lt;String, Long&gt; countByDept = emps.stream()
+        .collect(Collectors.groupingBy(Employee::dept, Collectors.counting()));
+
+// 3. 分组 + 下游 mapping 拿名单
+Map&lt;String, List&lt;String&gt;&gt; namesByDept = emps.stream()
+        .collect(Collectors.groupingBy(Employee::dept,
+                 Collectors.mapping(Employee::name, Collectors.toList())));
+
+// 4. 多级分组：部门 -&gt; 薪资档 -&gt; 人数（下游再嵌 groupingBy）
+Map&lt;String, Map&lt;String, Long&gt;&gt; deep = emps.stream()
+        .collect(Collectors.groupingBy(Employee::dept,
+                 Collectors.groupingBy(e -&gt; e.salary() &gt; 20000 ? "high" : "low",
+                         Collectors.counting())));
+
+// 5. joining 拼名字
+String all = emps.stream().map(Employee::name)
+        .collect(Collectors.joining(", ", "[", "]"));   // [tom, jerry, spike]</code></pre>
+  <div class="box warn"><p><strong>toMap 两大坑</strong>：① key 重复直接抛异常，业务上几乎总要显式传 merge 函数 <code>(a, b) -&gt; b</code>（后者覆盖）或 <code>(a, b) -&gt; a</code>；② value 为 null 时 NPE（内部用 HashMap.merge，null 不合法）。真实事故高发点，7 年经验应主动提。</p></div>
+</section>
+
+<section id="parallel">
+  <h2><span class="no">09</span>并行流陷阱 ⭐</h2>
+  <h3>底层机制</h3>
+  <ul>
+    <li><code>parallelStream()</code> / <code>parallel()</code> 把管道标记为并行，终端操作触发时：数据源用 <strong>Spliterator</strong> 递归二分拆分任务，提交到 <strong>ForkJoinPool.commonPool()</strong> 执行（工作窃取调度）。</li>
+    <li><strong>commonPool 的默认并行度 = CPU 核数 − 1</strong>（至少 1），主调用线程自己也会参与计算；可用 <code>-Djava.util.concurrent.ForkJoinPool.commonParallelism=N</code> 调整，或提交到自定义池。</li>
+    <li>拆分是否高效取决于数据源：<strong>ArrayList / 数组 / IntStream.range 支持随机访问，拆得又快又匀；LinkedList、迭代器包装的流拆分差</strong>，并行可能比串行还慢。</li>
+  </ul>
+  <h3>陷阱一：共享可变状态（经典翻车题）</h3>
+  <pre><code>List&lt;Integer&gt; result = new ArrayList&lt;&gt;();          // 反例：线程不安全的容器 + 并行 add
+IntStream.range(0, 10_000).parallel().forEach(result::add);
+System.out.println(result.size());                 // 可能 &lt; 10000，还可能抛 ArrayIndexOutOfBoundsException
+// 原因：ArrayList 非线程安全，并行扩容/add 丢数据、索引越界
+
+// 正解一：让 Stream 帮你并发安全地收集（内部按线程分桶再合并）
+List&lt;Integer&gt; ok = IntStream.range(0, 10_000).parallel()
+        .boxed().collect(Collectors.toList());
+
+// 正解二：真要手动累积就用并发容器
+ConcurrentMap&lt;String, Long&gt; m = stream.parallel()
+        .collect(Collectors.toConcurrentMap(...));</code></pre>
+  <h3>陷阱二：IO 密集任务拖死全局 commonPool</h3>
+  <pre><code>// 反例：慢 IO 跑在 commonPool 里，会把这台 JVM 上所有并行流/ForkJoinTask 饿死
+files.parallelStream().forEach(f -&gt; callSlowHttpApi(f));   // 每个任务耗时 2s
+
+// 正解：IO 密集就别用并行流；确需并行，提交到自定义线程池
+ForkJoinPool ioPool = new ForkJoinPool(32);        // 按并发度设线程数
+try {
+    ioPool.submit(() -&gt;
+        files.parallelStream().forEach(f -&gt; callSlowHttpApi(f))
+    ).get();
+} finally {
+    ioPool.shutdown();
+}
+// 原理：并行流用"提交它的线程所在/绑定的 ForkJoinPool"，在 ioPool 的任务里创建并行流，就跑在 ioPool 上</code></pre>
+  <h3>该不该用并行流的判断口径（四问）</h3>
+  <ol>
+    <li><strong>数据量够大吗？</strong>几万以下，拆分与调度的开销可能吞掉收益。</li>
+    <li><strong>单个元素的计算够重吗？</strong>CPU 密集（加密、解析、复杂计算）适合；纯轻量过滤不适合。</li>
+    <li><strong>无共享可变状态吗？</strong>有就先重构，或用并发安全的 collect。</li>
+    <li><strong>数据源可高效拆分吗？</strong>ArrayList/数组可以，LinkedList / iterator 流不行。</li>
+  </ol>
+  <div class="box tip"><p><strong>答题口径</strong>："并行流底层是 Spliterator 拆分 + ForkJoinPool.commonPool，默认并行度 CPU−1。我的实战原则：CPU 密集 + 大数据量 + 无共享状态 + 数据源可拆分才用；IO 密集一律不用并行流（会饿死全局 commonPool，影响整台 JVM），要用就自定义 ForkJoinPool 提交。"并发的线程池、ForkJoin 工作窃取细节见 <a href="../02-concurrency/README.html">02 并发编程板块</a>。</p></div>
+</section>
+
+<section id="optional">
+  <h2><span class="no">10</span>Optional 正确用法</h2>
+  <p><strong>设计意图：为"返回值可能缺失"提供一个显式类型</strong>，把"可能为 null"从口口相传的约定变成方法签名的一部分，逼调用方处理缺失分支。</p>
+  <h3>推荐姿势</h3>
+  <pre><code>// 生产者：可能查不到就返回 Optional，别返回 null
+Optional&lt;User&gt; findUser(String id) { ... }
+
+// 消费者：链式处理，几乎不需要 isPresent
+String city = findUser(id)
+        .map(User::getAddress)          // 值存在才映射，不存在则整个链保持 empty
+        .map(Address::getCity)
+        .filter(c -&gt; !c.isEmpty())
+        .orElse("unknown");             // 缺省值
+
+findUser(id).ifPresentOrElse(
+        u -&gt; log.info("found {}", u),   // JDK 9+
+        () -&gt; log.warn("not found"));
+
+User u = findUser(id).orElseThrow(
+        () -&gt; new BusinessException("用户不存在"));   // 取值并显式抛业务异常</code></pre>
+  <h3>orElse vs orElseGet（高频追问）</h3>
+  <pre><code>Optional&lt;User&gt; empty = Optional.empty();
+User a = empty.orElse(loadFromDb());      // ❌ 无论是否缺失，loadFromDb() 都会执行（急切求值）
+User b = empty.orElseGet(() -&gt; loadFromDb()); // ✅ 只有缺失才执行（懒加载，Supplier）
+// 缺省值是常量用 orElse，需要计算/查库用 orElseGet</code></pre>
+  <h3>反模式清单</h3>
+  <ul>
+    <li><strong>不做字段</strong>：Optional 不是免序列化友好的轻量对象，字段多一层包装徒增内存，且字段可为 null 本身就矛盾。</li>
+    <li><strong>不做方法参数</strong>：调用方多写一层包装，签名可读性变差；参数校验用 <code>Objects.requireNonNull</code> 更直接。</li>
+    <li><strong>不包集合</strong>：<code>Optional&lt;List&lt;T&gt;&gt;</code> 不如直接返回空集合 <code>Collections.emptyList()</code>。</li>
+    <li><strong>不裸调 get()</strong>：等价于把 NPE 换成 NoSuchElementException，应使用 orElseThrow 带语义异常。</li>
+    <li><strong>不用 isPresent + get 组合</strong>：那就退化回了 if (x != null)，换汤不换药。</li>
+  </ul>
+  <div class="box tip"><p><strong>一句话总结</strong>：Optional 是"返回值可能缺失"的领域专用类型，只出现在返回值位置，配合 map/filter/orElseXxx 链式消费。它不是消灭 null 的银弹——参数与字段里的 null 仍靠规约与断言。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">11</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：Lambda 本质 → 为什么编译器不直接生成匿名类？</strong>→ 匿名类每个都生成一份 class 文件、加载开销大且 this 语义混乱；invokedynamic 把实现策略留给运行期，JDK 8→15 从内部类演进到 hidden class 就是受益于此。</li>
+    <li><strong>追问链：Stream 惰性 → 那多写几个中间操作会不会多跑几趟？</strong>→ 不会，终端操作触发时融合成一次遍历；但有状态操作（sorted）会破坏纯流式处理，需要缓存全量。</li>
+    <li><strong>陷阱：forEach 里的 return 不是 break</strong>：forEach 的 lambda 是普通函数调用，return 只结束当前元素的处理（相当于 continue）；要"找到即停"用 filter + findAny，要完整控制流用普通 for。</li>
+    <li><strong>陷阱：并行流 + forEach 输出乱序</strong>：forEach 不保证顺序，需要顺序用 forEachOrdered（代价：失去并行自由度）。</li>
+    <li><strong>陷阱：Stream&lt;Integer&gt; 做数值求和</strong>：装箱严重，应转 IntStream（mapToInt）再 sum。</li>
+    <li><strong>陷阱：无限流忘了 limit</strong>：<code>Stream.generate</code> 不配 limit/skip，终端操作会永远跑下去（或 OOM）。</li>
+    <li><strong>场景题口径</strong>："你们项目里 Stream 用在哪、踩过什么坑？"——准备一个真实例子：如 toMap 未传 merge 函数上线后抛 IllegalStateException、并行流调外部接口拖慢整机的排查经历。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">12</span>面试自查清单</h2>
+  <ol>
+    <li>能说出 Lambda 的本质：函数式接口实例 + invokedynamic + LambdaMetafactory，并列出与匿名内部类的 4 点差异。</li>
+    <li>能解释 effectively final 的底层原因：栈帧销毁，捕获的是副本。</li>
+    <li>四大函数式接口的签名/语义/场景脱口而出，并能延伸到特化接口为什么存在（避免装箱）。</li>
+    <li>方法引用四种写法能各举一例，说清"类 + 实例方法"引用里接收者是谁。</li>
+    <li>能背出中间/终端操作分类，讲清惰性求值与 loop fusion、短路操作清单。</li>
+    <li>groupingBy + counting / mapping / 多级分组能现场手写。</li>
+    <li>能讲 toMap 的两个坑（key 冲突、value 为 null NPE）。</li>
+    <li>并行流：commonPool、CPU−1 并行度、共享状态反例与 collect 正解、IO 密集要自定义池，四问决策口径完整。</li>
+    <li>Optional：只做返回值、map/filter/orElse 链式消费、orElse vs orElseGet 差异、五条反模式。</li>
+  </ol>  <div class="box note"><p><strong>内容来源</strong>：参考并合并了 <a href="https://javaguide.cn/java/new-features/java8-common-new-features.html">JavaGuide · Java 8 新特性</a>（Lambda/Stream/Optional 部分与 <a href="https://javaguide.cn/java/new-features/java8-parallel-stream.html">并行流</a>，重构改写）。</p></div>
+  <div class="pager">
+    <a href="09-泛型.html">⬅ 上一章：09 泛型</a>
+    <a class="next" href="11-IO与NIO.html">下一章：11 IO 与 NIO →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 10 章 Lambda 与 Stream</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

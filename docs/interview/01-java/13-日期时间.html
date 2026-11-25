@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 13 章 · 日期时间 API — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#old">旧 API 的问题</a>
+  <a href="#local">LocalDate 三兄弟</a>
+  <a href="#instant">Instant 与时间戳</a>
+  <a href="#duration">Duration vs Period</a>
+  <a href="#format">DateTimeFormatter</a>
+  <a href="#zone">时区 ZonedDateTime</a>
+  <a href="#sdf">SimpleDateFormat 线程不安全 ⭐</a>
+  <a href="#design">不可变设计</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="12-注解与反射.html">上一章：12 注解与反射</a>
+  <a href="14-新特性演进.html">下一章：14 新特性演进 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 13 章 · 日期时间 API</h1>
+    <div class="sub">Date/Calendar 的历史债 · JSR-310 两条时间线 · SimpleDateFormat 线程安全 —— 从"会用"讲到"知道为什么这样设计"</div>
+    <div class="meta">
+      <span>⭐ 高频：SimpleDateFormat 线程不安全 · Duration vs Period</span>
+      <span>蓝本：AlgoMaster Java · Date &amp; Time API</span>
+      <span>JavaGuide 合并 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>SimpleDateFormat 为什么线程不安全？有哪些解决办法？⭐⭐</li>
+      <li>旧的 Date / Calendar API 有哪些设计问题？新 API 是怎么改进的？</li>
+      <li>LocalDateTime 和 Instant 有什么区别？分别适合什么场景？</li>
+      <li>Duration 和 Period 的区别？计算"两个日期相差多少天"用哪个？</li>
+      <li>ZoneId 和 ZoneOffset 有什么区别？ZonedDateTime 和 OffsetDateTime 怎么选？</li>
+      <li>新日期时间 API 为什么设计成不可变的？这带来什么好处？</li>
+      <li>老代码里有很多 Date，怎么和 Instant / LocalDateTime 互转？</li>
+      <li>格式化年份用 <code>yyyy</code> 和 <code>YYYY</code> 有什么区别？</li>
+    </ol>
+  </div>
+  <p>日期时间题的特点：<strong>题目不深，但特别容易暴露"知其然不知其所以然"</strong>。7 年经验的答法：旧 API 的问题要能像数家珍一样列出来（说明被坑过），SimpleDateFormat 线程安全要能讲到"共享 Calendar 状态被并发写坏"这一层，最后落到 JSR-310 的设计哲学——<strong>把"机器时间"和"人类时间"分成两条线、全部不可变</strong>。</p>
+</section>
+
+<section id="old">
+  <h2><span class="no">02</span>旧 API 的问题：java.util.Date / Calendar 槽点巡礼</h2>
+  <p>JSR-310（<code>java.time</code>，随 Java 8 引入，作者即是 Joda-Time 的创始人 Stephen Colebourne）不是推倒重来式炫技，而是对旧 API 二十年实战教训的回应。先看旧 API 到底有多别扭：</p>
+  <pre><code>Date d = new Date(2026, 9, 17);   // <span class="cm">实际是 3926 年 10 月：年份要减 1900，月份 0 起始（9 = 十月）</span>
+d.setYear(126);                   // <span class="cm">Date 是可变的：状态可被随时篡改，跨线程传递就是隐患</span>
+Calendar cal = Calendar.getInstance();
+cal.set(2026, Calendar.OCTOBER, 17);  // <span class="cm">月份必须用常量，直接写 10 会变成 11 月</span>
+int year = cal.get(Calendar.YEAR);    // <span class="cm">取个字段也要走"字段编号 + get"的模型，臃肿</span></code></pre>
+  <h3>槽点清单（按面试可背的顺序）</h3>
+  <ul>
+    <li><strong>可变</strong>：Date、Calendar 都有 setter，对象建完还能改。作为参数传递、放进缓存 / Map 的 key 都可能被污染——和 String 不可变的好处正好反着来（呼应 <a href="01-基础语法.html#string">第 01 章 String 不可变</a>）。</li>
+    <li><strong>反直觉的数值</strong>：年份从 1900 偏移、月份 0 起始，几乎每个老程序员都写出过差一年 / 差一月的 bug。</li>
+    <li><strong>职责不清</strong>：Date 既表示"某一个时刻"（时间戳）又被当作"年月日"用；<code>java.sql.Date</code> / <code>Timestamp</code> 继承自 <code>java.util.Date</code>，继承关系扭曲（父类明明是"时刻"，子类却表示"纯日期"）。</li>
+    <li><strong>非线程安全</strong>：Date/Calendar 本身可变；格式化器 SimpleDateFormat 更是线程不安全（下下节专讲 ⭐）。</li>
+    <li><strong>时区是二等公民</strong>：要靠 TimeZone 在旁边打补丁，处理夏令时（DST）几乎必然出错。</li>
+    <li>API 风格不一致：一半方法废弃、一半功能塞进 Calendar，两者职责重叠。</li>
+  </ul>
+  <h3>新旧 API 对照表</h3>
+  <table>
+    <tr><th>旧 API</th><th>新 API（java.time）</th><th>说明</th></tr>
+    <tr><td><code>java.util.Date</code></td><td><code>Instant</code></td><td>机器时间线上的一个点</td></tr>
+    <tr><td><code>Calendar</code></td><td><code>LocalDateTime</code> / <code>ZonedDateTime</code></td><td>人类视角的日期时间（无 / 带时区）</td></tr>
+    <tr><td><code>SimpleDateFormat</code></td><td><code>DateTimeFormatter</code></td><td>不可变、线程安全</td></tr>
+    <tr><td>手动从 Date 里取年月日</td><td><code>LocalDate</code> / <code>LocalTime</code></td><td>纯日期 / 纯时间，各自独立类型</td></tr>
+    <tr><td><code>java.sql.Date</code> / <code>Timestamp</code></td><td><code>LocalDate</code> / <code>LocalDateTime</code></td><td>JDBC 4.2 起直接映射</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：被问"新旧 API 区别"时，别只说"新的好用"。按"设计缺陷 → 新 API 对应改进"配对讲：可变 → 不可变；数值偏移 → 所见即所得；职责混杂 → 机器/人类两条时间线、日期时间拆成独立类型；格式化线程不安全 → Formatter 不可变。这一段讲完，基本不用再答第二问。</p></div>
+</section>
+
+<section id="local">
+  <h2><span class="no">03</span>LocalDate / LocalTime / LocalDateTime：人类时间线</h2>
+  <p><code>Local*</code> 系列表示"<strong>日历上的日期时间，不含时区概念</strong>"——就像纸质日历和墙上的钟，"2026-10-17 14:30" 本身不对应唯一的物理时刻，得配上时区才能落到时间轴上。生日、入职日期、营业时间这类"人类语义"用它们最合适。</p>
+  <pre><code>LocalDate date = LocalDate.of(2026, 10, 17);   // <span class="cm">月份 1~12，所见即所得</span>
+LocalDate today = LocalDate.now();              // <span class="cm">依赖系统默认时区</span>
+date.getYear();                                 // 2026
+date.getDayOfWeek();                            // SATURDAY —— 返回枚举，不再是 magic int
+date.isLeapYear();                              // true
+date.lengthOfMonth();                           // 31
+
+// <span class="cm">所有"修改"都返回新对象，this 不动：</span>
+LocalDate nextWeek = date.plusWeeks(1);
+LocalDate firstDay = date.withDayOfMonth(1);
+LocalDate monday  = date.with(TemporalAdjusters.next(DayOfWeek.MONDAY));  // <span class="cm">日期校正器</span>
+
+LocalTime t = LocalTime.of(14, 30, 0);
+LocalDateTime dt = LocalDateTime.of(date, t);
+LocalDateTime parsed = LocalDateTime.parse("2026-10-17T14:30:00");  // <span class="cm">默认 ISO 格式</span></code></pre>
+  <ul>
+    <li><strong>工厂方法三板斧</strong>：<code>now()</code> 当前、<code>of(...)</code> 构造、<code>parse(...)</code> 解析——整个 java.time 包风格统一。</li>
+    <li><strong>with / plus / minus</strong> 全部返回新实例，链式调用，绝不会改老对象。</li>
+    <li><code>Month</code> / <code>DayOfWeek</code> 是枚举，彻底告别 <code>Calendar.OCTOBER</code> 这种常量魔法值。</li>
+    <li>月份天数、闰年这类问题交给 API：<code>date.plusMonths(1)</code> 自动处理 1 月 31 日 → 2 月 28 日的边界（旧 API 要自己擦屁股）。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：<code>LocalDate.now()</code> / <code>LocalTime.now()</code> 用的是 JVM 默认时区。容器里时区配置不对，半夜跑批的"今天"可能差 8 小时；对确定性敏感的代码显式传 <code>LocalDate.now(ZoneId.of("Asia/Shanghai"))</code>，测试时传 <code>Clock</code> 固定时间。</p></div>
+</section>
+
+<section id="instant">
+  <h2><span class="no">04</span>Instant 与时间戳：机器时间线</h2>
+  <p><strong>JSR-310 的核心设计：两条时间线分开建模。</strong>机器视角（连续的、单调递增的秒数）用 <code>Instant</code>；人类视角（年月日时分秒，有历法规则）用 <code>LocalDateTime</code> 等。两者通过时区互转，语义清晰。</p>
+  <pre><code>Instant now = Instant.now();            // <span class="cm">UTC 时间轴上的一个点（纳秒精度）</span>
+now.getEpochSecond();                   // <span class="cm">自 1970-01-01T00:00:00Z 起的秒数</span>
+now.toEpochMilli();                     // <span class="cm">等价于 System.currentTimeMillis()</span>
+
+Instant i1 = Instant.ofEpochSecond(1760688000);     // <span class="cm">按 epoch 秒构造</span>
+Instant i2 = Instant.parse("2026-10-17T06:00:00Z"); // <span class="cm">Z = UTC（Zulu time）</span>
+
+// <span class="cm">与老代码互转（JDK 8+ 桥接方法）：</span>
+Date legacy = Date.from(i1);
+Instant back = legacy.toInstant();
+Date d = new Date();          // d.getTime() 就是 epoch 毫秒
+Calendar c = Calendar.getInstance();
+Instant fromCal = c.toInstant();</code></pre>
+  <ul>
+    <li><strong>Instant = epoch 秒 + 纳秒</strong>，与 <code>System.currentTimeMillis()</code> 同源，但它有类型、有行为（plus/minus/compare），不再是裸 long。</li>
+    <li><strong>怎么选</strong>：日志时间戳、接口超时、缓存 TTL、分布式系统传递"物理时刻"→ Instant / epoch 毫秒；页面展示、业务字段（生日、活动开始时间）→ LocalDate / LocalDateTime。</li>
+    <li>接口契约经验：对外 API 传 <strong>epoch 毫秒或 ISO-8601 UTC 字符串</strong>（无时区歧义），落到库里再按业务时区转 LocalDateTime——这是 7 年经验能主动讲的实战细节。</li>
+    <li>Instant <strong>不能直接获取年月日</strong>（它不知道时区），必须先 <code>atZone(ZoneId)</code>。这是设计使然，不是缺陷。</li>
+  </ul>
+  <div class="box note"><p>MySQL 的 <code>DATETIME</code> 无时区、<code>TIMESTAMP</code> 底层按 UTC 存储并在会话时区间换算——和 Instant/LocalDateTime 的关系刚好对应：TIMESTAMP ↔ Instant 思路，DATETIME ↔ LocalDateTime 思路。面试聊到存储层时带上这一句很加分（深入在 06-sql）。</p></div>
+</section>
+
+<section id="duration">
+  <h2><span class="no">05</span>Duration vs Period：两种"时间量"</h2>
+  <table>
+    <tr><th></th><th>Duration</th><th>Period</th></tr>
+    <tr><td>度量单位</td><td>秒 + 纳秒（精确物理时长）</td><td>年 + 月 + 日（日历上的跨度）</td></tr>
+    <tr><td>适用类型</td><td>Instant / LocalTime / LocalDateTime</td><td>LocalDate</td></tr>
+    <tr><td>典型输出</td><td><code>PT1H30M10S</code>（ISO-8601 时长）</td><td><code>P1Y2M3D</code></td></tr>
+    <tr><td>语义</td><td>"过了 24 小时"</td><td>"过了 1 天"（可能因 DST 不是 24 小时）</td></tr>
+    <tr><td>场景</td><td>超时、耗时统计、TTL</td><td>年龄、账期、会员有效期</td></tr>
+  </table>
+  <pre><code>LocalDateTime start = LocalDateTime.of(2026, 10, 17, 9, 0);
+LocalDateTime end   = LocalDateTime.of(2026, 10, 17, 10, 30, 10);
+Duration d = Duration.between(start, end);   // PT1H30M10S
+d.toMinutes();                                // 90
+d.toDays();
+
+LocalDate birth = LocalDate.of(1996, 6, 1);
+Period age = Period.between(birth, LocalDate.now());   // P30Y4M16D
+age.getYears();                                        // <span class="cm">30 —— 三个字段分别读</span>
+
+// <span class="cm">"总共相差多少天"不要用 Period 手算，用 ChronoUnit：</span>
+long days = ChronoUnit.DAYS.between(birth, LocalDate.now());</code></pre>
+  <ul>
+    <li><strong>为什么分两个类</strong>：日历跨度不是确定时长——"1 个月"可能是 28~31 天，"1 天"在夏令时切换日是 23 或 25 小时。Period 表示前者（跟着日历走），Duration 表示后者（跟着秒表走）。</li>
+    <li><code>localDate.plus(Period.ofDays(1))</code> 与 <code>instant.plus(Duration.ofDays(1))</code> 在 DST 边界会差 1 小时——跨时区业务里这是真实事故来源。</li>
+    <li>统计类需求（任务耗时、接口 RT）一律 Duration；账期、有效期一律 Period；"差多少天"用 <code>ChronoUnit.DAYS.between()</code>。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：<code>Period.between(a, b)</code> 的结果是三个独立字段（年、月、日各自算差），<strong>不是总天数</strong>——P1M2D 换算成天数没有唯一答案，这正是 Period 存在的意义。面试官爱拿"用它算两个日期差几天"钓人。</p></div>
+</section>
+
+<section id="format">
+  <h2><span class="no">06</span>DateTimeFormatter：格式化与解析</h2>
+  <pre><code>// <span class="cm">预定义格式（ISO-8601）</span>
+DateTimeFormatter iso = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
+iso.format(LocalDateTime.now());   // 2026-10-17T14:30:00
+
+// <span class="cm">自定义 pattern —— 推荐定义为 static final，可安全共享</span>
+private static final DateTimeFormatter F = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+F.format(LocalDateTime.now());
+LocalDateTime.parse("2026-10-17 14:30:00", F);
+
+DateTimeFormatter chinese = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
+LocalDate.parse("2026年10月17日", chinese);
+
+// <span class="cm">带时区格式化（off 即 ZoneOffset）</span>
+DateTimeFormatter f = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z");</code></pre>
+  <ul>
+    <li><strong>线程安全</strong>：DateTimeFormatter 不可变（pattern 解析结果在内部构建成只读结构），可以放心做成 <code>static final</code> 单例共享——这正是它替代 SimpleDateFormat 的根本原因。</li>
+    <li>双向能力：同一个 formatter 既 <code>format</code> 又 <code>parse</code>；SimpleDateFormat 里 format/parse 共享一个可变 Calendar 的隐患在这里不存在。</li>
+    <li>解析失败抛 <code>DateTimeParseException</code>（运行时异常），错误信息带失败位置，比旧的 <code>ParseException</code> 好排查。</li>
+  </ul>
+  <div class="box warn"><p><strong>高频陷阱：yyyy vs YYYY</strong>。<code>yyyy</code> 是 calendar year；<code>YYYY</code> 是 <strong>week-based year</strong>（按 ISO 周算法归属的年份）。跨年周（如 2026-12-29 属于 2027 年第 1 周）用 <code>YYYY</code> 会打出 2027——每年元旦前后总有人在线上踩这个坑。同理 <code>dd</code> 是日、<code>DD</code> 是"年内第几天"。答出这个细节基本能证明真用过。</p></div>
+</section>
+
+<section id="zone">
+  <h2><span class="no">07</span>时区：ZonedDateTime 与 OffsetDateTime</h2>
+  <h3>时区 ≠ UTC 偏移</h3>
+  <ul>
+    <li><strong>ZoneOffset</strong>：纯偏移量，如 <code>+08:00</code>——"此刻比 UTC 快 8 小时"，不含任何规则。</li>
+    <li><strong>ZoneId</strong>：IANA 时区，如 <code>Asia/Shanghai</code>——是<strong>一套规则集合</strong>（历史偏移 + 夏令时规则）。同一 ZoneId 在不同日期可能对应不同偏移（如 <code>Europe/Paris</code> 夏天 +02:00、冬天 +01:00）。</li>
+    <li>所以存储/传输未来时间要用 ZoneId 语义（ZonedDateTime 或 "时间 + 时区 ID"），只存偏移会在 DST 切换后出错。</li>
+  </ul>
+  <pre><code>ZonedDateTime tokyo = ZonedDateTime.now(ZoneId.of("Asia/Tokyo"));
+ZonedDateTime beijing = tokyo.withZoneSameInstant(ZoneId.of("Asia/Shanghai"));
+// <span class="cm">同一物理时刻，换墙上的钟——17:00 东京 = 16:00 北京</span>
+
+// <span class="cm">人类时间 ⇄ 机器时间 的桥梁：</span>
+LocalDateTime ldt = LocalDateTime.of(2026, 10, 17, 14, 0);
+ZonedDateTime zdt = ldt.atZone(ZoneId.of("Asia/Shanghai"));   // <span class="cm">赋予时区 → 落到时间轴</span>
+Instant inst = zdt.toInstant();                                // <span class="cm">→ 机器时间</span>
+LocalDateTime back = LocalDateTime.ofInstant(inst, ZoneId.of("Asia/Tokyo"));  // <span class="cm">15:00</span>
+
+OffsetDateTime odt = ldt.atOffset(ZoneOffset.of("+08:00"));    // <span class="cm">只带偏移，无 DST 规则</span></code></pre>
+  <h3>ZonedDateTime vs OffsetDateTime 怎么选</h3>
+  <table>
+    <tr><th></th><th>ZonedDateTime</th><th>OffsetDateTime</th></tr>
+    <tr><td>携带信息</td><td>时间 + ZoneId（含 DST 规则）</td><td>时间 + 固定偏移</td></tr>
+    <tr><td>场景</td><td>业务展示、跨时区换算、会议时间</td><td>与系统/API 交互、序列化协议（很多协议只认偏移）</td></tr>
+    <tr><td>plus 天的语义</td><td>按当地日历走（保持墙钟时间）</td><td>按秒平移</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>："中国没有夏令时，为什么还要在乎 ZoneId？"——因为跨时区业务（海外用户、跨机房日志对齐）和 IANA 规则库本身会更新（历史修正），<code>Asia/Shanghai</code> 与 <code>GMT+8</code> 看似等价，前者是有规则库支撑的完整时区。能讲出"历史上有过夏令时的地区（如 1986-1991 的中国）规则库照样记录"就更完整。</p></div>
+</section>
+
+<section id="sdf">
+  <h2><span class="no">08</span>SimpleDateFormat 线程不安全 ⭐⭐（必考）</h2>
+  <h3>现象</h3>
+  <pre><code>// <span class="cm">常见的"看起来没问题"的写法：</span>
+private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd");
+
+// <span class="cm">多线程并发调用 SDF.parse(...) / SDF.format(...)：</span>
+// <span class="cm">轻则解析出 1970 年、日期错乱，重则抛 NumberFormatException、ArrayIndexOutOfBoundsException</span></code></pre>
+  <h3>根因：内部共享可变状态 Calendar</h3>
+  <p>SimpleDateFormat 继承自 DateFormat，内部持有一个 <code>protected Calendar calendar</code> 字段。<code>parse()</code> 的执行过程是：<strong>① cal.clear() 清空 → ② 把解析出的年月日逐个 set 进去 → ③ 再从 calendar 里取结果构建 Date</strong>；<code>format()</code> 同样要把 Date set 进这个 calendar 再逐字段读。这三步不是原子的——线程 A 刚 set 了年份，线程 B 一句 clear() 清掉，A 拿到的就是被污染的中间状态。<strong>本质：把可变对象当共享资源用却没有任何同步。</strong></p>
+  <h3>三种解法（按推荐度排序）</h3>
+  <pre><code>// <span class="cm">③ 换 DateTimeFormatter（首选）：不可变对象，无共享可变状态，天然线程安全</span>
+private static final DateTimeFormatter F = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+LocalDate.parse("2026-10-17", F);
+LocalDate.now().format(F);
+
+// <span class="cm">① ThreadLocal 包装（遗留代码/还要用 Date 时的过渡方案）</span>
+private static final ThreadLocal&lt;SimpleDateFormat&gt; SDF_TL =
+        ThreadLocal.withInitial(() -&gt; new SimpleDateFormat("yyyy-MM-dd"));
+SDF_TL.get().parse("2026-10-17");   // <span class="cm">每线程一份实例，互不干扰</span>
+
+// <span class="cm">② 用局部变量：方法内 new，栈封闭（thread-confined），天然安全</span>
+public static Date parse(String s) throws ParseException {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");  // <span class="cm">每次新建，有创建开销但简单</span>
+    return sdf.parse(s);
+}</code></pre>
+  <ul>
+    <li><strong>解法对比</strong>：DateTimeFormatter 一步到位且 API 更现代；ThreadLocal 适合"历史代码大量共用 static SDF"的渐进改造，注意线程池场景线程复用不会导致脏数据（每线程独立实例），但要警惕长期不清理可能持有的引用（ThreadLocal 内存泄漏话题在 <a href="../02-concurrency/README.html">02 并发板块</a>展开）；局部变量最简单，但高频调用下反复创建 formatter（解析 pattern）有成本。</li>
+    <li><strong>加分点</strong>：阿里巴巴规约明确要求 SimpleDateFormat "定义时尽量使用 static final + ThreadLocal 或 DateUtils 工具类（内部即 ThreadLocal）"；更进一步说明 JDK 21 的虚拟线程下 ThreadLocal 方案成本变高（百万线程各持一份），不可变 formatter 的优势放大——一句带过即可，深入在 02 板块。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题骨架</strong>（三句话拿满）：① 现象——并发 parse/format 结果错乱或抛异常；② 根因——内部共享一个 Calendar，parse 是 clear+set+读 多步非原子操作，并发写坏状态；③ 方案——首选 DateTimeFormatter（不可变），过渡用 ThreadLocal 或改局部变量。追问"为什么 DateTimeFormatter 就安全"答"它和 String 一样是不可变对象，格式化过程中不写任何共享字段"。</p></div>
+</section>
+
+<section id="design">
+  <h2><span class="no">09</span>新 API 的不可变设计：一次面向并发的总复盘</h2>
+  <h3>怎么做到的</h3>
+  <ul>
+    <li><strong>类全部 final</strong>：LocalDate、Instant 等不可被继承改写行为（与 String 同款手段）。</li>
+    <li><strong>字段全部私有 final</strong>，无任何 setter；"修改"操作（plus/minus/with）一律<strong>返回新实例</strong>，原对象永不变化。</li>
+    <li><strong>线程安全免费获得</strong>：不可变对象可以无锁共享——<code>static final DateTimeFormatter</code>、把 LocalDate 当 Map key、跨线程传参数，都不需要考虑同步。这正是 SimpleDateFormat 问题的釜底抽薪式解法。</li>
+    <li>设计上属于 Effective Java "<strong>最小化可变性</strong>"条目的教科书实现（见 <a href="15-最佳实践.html#fp">第 15 章</a>）。</li>
+  </ul>
+  <h3>代价与权衡（高级岗要能讲两面）</h3>
+  <ul>
+    <li><strong>对象分配变多</strong>：每次 with/plus 都 new。缓解：多数日期对象生命周期短（逃逸分析可标量替换）、创建成本低（几个 int 字段）；比起并发 bug 的修复成本，这点开销是划算的。</li>
+    <li><strong>不适合频繁变更的场景</strong>：高频率字段更新（如每 tick 更新时间）应改用可变的累加模型或直接操作 long 时间戳，而不是循环 plus 产生海量中间对象。</li>
+    <li>与 String 一样，不可变性换来的是：安全性（可作可信 key）、简化推理（值语义）、自由共享。这是 Java 平台一以贯之的品味。</li>
+  </ul>
+  <div class="box note"><p>串起来的一句话总结：旧 API 输在"可变 + 线程不安全 + 语义混乱"，新 API 赢在"不可变 + 两条时间线（机器 Instant / 人类 LocalDateTime）+ 类型化时区"。这句能作为整章的收束答案。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">10</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：SimpleDateFormat 不安全 → 那 JDK 里还有哪些线程不安全的类？</strong>→ Calendar、Date（可变但一般不当共享资源）、普通 HashMap、SimpleTimeZone、随机数 java.util.Random（并发性能差而非安全问题）——答出"共性是内部可变状态"即可。</li>
+    <li><strong>追问链：为什么不用 synchronized 包一层 SDF？</strong>→ 能用但串行化后高并发下成为瓶颈；且治标不治本，不可变化才是正解。</li>
+    <li><strong>陷阱：LocalDateTime.parse("2026-10-17") 会抛异常</strong>——默认 ISO 格式要求完整 "yyyy-MM-ddTHH:mm:ss"，纯日期用 LocalDate.parse。</li>
+    <li><strong>陷阱：格式化 pattern 大小写敏感</strong>——mm 是分钟、MM 是月份；YYYY/DD 一节已讲，属于元旦 bug 常客。</li>
+    <li><strong>追问：LocalDateTime 存库用什么类型？</strong>→ JDBC 4.2+ 用 setObject 传 LocalDate/LocalDateTime 即可，MyBatis/Spring Data 都已支持；时间戳语义用 TIMESTAMP（UTC 存储）+ 时区一致的连接参数 <code>serverTimezone</code>，否则差 8 小时是经典事故。</li>
+    <li><strong>追问：如何生成固定时间做单测？</strong>→ 业务代码注入 <code>java.time.Clock</code>，测试用 <code>Clock.fixed(...)</code>——体现可测试性意识，能自然接到第 15 章单元测试话题。</li>
+    <li><strong>陷阱：Date.toString() 带时区</strong>——它按 JVM 默认时区打印，但 Date 本体只是 epoch 毫秒；很多人因此误解"Date 里面存了时区"。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">11</span>面试自查清单</h2>
+  <ol>
+    <li>能脱口说出旧 API 四大槽点：可变、年份 1900/月份 0 偏移、职责混乱、非线程安全。</li>
+    <li>SimpleDateFormat 线程不安全能讲到"内部共享 Calendar + parse 三步非原子"这一层，并给出三种解法与取舍。</li>
+    <li>能讲清"机器时间 Instant / 人类时间 LocalDateTime"两条线，以及通过 atZone / ofInstant 互转。</li>
+    <li>知道 epoch 秒/毫秒与 Instant 的关系（toEpochMilli ≡ System.currentTimeMillis）。</li>
+    <li>Duration 与 Period 的区别 + "差多少天"用 ChronoUnit.DAYS.between。</li>
+    <li>能区分 ZoneId 与 ZoneOffset，并说明 ZonedDateTime / OffsetDateTime 的选型。</li>
+    <li>知道 yyyy 与 YYYY、mm 与 MM 的区别，能举出元旦跨年 bug 的例子。</li>
+    <li>能从不可变设计角度解释新 API 为什么线程安全，并说出代价与适用边界。</li>
+  </ol>  <div class="box note"><p><strong>内容来源</strong>：参考并合并了 <a href="https://javaguide.cn/java/new-features/java8-common-new-features.html">JavaGuide · Java 8 新特性</a>日期时间 API 部分的问答口径（重构改写非照抄）。</p></div>
+  <div class="pager">
+    <a href="12-注解与反射.html">⬅ 上一章：注解与反射</a>
+    <a class="next" href="14-新特性演进.html">下一章：新特性演进 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 13 章 日期时间 API</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

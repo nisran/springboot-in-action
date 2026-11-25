@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 04 章 · 抽象与接口 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#choose">抽象类 vs 接口：怎么选 ⭐⭐</a>
+  <a href="#iface-methods">接口方法演化：default/static/private</a>
+  <a href="#resolution">default 裁决顺序：类优先原则 ⭐⭐</a>
+  <a href="#functional">函数式接口</a>
+  <a href="#record">record：不可变数据载体 ⭐</a>
+  <a href="#sealed">sealed：受控继承 ⭐</a>
+  <a href="#adt">三件套：sealed × record × 模式匹配</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="03-继承与多态.html">上一章：03 继承与多态</a>
+  <a href="05-封装与不可变.html">下一章：05 封装与不可变 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 04 章 · 抽象与接口</h1>
+    <div class="sub">抽象类 vs 接口选型 · default/static/private 方法 · 函数式接口 · record · sealed —— 从 JDK 8 到 21 的抽象演化</div>
+    <div class="meta">
+      <span>⭐ 高频：抽象类 vs 接口 · record · sealed</span>
+      <span>蓝本：AlgoMaster Java · Abstract Classes &amp; Interfaces</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span>版本演进：<a href="14-新特性演进.html" style="color:inherit">第 14 章</a> · 设计视角：<a href="../07-LLD/README.html" style="color:inherit">07-LLD</a></span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>抽象类和接口有什么区别？项目里怎么选？⭐⭐（几乎必考）</li>
+      <li>抽象类有构造器却不能 new，那构造器是给谁用的？</li>
+      <li>接口能有方法体吗？讲讲 JDK 8 的 default 和 static 方法、JDK 9 的 private 方法。⭐</li>
+      <li>一个类实现的两个接口有同名 default 方法，会怎样？怎么解决？</li>
+      <li>什么是函数式接口？@FunctionalInterface 不写行不行？</li>
+      <li>record 是什么（JDK 16 转正）？它自动生成了哪些东西？和 Lombok @Data 比怎么选？⭐</li>
+      <li>sealed 类是什么（JDK 17 转正）？permits 怎么用？它解决了什么问题？⭐</li>
+      <li>sealed + record + switch 模式匹配组合起来能做什么？（代数数据类型）</li>
+    </ol>
+  </div>
+  <p>这一章一半考经典选型（抽象类 vs 接口，答出层次感即可），一半考<strong>对新版本演进的跟进</strong>（record / sealed 是 JDK 17 LTS 之后的面试新宠）。7 年经验如果还在背"接口不能有方法体"，会直接暴露知识停在 JDK 7。</p>
+</section>
+
+<section id="choose">
+  <h2><span class="no">02</span>抽象类 vs 接口：怎么选 ⭐⭐（必考）</h2>
+  <h3>技术约束对比表</h3>
+  <table>
+    <tr><th>维度</th><th>抽象类（abstract class）</th><th>接口（interface）</th></tr>
+    <tr><td>继承机制</td><td>extends，<strong>单继承</strong></td><td>implements，<strong>多实现</strong></td></tr>
+    <tr><td>成员变量</td><td>任意：可变实例字段、protected、静态块初始化</td><td>只能 <code>public static final</code> 常量（无实例状态）</td></tr>
+    <tr><td>方法</td><td>抽象 + 具体方法 + static + final 方法都行</td><td>抽象方法 + default/static（JDK 8）+ private（JDK 9）</td></tr>
+    <tr><td>构造器</td><td>有（供 super() 链初始化自身字段）</td><td>无</td></tr>
+    <tr><td>初始化块</td><td>静态块、实例块都可以</td><td>都不行（无状态可言）</td></tr>
+    <tr><td>语义</td><td><strong>is-a</strong>：身份的一部分，模板骨架</td><td><strong>can-do</strong>：能力契约，可插拔</td></tr>
+    <tr><td>演化代价</td><td>新增抽象方法 → 所有子类必须改（源码不兼容）</td><td>新增 default 方法可做到二进制兼容</td></tr>
+  </table>
+  <h3>选型口径（按这个顺序说）</h3>
+  <ol>
+    <li><strong>语义优先</strong>：is-a 且要共享<strong>状态（字段）</strong>、受保护方法、部分实现 → 抽象类（模板方法模式）；can-do 的<strong>能力横切面</strong>（Comparable、AutoCloseable、Serializable）→ 接口，一个类可以同时具备多种能力。</li>
+    <li><strong>默认接口</strong>：抽象类占用唯一的继承名额且耦合实现层；接口面向使用方编程（面向接口编程、依赖注入的基础），扩展时新增实现零侵入。</li>
+    <li><strong>框架实证</strong>（背两个例子）：<code>List</code>（契约）与 <code>AbstractList</code>（骨架实现）的分工——JDK 同时给出两者，骨架类替你实现通用方法；<code>HttpServlet</code> 的 service → doGet/doPost 是模板方法；Spring 的 <code>JdbcTemplate</code> 把"资源获取/异常翻译"固定，把 SQL 与回调留给子类/ Lambda。</li>
+  </ol>
+  <div class="box tip"><p><strong>一句话口径</strong>："模板骨架用抽象类，能力契约用接口；不确定就先定义接口，需要共享字段/受保护方法/公共实现时再补一个抽象类实现它——List + AbstractList 就是这个双层结构。"最后这句双层结构是高级岗的区分点。</p></div>
+  <div class="box warn"><p><strong>陷阱</strong>：① 抽象类<strong>可以有构造器但不能实例化</strong>——构造器是给子类 super() 链用的；② <code>abstract</code> 与 <code>final</code> 不能同时修饰类（一个要被继承、一个禁止被继承，自相矛盾，编译错误）；③ 抽象类可以没有抽象方法（用途：纯"禁止 new"的基类），有抽象方法的类必须是抽象类。</p></div>
+</section>
+
+<section id="iface-methods">
+  <h2><span class="no">03</span>接口方法演化：default / static / private</h2>
+  <h3>JDK 8 之前：接口 = 纯契约</h3>
+  <p>只有 public abstract 方法和 public static final 常量。致命问题：<strong>接口一旦发布就没法加方法</strong>——JDK 8 要给 <code>Collection</code> 加 <code>stream()</code>，全世界所有实现类都得跟着实现？于是 default 方法诞生。</p>
+  <h3>default 方法：带实现的接口方法</h3>
+  <pre><code>interface PaymentChannel {
+    void pay(BigDecimal amount);
+
+    // JDK 8：default 方法，老实现类无需改动即可获得新能力
+    default String describe() {
+        return "channel: " + name();
+    }
+    default boolean supportsRefund() { return false; }
+    String name();
+}</code></pre>
+  <ul>
+    <li><strong>定位</strong>：接口演化的"向后兼容补丁"，不是"多继承工具"——别把它当 trait 用来堆逻辑。</li>
+    <li><strong>菱形冲突</strong>：实现两个接口存在同名同签名 default → <strong>编译错误，必须重写</strong>，可用 <code>InterfaceName.super.method()</code> 指定沿用哪边：</li>
+  </ul>
+  <pre><code>class Alipay implements Pay, Refundable {
+    @Override
+    public String receipt() {
+        return Pay.super.receipt() + " | " + Refundable.super.receipt();
+    }
+}</code></pre>
+  <ul>
+    <li><strong>规则细节</strong>：类中继承的方法（含抽象类里的具体方法）优先于接口 default；default 方法<strong>不能覆盖 Object 的方法</strong>（equals/hashCode/toString 的语义属于值本身，不该由接口统一实现，编译器直接禁止）。</li>
+  </ul>
+  <h3 id="resolution">同名方法裁决四步（类优先原则的完整版）⭐</h3>
+  <p>类继承树与接口树同时有同名方法时，编译器按固定优先级裁决（<strong>亲爹压后爹，离得近压离得远，平级冲突法庭拒绝裁决</strong>）：</p>
+  <table>
+    <tr><th>优先级</th><th>胜者</th><th>说明</th></tr>
+    <tr><td>1</td><td><strong>自己重写的方法</strong></td><td>实现类自己写的永远最优先</td></tr>
+    <tr><td>2</td><td><strong>超类方法（具体/抽象都算）</strong></td><td>父类有同名方法 → 接口 default 出局；父类是<strong>抽象</strong>方法也会"挡住" default，逼实现类自己实现（经典冷知识）</td></tr>
+    <tr><td>3</td><td><strong>更具体的接口 default</strong></td><td>IB extends IA 且都实现了 hi() → 实现 IB 的类拿 IB 的版本（离得近压离得远）</td></tr>
+    <tr><td>4</td><td>父接口 default</td><td>兜底</td></tr>
+  </table>
+  <pre><code>interface IA { default String hi() { return "IA"; } }
+interface IB extends IA { default String hi() { return "IB"; } }   // 更具体
+class Base { public String hi() { return "Base"; } }               // 超类方法
+
+class C1 extends Base implements IA, IB {}
+new C1().hi();                       // "Base" —— 类优先压过两个接口
+
+class C2 implements IA, IB {}        // 不冲突！IB 重写的就是 IA 的那个 default（同源覆盖）
+new C2().hi();                       // "IB" —— 最具体者胜
+
+interface IC extends IA {}
+interface ID extends IA {}           // 两条路都指向【同一个】IA.hi —— 菱形同源，也不冲突
+class C3 implements IC, ID {}        // ✅ 编译通过，用 IA 的实现
+
+interface IE { default String hi() { return "IE"; } }   // 与 IA 平级且互不相干
+class C4 implements IA, IE {}        // ❌ 编译错误：IA 与 IE 的 default 互不相关
+                                     //    "class C4 inherits unrelated defaults"
+class C5 implements IA, IE {
+    @Override public String hi() { return IA.super.hi() + "|" + IE.super.hi(); }  // 唯一解：重写+点名
+}</code></pre>
+  <ul>
+    <li><strong>为什么类优先</strong>：Java 8 加 default 的目标是"给存量类补新能力而不破坏它们"——若接口 default 能悄悄压过类里已有的方法，加一个接口就会改变无数既有类的行为，向后兼容直接破产。"类是亲爹，接口是干爹"。</li>
+    <li>验证方式（面试可提）：javac 与 IDE 都会直接报冲突；用 <code>javap -c</code> 看编译产物，冲突类根本不会生成字节码。</li>
+  </ul>
+  <h3>static 方法：挂在接口上的工具/工厂</h3>
+  <pre><code>interface Point {
+    static Point of(int x, int y) {          // 工厂方法：调用 Point.of(...)
+        return new SimplePoint(x, y);
+    }
+}
+// JDK 8 风向标：Comparator.naturalOrder()、List.of()、Optional.of()
+// 取代了 "Collections 工具类 + 私有构造器" 的旧模式</code></pre>
+  <h3>private 方法（JDK 9）：default 之间的复用</h3>
+  <pre><code>interface Validator {
+    default String validateName(String s)  { return check(s, 20); }
+    default String validatePhone(String s) { return check(s, 11); }
+
+    private String check(String s, int max) {   // JDK 9：私有方法，供 default 复用
+        return (s == null || s.length() > max) ? "invalid" : "ok";
+    }
+    private static String trim(String s) { ... } // 也可以是 private static
+}</code></pre>
+  <div class="box note"><p><strong>兼容性三档</strong>：源码兼容（调用方不用改能重新编译）、二进制兼容（已编译的 class 不重编也能链接运行）、行为兼容（语义不变）。default 方法解决的是二进制兼容——这也是"为什么接口能有方法体了"的官方动机。接口依然<strong>没有实例状态</strong>，default 只能操作方法参数和静态常量。</p></div>
+</section>
+
+<section id="functional">
+  <h2><span class="no">04</span>函数式接口与 @FunctionalInterface</h2>
+  <h3>定义：SAM —— Single Abstract Method</h3>
+  <ul>
+    <li><strong>有且仅有一个抽象方法</strong>的接口就是函数式接口，可以用 Lambda / 方法引用赋值。</li>
+    <li>计数规则：default、static、private 方法不计入；<strong>Object 的 public 方法（equals 等）也不计入</strong>——<code>Comparator</code> 虽然声明了 equals，仍是函数式接口。</li>
+    <li><code>@FunctionalInterface</code>：非必需，但编译器校验（多了抽象方法立刻报错），<strong>必须写</strong>——相当于函数式接口版的"契约声明"。</li>
+  </ul>
+  <pre><code>@FunctionalInterface
+interface Printer {
+    void print(String msg);
+
+    default Printer andThen(Printer next) {      // default 不影响 SAM 判定
+        return msg -&gt; { print(msg); next.print(msg); };
+    }
+}</code></pre>
+  <h3>JDK 内置函数式接口（四大天王 + 特化）</h3>
+  <table>
+    <tr><th>接口</th><th>抽象方法</th><th>语义</th><th>代表场景</th></tr>
+    <tr><td><code>Function&lt;T,R&gt;</code></td><td><code>R apply(T)</code></td><td>入 → 出（转换）</td><td>map、computeIfAbsent</td></tr>
+    <tr><td><code>Consumer&lt;T&gt;</code></td><td><code>void accept(T)</code></td><td>消费不返回</td><td>forEach、peek</td></tr>
+    <tr><td><code>Supplier&lt;T&gt;</code></td><td><code>T get()</code></td><td>无入有出（生产/惰性）</td><td>orElseGet、懒加载</td></tr>
+    <tr><td><code>Predicate&lt;T&gt;</code></td><td><code>boolean test(T)</code></td><td>断言</td><td>filter、removeIf</td></tr>
+    <tr><td>衍生</td><td>BiFunction / UnaryOperator / IntFunction / ToLongFunction …</td><td>双参/同型/原始类型特化</td><td>避免装箱开销</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：函数式接口是 Lambda 的<strong>类型载体</strong>——Lambda 本身没有类型，写 <code>(a, b) -&gt; ...</code> 时编译器从目标上下文（变量声明/参数/返回值）推断它是哪个 SAM。自定义函数式接口的典型时机：业务回调语义需要命名（如 <code>RetryPolicy</code>、<code>ShardingHandler</code>）。深入见 <a href="10-Lambda与Stream.html">第 10 章</a>。</p></div>
+</section>
+
+<section id="record">
+  <h2><span class="no">05</span>record：不可变数据载体 ⭐（JDK 16 转正）</h2>
+  <h3>一行换五件套</h3>
+  <pre><code>// JDK 14 预览、16 转正（JEP 395）："数据的透明载体"
+public record Point(int x, int y) {}
+
+// 编译器自动生成：
+// ① 全参规范构造器 Point(int x, int y)
+// ② 访问器 x() / y()        —— 注意不是 getX()！
+// ③ equals()：基于全部组件的值比较（不是引用）
+// ④ hashCode()：基于全部组件
+// ⑤ toString()：Point[x=1, y=2] —— 天然适合日志</code></pre>
+  <h3>紧凑构造器：参数校验与规范化</h3>
+  <pre><code>public record Range(int low, int high) {
+    public Range {                                        // 紧凑构造器：不写参数列表
+        if (low &gt; high) throw new IllegalArgumentException("low &gt; high");
+        low = Math.max(low, 0);                           // 规范化后赋回参数（无需 this.low = low）
+    }
+}
+
+// 静态工厂惯用法：语义化构造
+public record Money(long cents, String currency) {
+    public static Money ofCny(long yuan) { return new Money(yuan * 100, "CNY"); }
+    public static Money zero()           { return new Money(0, "CNY"); }
+}</code></pre>
+  <h3>规则与限制</h3>
+  <ul>
+    <li>组件（字段）隐式 <code>private final</code>；类隐式 <code>final</code>（不能被继承），隐式继承 <code>java.lang.Record</code>（不能再 extends 别的类），<strong>可以实现接口</strong>。</li>
+    <li>不能再声明<strong>可变实例字段</strong>（静态字段、静态方法、实例方法随意加）；不能再手动写规范构造器以外的"全字段构造"混淆语义。</li>
+    <li>JDK 16 起支持<strong>局部 record</strong>：方法体内临时建一个中间结果类型，比 double[] 和 Pair 更有表达力。</li>
+    <li><strong>浅不可变</strong>：组件是可变对象（List、Date）时，引用不变但内容可改——防御性写法 <code>List.copyOf(items)</code> 存进去。</li>
+    <li>生态注意：访问器是 <code>x()</code> 不符合 JavaBean 规范，Jackson 需 2.12+、Spring 需 2.6+ 才友好支持 record 反序列化（构造器绑定）。</li>
+  </ul>
+  <h3>record vs Lombok @Data（高频对比题）</h3>
+  <table>
+    <tr><th>维度</th><th>record</th><th>Lombok @Data / @Value</th></tr>
+    <tr><td>层次</td><td>语言级（编译器 + JLS 语义）</td><td>注解处理器改字节码（编译期织入）</td></tr>
+    <tr><td>可变性</td><td>强制不可变（无 setter）</td><td>@Data 全家桶默认可变（getter/setter）</td></tr>
+    <tr><td>equals/hashCode</td><td>按组件<strong>语义</strong>生成，规格稳定</td><td>按字段生成（exclude/include 可配）</td></tr>
+    <tr><td>新特性协同</td><td>与解构模式匹配（JDK 21）、sealed 天然配合</td><td>无此能力</td></tr>
+    <tr><td>工具链耦合</td><td>无（JDK 自带）</td><td>依赖 Lombok 版本，IDE/升级常踩坑</td></tr>
+    <tr><td>适用</td><td>值对象、DTO、多返回值、Map 的 key</td><td>需要可变 POJO / JPA 实体（实体需要无参构造与 setter）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>："新的值对象/DTO 一律 record——不可变、equals/hashCode/toString 白送、还接得住模式匹配；Lombok 留给 JPA 实体这类必须可变的场景，别再用 @Data 生成'伪值对象'（可变 + equals 全字段，放进 HashSet 就埋雷，呼应第 03 章可变 key 的坑）。"</p></div>
+</section>
+
+<section id="sealed">
+  <h2><span class="no">06</span>sealed：受控继承 ⭐（JDK 17 转正）</h2>
+  <h3>动机：在 final（全封）与开放（全开）之间加一档</h3>
+  <p>过去只有两个极端：<code>final</code> 谁都不能继承；不加 final 任何人随便继承。sealed 让<strong>作者声明"谁可以继承我"</strong>——把继承从"默认开放"变成"白名单许可"。</p>
+  <pre><code>// JDK 17 转正（JEP 409）
+public sealed interface PaymentResult permits Paid, Declined, Pending {}
+//                       ↑ sealed 类/接口    ↑ 显式列出全部许可类型
+
+public record Paid(String txnId, BigDecimal amount) implements PaymentResult {}
+public record Declined(String reason)                 implements PaymentResult {}
+public record Pending(String txnId, Duration eta)     implements PaymentResult {}</code></pre>
+  <h3>规则（三条硬约束）</h3>
+  <ul>
+    <li>每个 permitted 子类型必须<strong>直接</strong> extends / implements 该 sealed 类型，且必须三选一标注：<code>final</code>（到此为止）/ <code>sealed</code>（继续受控下放）/ <code>non-sealed</code>（重新开放给任何人）。</li>
+    <li>sealed 类型必须有子类：permits 列表不能为空（或省略 permits 要求子类同文件）；permitted 类型必须<strong>同模块，或未命名模块时同包</strong>。</li>
+    <li>sealed 不能与 final 同用（final 已经全封了，没有 permits 可言）；sealed 与 record 是绝配——record 天生 final。</li>
+  </ul>
+  <h3>核心收益：穷尽性（exhaustiveness）</h3>
+  <pre><code>static String render(PaymentResult r) {
+    return switch (r) {
+        case Paid p     -&gt; "✅ " + p.txnId() + " " + p.amount();
+        case Declined d -&gt; "❌ " + d.reason();
+        case Pending p  -&gt; "⏳ " + p.txnId();
+    };  // ✅ 无需 default：编译器知道 permitted 集合已全覆盖
+        // 将来新增 Delayed implements PaymentResult → 这里【直接编译错误】
+}</code></pre>
+  <ul>
+    <li>switch 模式匹配（JDK 21 转正，JEP 441）下，编译器按 permits 集合做<strong>穷尽性检查</strong>：新增子类型时所有漏改的 switch 全部编译报错——把"漏处理一个分支"从<strong>运行期事故</strong>变成<strong>编译期错误</strong>。</li>
+    <li>反射可查：<code>Class.getPermittedSubclasses()</code>——框架（如 Jackson、验证器）可据此做序列化/校验。</li>
+    <li>典型建模：<strong>领域状态机</strong>（订单状态、支付结果）、结果类型（模拟函数式语言的 <code>Option</code>/<code>Result</code>）、消息协议的封闭指令集。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：① 加了 <code>default</code> 分支会<strong>毁掉穷尽性检查</strong>——编译器认为已全覆盖，新增子类型不再报错，等于白用 sealed；② permitted 子类必须能被 sealed 类型"看到"（访问权限），跨包放错位置直接编译错误；③ sealed 管的是<strong>编译期封闭</strong>，不是运行时校验，别和安全验证混为一谈。</p></div>
+</section>
+
+<section id="adt">
+  <h2><span class="no">07</span>三件套协同：sealed × record × 模式匹配 = 代数数据类型</h2>
+  <h3>函数式的"sum + product"落到 Java</h3>
+  <ul>
+    <li><strong>record = product 类型</strong>（积：一个值由多个字段的组合构成，且仅此组合）。</li>
+    <li><strong>sealed = sum 类型</strong>（和：一个值是有限集合中的<strong>恰好一种</strong>）。</li>
+    <li>两者组合就是<strong>代数数据类型（ADT）</strong>——Scala/Rust/Haskell 里 enum 的表达力，Java 17/21 终于补齐。</li>
+  </ul>
+  <h3>实战示例：模拟 Result 类型</h3>
+  <pre><code>public sealed interface Result&lt;T&gt; permits Ok, Err {}
+public record Ok&lt;T&gt;(T value)              implements Result&lt;T&gt; {}
+public record Err&lt;T&gt;(int code, String msg) implements Result&lt;T&gt; {}
+
+static &lt;T&gt; String log(Result&lt;T&gt; r) {
+    return switch (r) {
+        case Ok(T value)      -&gt; "ok: " + value;              // JDK 21 record 解构模式
+        case Err(int code, String msg) -&gt; "err[" + code + "] " + msg;
+    };
+}</code></pre>
+  <ul>
+    <li>JDK 21 的 <strong>record patterns（JEP 440）</strong>直接把组件解构成变量，嵌套 record 也能一层层拆。</li>
+    <li>对比旧写法：继承体系 + if-else + 强转 + 手写校验 → 现在"类型即文档、分支即穷尽、编译器当测试"。</li>
+    <li>业务里最先落地的位置：支付/工单的<strong>状态流转</strong>、消息队列的<strong>事件类型定义</strong>、对外 API 的错误码分类——把一堆魔法字符串换成一目了然的类型树。</li>
+  </ul>
+  <div class="box note"><p>三个特性各自版本线：record 16（JEP 395）、sealed 17（JEP 409）、模式匹配 instanceof 16（JEP 394）、switch 模式匹配 21（JEP 441）、record 解构 21（JEP 440）。JDK 17/21 两个 LTS 是面试讲新特性的主线，完整时间轴见 <a href="14-新特性演进.html">第 14 章</a>；用它们做低耦合设计的例子见 <a href="../07-LLD/README.html">07-LLD 板块</a>。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：抽象类 vs 接口 → 接口能定义 main 方法吗？</strong>→ 可以，static 方法允许（JDK 8+），<code>interface I { public static void main(String[] a){...} }</code> 合法——考你对 static 接口方法的掌握。</li>
+    <li><strong>追问链：default 方法 → 类优先原则？</strong>→ 裁决顺序：<strong>自己重写 &gt; 超类方法（具体/抽象都赢，抽象的会"挡住" default 逼你实现）&gt; 更具体的接口 default &gt; 父接口 default</strong>；菱形同源（两条继承路指向同一个 default）不算冲突，两个<strong>平级</strong> default 才冲突——编译器拒绝裁决直接报错，实现类必须重写，体内用 <code>X.super.m()</code> 点名调用。加分点：default 不能覆盖 Object 的方法（toString/equals/hashCode，实测编译错误）；接口 static 方法不传给实现类。</li>
+    <li><strong>追问链：接口为什么不能有实例字段？</strong>→ 接口是契约不是实现，多实现下"接口状态"归属矛盾（两个接口同名字段听谁的）；JDK 团队刻意保持"无状态"边界。</li>
+    <li><strong>追问链：record → 能不能继承抽象类？</strong>→ 不能（已隐式继承 Record）；可实现接口。能不能实现抽象类里的抽象逻辑？→ 只能通过接口侧。JPA 实体为什么不用 record？→ 实体需要可变 + 无参构造 + 代理增强。</li>
+    <li><strong>追问链：record 两个组件相同的实例 equals 相等吗？</strong>→ 相等（全组件值比较）——所以 record 当 HashMap 的 key 完美契合第 03 章"key 必须不可变"的要求。</li>
+    <li><strong>陷阱：sealed 的 permits 子类忘了标 final/sealed/non-sealed</strong>→ 编译错误；子类与 sealed 类不同包（未命名模块）→ 编译错误。</li>
+    <li><strong>陷阱：@FunctionalInterface 注解的接口又加了第二个抽象方法</strong>→ 编译错误；但加 default/static/private/Object 方法不算——考 SAM 计数规则。</li>
+    <li><strong>陷阱：default 方法里修改"常量"字段</strong>→ 接口字段是 public static final，改不了；想在 default 里存状态是设计错误，请改用抽象类。</li>
+    <li><strong>追问链：有 default 之后抽象类还有存在价值吗？</strong>→ 有：① <strong>状态</strong>——抽象类能有实例字段/构造器维护中间状态，default 只能靠"接口常量 + 纯函数"；② <strong>protected 成员与模板方法</strong>——对子类暴露受控扩展点；③ <strong>单继承的代价换来强约束</strong>。一句话："default 是能力共享，抽象类是骨架与状态共享。"</li>
+    <li><strong>追问链：sealed 和 enum 什么关系？</strong>→ enum 是"有限<strong>实例</strong>集合"（每个常量是单例），sealed 是"有限<strong>类型</strong>集合"（每个子类型可携带不同字段与行为）；需要"每种状态带各自数据"时 enum 就捉急了（得靠构造器传参硬塞），sealed + record 是"万能枚举"。</li>
+    <li><strong>追问：接口初始化什么时候发生？</strong>→ 访问接口的非常量字段/触发其 <code>&lt;clinit&gt;</code> 才初始化；<strong>实现类初始化不会连带初始化接口</strong>（与类父子不同）——冷门但真实的 JLS 行为，答出来就是区分度。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>能按"约束表 + 语义口径 + 框架实证（List/AbstractList、HttpServlet）"三层回答抽象类 vs 接口怎么选。</li>
+    <li>能解释 default 方法的动机（二进制兼容、Collection.stream()）、菱形冲突规则与 X.super.m() 消歧。</li>
+    <li>知道接口 static 方法（工厂/工具）和 private 方法（default 复用）各自的定位。</li>
+    <li>能给出函数式接口的 SAM 判定规则（default/static/private/Object 方法不计入）并写 @FunctionalInterface。</li>
+    <li>能列出 record 自动生成的五件套，会用紧凑构造器做校验，知道 record 浅不可变 + List.copyOf 防御。</li>
+    <li>能对比 record 与 Lombok @Data（层次、可变性、协同、工具链），给出选型建议。</li>
+    <li>能写出 sealed interface + permits 的完整例子，说出三条硬约束和 non-sealed 的语义。</li>
+    <li>能解释穷尽性：sealed + switch 模式匹配如何把"漏分支"从运行期事故变成编译期错误，以及 default 分支为什么会毁掉它。</li>
+    <li>能说清 sealed（sum）+ record（product）= ADT，举一个状态机或 Result 类型的业务例子。</li>
+    <li>能按四步裁决表讲同名方法冲突（含"抽象超类挡 default"冷知识），并写出 X.super.m() 消歧代码。</li>
+    <li>能回答"default 之后抽象类还有何价值"（状态/protected/模板骨架）与 sealed vs enum（实例集合 vs 类型集合）。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章在 AlgoMaster 蓝本与仓库笔记基础上，参考并合并了 <a href="https://javaguide.cn/java/basis/java-basic-questions-02.html">JavaGuide · Java 基础面试（中）</a>抽象类/接口对比口径与 <a href="https://javaguide.cn/java/new-features/java8-common-new-features.html">JavaGuide · Java 8 新特性</a>（default/函数式接口部分，重构改写）。</p></div>
+  <div class="pager">
+    <a href="03-继承与多态.html">⬅ 上一章：继承与多态</a>
+    <a class="next" href="05-封装与不可变.html">下一章：封装与不可变 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 04 章 抽象与接口</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 06 章 · 包与模块 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#package">package：命名空间与封装边界</a>
+  <a href="#import">import 与静态导入</a>
+  <a href="#access">访问控制与包的组合</a>
+  <a href="#jpms">JPMS 模块系统（了解级）</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="05-封装与不可变.html">⬅ 上一章：05 封装与不可变</a>
+  <a href="07-异常处理.html">下一章：07 异常处理 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 06 章 · 包与模块</h1>
+    <div class="sub">package · import · 静态导入 · 访问控制组合 · JPMS —— 小章不出大题，但全是"细节暴露基本功"的问法</div>
+    <div class="meta">
+      <span>⭐ 高频：default 与包 · --add-opens 来龙去脉</span>
+      <span>蓝本：AlgoMaster Java · Packages &amp; Modules</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span>笔记：无既有笔记，蓝本 + 检索补全</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>package 在 Java 里起哪些作用？和目录结构是什么关系？</li>
+      <li><code>import java.util.*</code> 会把子包也导进来吗？会影响运行性能吗？</li>
+      <li>java.util.Date 和 java.sql.Date 都导入时会怎样？怎么解决？</li>
+      <li>静态导入（import static）是什么？为什么不建议滥用？</li>
+      <li>default（包私有）权限的适用场景？和 protected 的边界在哪？⭐</li>
+      <li>JDK 9 模块化（JPMS）解决什么问题？module-info.java 里写什么？（了解级）</li>
+      <li>升级 JDK 17 后，为什么反射访问 JDK 内部 API 报 InaccessibleObjectException？<code>--add-opens</code> 是干嘛的？</li>
+    </ol>
+  </div>
+  <p>这章单独出大题的概率不高，但<strong>几乎每个知识点都能当"追问弹药"</strong>挂在别的题后面（封装题追修饰符、升级 JDK 题追模块强封装）。7 年经验的姿态：包的部分答出"设计视角"，模块部分答出"动机 + 现状"，不要在语法细节上背书。</p>
+</section>
+
+<section id="package">
+  <h2><span class="no">02</span>package：命名空间与封装边界</h2>
+  <p><strong>包同时扮演三个角色：</strong></p>
+  <ol>
+    <li><strong>唯一命名空间</strong>：<code>com.company.order.OrderService</code> 这样的全限定名（FQCN）保证跨团队、跨三方库类名不冲突。包名惯例是倒写域名 + 全小写；<code>java.*</code> / <code>javax.*</code> 前缀保留给 JDK。</li>
+    <li><strong>访问控制的边界单位</strong>：default（包私有）权限按包生效（第 04 节展开）——"同包"是 Java 里第一种比"公开/私有"更细的可见性刻度。</li>
+    <li><strong>组织与复用单元</strong>：源码层面包对应目录路径（<code>com/company/order/</code>），编译产物对应 class 文件路径；一个包把"一起变化、一起复用"的类聚在一起。</li>
+  </ol>
+  <h3>规则细节</h3>
+  <ul>
+    <li>一个 .java 文件最多一个 public 顶层类，类名必须与文件名相同；不加 public 的顶层类对同包可见。</li>
+    <li>package 语句必须是文件第一条语句（注释除外）；不写 package 的类落在"默认包/匿名包"里，<strong>默认包的类无法被任何有包名的类导入</strong>——所以正式代码永远要写包。</li>
+    <li>JVM 运行时按 class 文件里记录的 FQCN + classpath 根定位类，"目录必须与包一致"是 javac/构建工具对源码的约束。</li>
+  </ul>
+  <h3>跨包访问实证：default 的边界到底在哪</h3>
+  <pre><code>// ── com/order/PinChecker.java ──
+package com.order;
+
+class PinChecker {                        // default：包私有
+    static boolean check(String pin) { return pin.length() == 6; }
+}
+
+// ── com/order/OrderService.java（同包，无需 import、直接用）──
+package com.order;
+
+public class OrderService {
+    public boolean validate(String pin) {
+        return PinChecker.check(pin);     // ✅ 同包：default 类可见
+    }
+}
+
+// ── com/payment/PaymentService.java（另一个包）──
+package com.payment;
+import com.order.PinChecker;              // ❌ 编译错误：default 类对包外不可见
+
+public class PaymentService {
+    void pay(String pin) { /* PinChecker.check(pin) 用不了 */ }
+}</code></pre>
+  <div class="box warn"><p><strong>经典陷阱：包不嵌套</strong>。<code>com.order.internal</code> 相对 <code>com.order</code> 是<strong>完全独立的两个包</strong>——名字前缀相同不带来任何访问特权，default 成员照样互相不可见，引用还要 import。"子包"只是命名惯例，Java 的包在语言层面是扁平的。</p></div>
+  <h3>jar 与包的关系（正交的两件事）</h3>
+  <ul>
+    <li><strong>包是命名空间/可见性单位，jar 是物理打包/分发单位</strong>，两者互相独立：一个 jar 可以装多个包，一个包在 classpath 下也可以散落在多个 jar 里（这正是 split package 隐患的来源，第 05 节呼应）。</li>
+    <li>运行期找类 = "classpath 根 + FQCN 路径"，和 jar 文件名无关；同名 FQCN 出现在多个 jar 时谁排前面用谁，纯靠运气——模块化要治的就是这个。</li>
+  </ul>
+  <div class="box tip"><p><strong>7 年视角：包是"组件"的雏形</strong>。分包的方式暴露设计品味：按技术分层（controller/service/dao）是最省事的分法，但改一个需求要横跨 N 个包；按业务域分包（<code>order</code>、<code>payment</code>、<code>inventory</code> 各自高内聚）才让"default 权限 + 同包协作"发挥作用——把强相关的类放一个包里互相暴露包内 API，对外只留 public 入口。这个思路放大就是模块化，第 05 节呼应。</p></div>
+  <pre><code>src/main/java/com/company/
+├── order/                              # 订单域
+│   ├── api/OrderController.java        #   对外 public 入口
+│   └── internal/OrderRepoHelper.java   #   包内协作细节（对别的包不可见）
+├── payment/                            # 支付域：同构的 api/internal 结构
+├── inventory/                          # 库存域
+└── shared/                             # 跨域公共：只有这里允许被各域依赖</code></pre>
+</section>
+
+<section id="import">
+  <h2><span class="no">03</span>import 与静态导入</h2>
+  <h3>import 的本质：编译期的名字解析</h3>
+  <ul>
+    <li><code>import</code> 只是把"简单名 → 全限定名"的映射告诉编译器，<strong>不会触发类加载，更不会"把整个包加载进来"</strong>——类加载永远按需发生。所以通配符导入没有运行时性能差异，只有可读性差异。</li>
+    <li>按需导入 <code>import java.util.*;</code> <strong>不递归子包</strong>：util 下的子包 util.function 还得单独 import。</li>
+    <li>两个包有同名类时（经典：两个 Date），通配符导入下直接用简单名会编译报错"引用不明确"，唯一解法是<strong>写全限定名消歧</strong>：</li>
+  </ul>
+  <pre><code>import java.util.*;
+import java.sql.*;
+
+Date d;              // ❌ 编译错误：java.util.Date 与 java.sql.Date 均匹配
+java.util.Date d2;   // ✅ 全限定名消歧（import 了也可以写全名）</code></pre>
+  <h3>静态导入（JDK 5+）</h3>
+  <pre><code>import static java.lang.Math.PI;
+import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
+import static org.junit.jupiter.api.Assertions.assertEquals;   // 测试代码里的正当场景
+
+double area = PI * r * r;
+int hi = max(a, b);
+List&lt;String&gt; none = emptyList();
+assertEquals(expected, actual);</code></pre>
+  <h3>滥用问题（面试考点）</h3>
+  <pre><code>import static java.lang.System.out;
+
+out.println("hello");   // 读代码的人不知道 out 从哪来：是字段？本地变量？</code></pre>
+  <ul>
+    <li>静态导入把"成员属于谁"的信息藏掉了：调用来源不可见，code review 和排查时的定位成本上升。</li>
+    <li>还有静态成员同名冲突的风险：两个类静态导入同一个名字（如两个工具类都有 <code>of</code>）直接编译错误。</li>
+    <li><strong>使用纪律</strong>：只对"语义自明、无人不知"的静态成员用——测试断言（assertEquals）、数学常量（PI）、枚举/常量类成员；<code>System.out</code>、业务工具类方法这类"需要知道归属"的一律不用。</li>
+  </ul>
+  <div class="box warn"><p><strong>答"通配符导入影响性能吗"</strong>——不影响（编译期符号解析，无运行时开销），但主流规约（含阿里规约）仍建议单类型导入，理由是可读性：一眼看清依赖了哪些类，重构时能精确感知影响面。别把"规约建议"和"性能事实"混为一谈。</p></div>
+</section>
+
+<section id="access">
+  <h2><span class="no">04</span>访问控制与包的组合 ⭐</h2>
+  <p>第 05 章给过四种修饰符的范围表；这里从"和包组合"的视角再过一遍，考的是组合规则与设计用法：</p>
+  <table>
+    <tr><th>修饰符</th><th>本类</th><th>同包</th><th>其他包的子类</th><th>其他包非子类</th><th>与包的关系</th></tr>
+    <tr><td><code>private</code></td><td>✓</td><td>✗</td><td>✗</td><td>✗</td><td>与包无关</td></tr>
+    <tr><td><code>default</code></td><td>✓</td><td>✓</td><td>✗</td><td>✗</td><td><strong>可见性 = 恰好同包</strong>，包外连子类都看不见</td></tr>
+    <tr><td><code>protected</code></td><td>✓</td><td>✓</td><td>✓（仅经子类引用）</td><td>✗</td><td>= default 范围 + 跨包子类</td></tr>
+    <tr><td><code>public</code></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>与包无关（模块化后受 exports 约束）</td></tr>
+  </table>
+  <h3>default = 包私有：被低估的封装工具</h3>
+  <ul>
+    <li>default 让"同包的类亲密协作，包外只认 public API"成为可能——JDK 标准库内部大量类就是包私有的（如 <code>java.util</code> 里的辅助类），对外只暴露必要入口。</li>
+    <li>跨包想"只用不暴露"怎么办？把能力收到接口里（接口默认可见性更大），实现类留包内——这正是第 04 章"抽象与接口"的封装动机。</li>
+    <li>代价：包没有继承机制、不能拆分（一个包横跨多个 jar 会出大问题，见 split package），可扩展性差——这正是后来要有模块的原因之一。</li>
+  </ul>
+  <h3>组合规则速查</h3>
+  <table>
+    <tr><th>位置</th><th>可用的修饰符</th><th>说明</th></tr>
+    <tr><td>顶层类 / 接口</td><td>public / default</td><td>只有两档；private/protected 仅成员可用</td></tr>
+    <tr><td>嵌套类 / 成员</td><td>全部四种</td><td>嵌套类能访问外部类的 private 成员（同一编译单元）</td></tr>
+    <tr><td>接口成员（JDK 8 前）</td><td>隐式 public</td><td>方法隐式 <code>public abstract</code>，字段隐式 <code>public static final</code></td></tr>
+    <tr><td>接口成员（JDK 9+）</td><td>允许 private 方法</td><td>给 default 方法提取公共逻辑用，不外泄</td></tr>
+    <tr><td>局部变量</td><td>不能加</td><td>作用域天然限于方法块</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：范围表 + 两个细节（"protected 含包访问"、"接口成员天然 public"）+ 一句设计观——<strong>public 是契约、default 是包内实现细节、protected 是给子类的扩展点</strong>，三者构成一个"可见性漏斗"。模块化之后 public 之上还多了一层 exports 闸门，顺势引出下一节。</p></div>
+</section>
+
+<section id="jpms">
+  <h2><span class="no">05</span>JPMS 模块系统（了解级）</h2>
+  <p>JDK 9 的 Project Jigsaw 把"包"之上加了一层<strong>模块（Module）</strong>。面试定位：考得浅但常挂靠在"升级 JDK"的真实经历里，答出动机和影响即可，语法不必背全。</p>
+  <h3>为什么要有模块：classpath 的三大病灶</h3>
+  <ol>
+    <li><strong>JAR 平铺、无结构</strong>：classpath 上所有 jar 被拍平成一张大网，同一个类出现在多个 jar（重复类/split package）时，加载哪个全凭 classpath 顺序，运行时才爆雷。</li>
+    <li><strong>public 即全公开</strong>：只要类是 public，任何人都能依赖——没有"只给内部用"的手段（default 只能挡包，挡不住别的包）。<code>sun.misc.Unsafe</code> 这类内部 API 被全生态滥用就是这么来的。</li>
+    <li><strong>依赖不显式</strong>：代码用了哪个 jar 没有声明，缺依赖要到运行时抛 <code>NoClassDefFoundError</code> 才发现（不可靠配置 unreliable configuration）。</li>
+  </ol>
+  <p><strong>JPMS 的两根支柱：强封装 + 可靠依赖。</strong>模块 = 一组包 + 一个 <code>module-info.java</code>；启动时校验依赖图，缺模块直接 fail-fast；模块路径取代 classpath 的线性扫描，还能用 jlink 裁剪出最小运行时镜像。</p>
+  <h3>module-info.java 长什么样</h3>
+  <pre><code>module com.order.service {
+    requires java.sql;                    // 显式声明依赖的模块
+    requires transitive com.common.core;  // 传递依赖：我的使用者也必然用到它
+    exports com.order.service.api;        // 只导出 api 包：只有这里的 public 对外可见
+    // com.order.service.internal 不导出 → 包外连 public 类都看不见（强封装）
+    opens com.order.service.model;        // 运行期放行反射（给 Jackson / MyBatis / Spring 用）
+}</code></pre>
+  <h3>对反射的影响（业务工程师真正会撞上的点）</h3>
+  <ul>
+    <li>JDK 自身被拆成 <code>java.base</code> 等模块后，内部包默认不开放：<strong>JDK 16（JEP 396）起默认强封装，JDK 17 正式化</strong>——反射访问 JDK 内部 API（如 <code>java.lang</code> 的私有字段）会抛 <code>InaccessibleObjectException</code>。</li>
+    <li>解法就是启动参数 <code>--add-opens java.base/java.lang=ALL-UNNAMED</code>：把目标包对"无名模块"（classpath 世界）打开。升级 JDK 17/21 时 Spring / Lombok / Arthas 报的反射错误，十有八九落在这里——<strong>能讲清这个报错的来龙去脉，就是这题的高分点</strong>。</li>
+    <li>自己的模块同理：不 <code>opens</code> 的包，深度反射（setAccessible）进不去；ORM/序列化框架处理实体需要 opens。</li>
+  </ul>
+  <h3>classpath vs module-path</h3>
+  <table>
+    <tr><th></th><th>classpath（传统）</th><th>module-path（JPMS）</th></tr>
+    <tr><td>内容形态</td><td>jar 平铺，jar 本身无身份</td><td>每个模块有名字、有显式依赖图</td></tr>
+    <tr><td>依赖发现</td><td>线性扫描，缺依赖运行时才抛 NoClassDefFoundError</td><td>启动期校验 requires 图，缺了直接启动失败（fail-fast）</td></tr>
+    <tr><td>可见性</td><td>public 即全公开</td><td>exports 的包才公开，且只对依赖我的模块公开</td></tr>
+    <tr><td>split package</td><td>靠类加载顺序"赌"赢家</td><td>直接报错，拒绝启动</td></tr>
+    <tr><td>配套工具</td><td>-cp 参数</td><td>--module-path + jdeps（分析依赖）/ jlink（裁剪运行时）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>现状判断（务实口径）</strong>：业务系统绝大多数仍以 classpath 方式跑（Spring Boot 主流用法不强制模块化），JPMS 的深度使用者是 JDK 自身与部分类库/中间件。面试回答抓两点：① 两大动机——强封装（exports 才可见）+ 可靠依赖（requires 显式化、启动期校验）；② <code>--add-opens</code> 解决的是"强封装挡住了反射"的兼容问题。再补一句"split package 在模块模式下直接启动失败，而 classpath 下靠加载顺序赌运气"，就够了。</p></div>
+  <h3>现实：为什么业务系统基本没模块化（高级岗加分段）</h3>
+  <ul>
+    <li><strong>Spring Boot fat jar 与模块语义冲突</strong>：Boot 的可执行 jar 是嵌套 jar 结构，靠自定义 <code>LaunchedClassLoader</code> 按 classpath 语义加载——模块路径模型装不下"jar 套 jar"，二者天然不兼容。</li>
+    <li><strong>生态消化慢</strong>：主流框架对模块化的支持长期停留在"不打扰"（Automatic-Module-Name 起步），Maven/Gradle 构建链没有把模块图纳入一等公民，jlink 裁剪对服务端吸引力有限（镜像分层/容器化已解决启动与体积痛点）。</li>
+    <li><strong>收益错位</strong>：模块化最大受益者是 JDK 自己（jlink 最小运行时、内部 API 封死）和类库作者（API 面收敛）。业务代码的依赖治理靠 Maven 依赖树 + 规约就能解决大半，切换成本却实打实。</li>
+    <li><strong>但强封装的"半成品"已强制落地</strong>：即便业务不模块化，JDK 16+ 的默认强封装也在影响所有人——这就是 <code>--add-opens</code> 成为升级 JDK 必备参数的原因。"用了半个 JPMS"是 2026 年的准确现状描述。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">06</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：import 通配符 → 递归子包吗</strong> → 不递归；→ 影响性能吗 → 不影响（编译期解析、类加载按需）；→ 那为什么规约建议单类型导入 → 可读性/重构感知，不是性能。</li>
+    <li><strong>追问链：classpath vs module-path</strong> → classpath 是平铺线性扫描、jar 无身份；module-path 每个模块有名字、依赖在启动期组图校验、缺了直接启动失败（fail-fast）。</li>
+    <li><strong>追问：split package 是什么</strong> → 同一个包名出现在两个模块（或两个 jar）里。模块模式下直接报错拒绝启动；classpath 下则是"哪个 jar 排前面用哪个"的隐式赌博——这正是模块要治的病。</li>
+    <li><strong>陷阱：默认包（不写 package）</strong>的类无法被任何有包名的类引用，JSP/反射场景还会出各种诡异问题——正式代码必写包。</li>
+    <li><strong>陷阱：protected 同包可见</strong>常被误判——出个小题：同包非子类访问 protected 成员？能。跨包子类里拿"别的子类实例"访问？不能。</li>
+    <li><strong>陷阱：包不嵌套</strong>——<code>com.order.internal</code> 对 <code>com.order</code> 来说是外部包，default 成员互相不可见；"子包"只是命名惯例，包在语言层面是扁平的（第 02 节有实证代码）。</li>
+    <li><strong>陷阱：静态导入同名冲突</strong>——两个类静态导入同名成员（都是 <code>of</code>）直接编译错误，和普通 import 冲突一样处理。</li>
+    <li><strong>追问：requires transitive 什么时候用</strong> → 我 exports 出去的 API 签名里用到了第三方模块的类型，我的使用者编译也需要它，就声明 transitive 免得每个使用者重复 requires。</li>
+    <li><strong>追问链：NoClassDefFoundError 怎么排查？</strong>→ 编译有、运行没有 = classpath 缺 jar 或版本被仲裁掉（Maven <code>dependency:tree</code> 查谁把它 exclude/降级了）；同 FQCN 两个版本 = split package 赌错了加载顺序，用 <code>-verbose:class</code> 看实际加载来源，Maven Enforcer 强制收敛。这题把"包与 jar 正交"的知识点落到了实战。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">07</span>面试自查清单</h2>
+  <ol>
+    <li>能说出 package 的三个作用（命名空间 / 访问控制边界 / 组织单元）与目录、FQCN 的关系。</li>
+    <li>import 是编译期名字解析：不递归子包、无运行时开销、同名冲突用全限定名消歧。</li>
+    <li>静态导入的正反例能各举一个（断言 vs System.out）。</li>
+    <li>四修饰符范围表 + "protected 含包访问" + "顶层类只有两档" + 接口成员隐式 public。</li>
+    <li>能讲 default（包私有）的设计用法：包内协作、对外只留 public——"包是组件雏形"。</li>
+    <li>JPMS 两大动机（强封装 + 可靠依赖）、module-info 五个关键字里至少认识 requires/exports/opens。</li>
+    <li>能讲清 --add-opens 的来龙去脉：模块强封装 → 反射 JDK 内部报 InaccessibleObjectException → 打开指定包。</li>
+    <li>split package 在 classpath 和 module-path 下行为差异能说两句。</li>
+    <li>能讲"为什么业务没模块化"（fat jar 冲突、生态消化慢、收益错位）与 NoClassDefFoundError 的依赖冲突排查套路。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章为蓝本 + 检索补全，模块化动机与 <code>--add-opens</code> 口径参考了 <a href="https://javaguide.cn/java/basis/java-basic-questions-03.html">JavaGuide · Java 基础面试（下）</a>的泛型/注解/SPI 相关追问风格（重构改写）。</p></div>
+  <div class="pager">
+    <a href="05-封装与不可变.html">⬅ 上一章：封装与不可变</a>
+    <a class="next" href="07-异常处理.html">下一章：异常处理 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 06 章 包与模块</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

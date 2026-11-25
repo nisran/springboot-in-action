@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 05 章 · 封装与不可变 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#access">封装与四种访问修饰符</a>
+  <a href="#immutable">手写不可变类：五条规则 ⭐</a>
+  <a href="#string">String 为什么天然满足</a>
+  <a href="#levels">不可变的层次：浅 vs 深</a>
+  <a href="#defensive">防御性拷贝 ⭐</a>
+  <a href="#tradeoff">线程安全与实战权衡</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="04-抽象与接口.html">⬅ 上一章：04 抽象与接口</a>
+  <a href="06-包与模块.html">下一章：06 包与模块 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 05 章 · 封装与不可变</h1>
+    <div class="sub">访问修饰符 · Immutable Class 手写套路 · 浅/深不可变 · 防御性拷贝 —— 面向对象特性的收尾，也是高级岗最爱考的代码素养题</div>
+    <div class="meta">
+      <span>⭐ 高频：手写不可变类 · 防御性拷贝</span>
+      <span>蓝本：AlgoMaster Java · Encapsulation &amp; Immutability</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span>笔记：无既有笔记，蓝本 + 检索补全</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>四种访问修饰符的作用范围？protected 在"同包的非子类"里能访问吗？</li>
+      <li>手写一个 Immutable Class，说说要做哪几件事？⭐⭐</li>
+      <li>字段全部加了 <code>final</code>，这个类就是不可变类了吗？（浅 vs 深）</li>
+      <li>为什么 getter 不能直接返回数组 / Date / 集合？怎么解决？⭐</li>
+      <li><code>Collections.unmodifiableList</code> 返回的列表是"不可变"的吗？和 <code>List.of</code> 什么区别？</li>
+      <li>String 为什么天然是不可变类？自己写不可变类为什么建议加 <code>final</code>？</li>
+      <li>不可变对象和线程安全是什么关系？<code>final</code> 字段在 JMM 里有什么特殊待遇？</li>
+      <li>业务系统里真的一切都做成不可变吗？你们项目怎么权衡？</li>
+    </ol>
+  </div>
+  <p>这一章是"白板写代码"型考题的主产区：题目不长，但<strong>每一行都在考察对边界的敏感性</strong>。7 年经验的打法：五条规则背成肌肉记忆，再往下压一层（浅/深、JMM final 语义、实战分层），就和 3 年经验的答案拉开差距了。</p>
+</section>
+
+<section id="access">
+  <h2><span class="no">02</span>封装与四种访问修饰符</h2>
+  <p><strong>封装 = 把数据与操作绑定在类里，隐藏内部表示，只暴露最小接口。</strong>它买到的三样东西：① <strong>不变式（invariant）只在一处维护</strong>——外部拿不到内部字段就破坏不了约束（金额非负、状态机合法流转）；② <strong>内部实现可自由重构</strong>，调用方无感；③ <strong>误用面缩小</strong>——构造器校验过的对象，后续状态不会被随手改坏。</p>
+  <table>
+    <tr><th>修饰符</th><th>本类</th><th>同包</th><th>其他包的子类</th><th>其他包非子类</th><th>典型用途</th></tr>
+    <tr><td><code>private</code></td><td>✓</td><td>✗</td><td>✗</td><td>✗</td><td>内部字段与实现细节（默认选择）</td></tr>
+    <tr><td><code>default</code>（不写）</td><td>✓</td><td>✓</td><td>✗</td><td>✗</td><td>包内协作 API（"朋友圈"可见）</td></tr>
+    <tr><td><code>protected</code></td><td>✓</td><td>✓</td><td>✓</td><td>✗</td><td>专门留给子类的扩展点（模板方法）</td></tr>
+    <tr><td><code>public</code></td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>对外契约，越少越好</td></tr>
+  </table>
+  <h3>三个常被追问的细节</h3>
+  <ul>
+    <li><strong>顶层类只有两档</strong>：public 或 default；private / protected 只有成员（嵌套类、字段、方法）能用。一个 .java 文件最多一个 public 顶层类，且必须与文件名同名。</li>
+    <li><strong>protected 隐含包访问</strong>：它覆盖了 default 的全部范围，再叠加"其他包子类"。很多人只知道"子类可见"，漏了"同包非子类也可见"——表格题就埋在这里。</li>
+    <li><strong>跨包子类访问 protected 的姿势限制</strong>：在子类代码里，只能通过<strong>子类自身（及其更下层子类）的引用</strong>访问继承来的 protected 成员；不能拿父类引用或"别的子类实例"去访问（JLS 6.6.2）。</li>
+    <li>局部变量不能加访问修饰符——它的作用域天然限于方法块内。</li>
+  </ul>
+  <h3>包私有在工业界的真实用法（一行代码讲出场景感）</h3>
+  <ul>
+    <li>JDK 大量用包私有控制内部 API：<code>java.lang</code> 里 <code>AbstractStringBuilder</code> 是包私有——StringBuilder/StringBuffer 共享它的实现，但不对外暴露；<code>Integer.IntegerCache</code> 同样是包私有静态类。</li>
+    <li>Spring 源码模式：<code>org.springframework.beans.factory.support</code>（实现层）与 <code>org.springframework.beans.factory.config</code>（API 层）分包，default 权限的实现类外部根本 import 不到——<strong>包就是它的"模块边界"</strong>（无 JPMS 时代的土法模块化）。</li>
+    <li>实战建议：一个功能的"内部协作类"收进子包用 default 权限，public 只留给真正对外的门面接口——比"全部 public 再靠文档提醒"可靠得多。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：先甩范围表（四个修饰符按可见性递增排一遍），主动补"protected 含包访问"和"顶层类只有两档"两个细节，最后加一句——<strong>封装的粒度不只是类：包（default 权限的生效边界）和模块是更大尺度的封装</strong>，一句话把话题引到 06 章，显示知识是成体系的。</p></div>
+</section>
+
+<section id="immutable">
+  <h2><span class="no">03</span>手写不可变类：五条规则 ⭐⭐</h2>
+  <p>这是本章的白板必考题。先给能背的口诀，再给标准代码：</p>
+  <p><strong>① 类 final · ② 字段 final · ③ 不提供 setter · ④ 构造器对可变入参防御性拷贝 · ⑤ getter 对可变字段返回副本</strong></p>
+  <pre><code>public final class Card {                              // ① 类 final：杜绝子类覆盖方法破坏规则
+    private final String cardNo;                        // ② 字段 private final
+    private final int[] pins;                           //    可变类型是防御性拷贝的主战场
+    private final Date issuedAt;
+
+    public Card(String cardNo, int[] pins, Date issuedAt) {
+        this.cardNo = cardNo;                           // String 不可变，直接存
+        this.pins = pins.clone();                       // ④ 构造器：可变入参先拷贝再入字段
+        this.issuedAt = new Date(issuedAt.getTime());   //    Date 可变，同样拷贝
+    }
+
+    // ③ 不提供任何 setter / 修改状态的方法
+
+    public String getCardNo() { return cardNo; }        // 不可变字段可直接返回
+
+    public int[] getPins() {                            // ⑤ getter：可变字段返回副本
+        return pins.clone();
+    }
+
+    public Date getIssuedAt() {
+        return new Date(issuedAt.getTime());
+    }
+}</code></pre>
+  <h3>逐条说"为什么"（面试官会抠这里）</h3>
+  <ul>
+    <li><strong>① 类为什么要 final</strong>：不可变是靠"纪律"维持的约定，不是 JVM 强制的。只要允许继承，子类就能覆盖 getter 把内部引用漏出去、甚至记录窃取入参。String、Integer、LocalDate 全是 final 类，不是巧合。</li>
+    <li><strong>② 字段为什么要 final</strong>：编译器保证引用不再被重新赋值；同时 final 字段在 JMM 里有特殊的内存语义（第 07 节展开），是不可变对象能免同步共享的底层依据之一。</li>
+    <li><strong>③④⑤ 是一组</strong>：④ 保证"进来的脏数据带不进来"，⑤ 保证"干净数据漏不出去"，③ 保证中间没有任何修改通道。</li>
+    <li><strong>什么字段不用拷</strong>：String、包装类、其他不可变类的引用直接存即可——拷贝只针对可变类型（数组、Date、可变集合、StringBuilder）。</li>
+  </ul>
+  <div class="box note"><p><strong>record 帮你做了一半</strong>：record（JDK 16 转正）隐式 final 类、final 字段、无 setter、无 extends——①②③ 自动满足；但官方定义它是<strong>"浅不可变"（shallowly immutable）</strong>：accessor 不做防御性拷贝。可变组件仍要自己在紧凑构造器里拷：</p></div>
+  <pre><code>public record Card(String cardNo, List&lt;String&gt; tags) {
+    public Card {                       // 紧凑构造器：补上防御性拷贝
+        tags = List.copyOf(tags);       // 拷成真不可变集合 + 拒绝 null，一箭双雕
+    }
+}</code></pre>
+  <h3>JDK 里的现成样板（答题时点名）</h3>
+  <p><code>String</code>、<code>Integer</code> 等包装类、<code>BigDecimal</code>、<code>LocalDate</code> / <code>LocalDateTime</code>（新日期时间 API 全面不可变，就是用来替代可变的 Date）、<code>Optional</code>、<code>List.of(...)</code> 的产物。</p>
+</section>
+
+<section id="string">
+  <h2><span class="no">04</span>String 为什么天然满足</h2>
+  <p><a href="01-基础语法.html#string">第 01 章</a>从"常量池 / 线程安全 / hash 缓存 / 安全"四个角度讲了 String <em>为什么</em>要不可变；这里反过来，用五条规则核验它 <em>怎么</em>做到的：</p>
+  <pre><code>public final class String {          // ① final 类：String、JDK 里所有不可变类都是 final
+    private final byte[] value;       // ② private final 字段（JDK 9+ byte[] + coder，为什么见下方 JEP 254 小节；JDK 8 是 char[]）
+    private int hash;                 //    hash 缓存：内容永不变，所以敢缓存一次终身使用
+    // ③ 无任何 setter
+    // ④⑤ substring / replace / concat / trim 全部返回新对象，value 数组引用从不外泄
+}</code></pre>
+  <ul>
+    <li>注意一个微妙点：<code>value</code> 本身是<strong>可变的数组</strong>，但 String 从不把它的引用交给任何人——所有读取都靠内部遍历/复制完成。<strong>"字段是可变类型"不致命，"引用泄漏"才致命</strong>，这是手写不可变类时最容易被追问的一句话。</li>
+    <li>想改 String 只能生成新对象；反射暴力改 <code>value</code> 在 JDK 12+ 已被模块系统彻底封锁（01 章追问链讲过）。</li>
+  </ul>
+  <h3>底层存储：JDK 9 为什么把 char[] 改成 byte[]（JEP 254）</h3>
+  <p>JDK 9 之前 <code>value</code> 是 <code>char[]</code>，而 char 是 UTF-16 代码单元、固定 2 字节。各类堆 dump 统计里 String 常占堆的 1/4 ~ 1/2，其中<strong>绝大多数只含 Latin-1 字符</strong>（ASCII / 西文——JSON key、URL、英文日志），1 字节就够却被迫占 2 字节，一半内存白白浪费。JDK 9（JEP 254 Compact Strings）改为<strong>整串二选一</strong>的自适应存储：</p>
+  <pre><code>private final byte[] value;   // 真正存字符
+private final byte coder;     // 整串一个标记：0 = LATIN1（1 字节/字符），1 = UTF16（2 字节/代码单元）
+
+"abc"   → coder = LATIN1，value = [61 62 63]                 // 3 字节，省一半
+"abc们" → coder = UTF16， value = [00 61 00 62 00 63 4E EC]   // 8 字节：a/b/c 也被撑到 2 字节
+"😀"    → coder = UTF16， value = [D8 3D DE 00]               // 4 字节 = 一对代理项（2 个代码单元）</code></pre>
+  <ul>
+    <li><strong>coder 是整串级别、一票否决制</strong>：构造时扫一遍，任何一个字符 &gt; 0xFF，<strong>整串</strong>放弃压缩、按 UTF-16 存——不存在"a 用 1 字节、们 用 2 字节"的逐字符混合编码。"abc们" 理想 5 字节实际 8 字节，这 3 字节浪费是被主动接受的（统计上真正的混合串占比很小）。</li>
+    <li><strong>为什么不逐字符变长（比如干脆用 UTF-8）</strong>：<code>charAt(i)</code> 必须保持 O(1)——地址 = 基址 + i × unitSize，unitSize 必须是整串常量；变长编码会让随机访问退化成 O(n)，而 String 的 length / hashCode / indexOf 全建立在常数时间随机访问上。这也是 JEP 254 拒绝 UTF-8 方案的同一理由。</li>
+    <li><strong>没有"3 字节"形态</strong>：UTF-16 每个代码单元固定 2 字节；增补字符（emoji、𠮷）= 代理对 = 两个代码单元 = 4 字节，所以 <code>"😀".length() == 2</code>，<code>codePointCount()</code> 才返回真实字符数。"汉字 UTF-8 占 3 字节"是 <code>getBytes()</code> 序列化时的概念，与堆内存储是两码事。</li>
+  </ul>
+  <div class="box tip"><p><strong>收益与代价</strong>：主收益是内存——Latin-1 串直接减半，堆压力与 GC 频率下降、CPU 缓存局部性变好，性能是间接受益；<code>StringBuilder</code> / <code>StringBuffer</code> 同步做了相同改造。代价：纯中文串毫无收益、还多一次构造探测；Latin-1 与 UTF-16 串拼接要 inflate（膨胀拷贝）；可用 <code>-XX:-CompactStrings</code> 关闭（实践中几乎不用）。验证手段：<code>javap -p java.lang.String</code> 看 <code>byte[] value</code> 字段，或用 JOL 对比对象大小。</p></div>
+</section>
+
+<section id="levels">
+  <h2><span class="no">05</span>不可变的层次：浅 vs 深 ⭐</h2>
+  <p>"不可变"不是一个开关，是一条光谱。面试官问"字段全 final 就不可变了吗"，考的就是下面这张表：</p>
+  <table>
+    <tr><th>层次</th><th>含义</th><th>线程安全？</th><th>例子</th></tr>
+    <tr><td><strong>浅不可变</strong><br>shallowly immutable</td><td>对象自身字段引用不可变（final），但字段指向的对象可能可变</td><td>不保证</td><td>record、<code>final List&lt;可变对象&gt;</code> 字段</td></tr>
+    <tr><td><strong>深不可变</strong><br>deeply immutable</td><td>整棵对象图封闭在不可变类型中（基本类型 + String + 其他深不可变对象）</td><td>天然线程安全</td><td>String、Integer、LocalDate、装着不可变元素的 <code>List.of</code></td></tr>
+  </table>
+  <pre><code>final class Team {                                            // 类 final、字段 final，看着很"不可变"
+    private final List&lt;Member&gt; members;
+    Team(List&lt;Member&gt; members) { this.members = members; }     // ❌ 连浅拷贝都没有
+    List&lt;Member&gt; getMembers() { return members; }              // ❌ 引用直接外泄
+}
+
+// 外部一改，Team 的"不可变"瞬间破防：
+team.getMembers().add(new Member("混进来的人"));    // 集合本身可变：结构被改
+team.getMembers().get(0).rename("改名");            // 元素可变：即使集合只读，状态照样变</code></pre>
+  <h3>只读 ≠ 不可变：unmodifiableList vs List.of</h3>
+  <table>
+    <tr><th></th><th><code>Collections.unmodifiableList(list)</code></th><th><code>List.of(...)</code> / <code>List.copyOf(list)</code></th></tr>
+    <tr><td>本质</td><td>包装原集合的<strong>只读视图</strong>（JDK 9+ 会在能确认时返回原不可变集合）</td><td><strong>拷贝</strong>出的真不可变集合</td></tr>
+    <tr><td>原集合变化</td><td>视图跟着变</td><td>不受影响</td></tr>
+    <tr><td>修改操作</td><td>抛 UnsupportedOperationException</td><td>抛 UnsupportedOperationException</td></tr>
+    <tr><td>null 元素</td><td>取决于底层集合</td><td>直接拒绝（NPE）</td></tr>
+    <tr><td>距离"深不可变"</td><td>还差两层：底层会变、元素会变</td><td>还差一层：元素本身也得不可变</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：<code>unmodifiable</code> 的语义是"<strong>别人不能通过我这个引用改</strong>"，<code>List.of</code> 的语义是"<strong>这个集合真的不会变</strong>"。要变成深不可变还差最后一步：容器装的元素本身也不可变。三连问（unmodifiable / List.of / Arrays.asList）几乎必出，差异要能张口就来。</p></div>
+</section>
+
+<section id="defensive">
+  <h2><span class="no">06</span>防御性拷贝 ⭐</h2>
+  <p><strong>定义：在信任边界上（构造入参、getter 返回、反序列化、跨线程/跨服务传递）用"复制数据"代替"共享引用"。</strong>它是五条规则里 ④⑤ 的正式名字，也是封装的最后一道防线。先看破防现场：</p>
+  <pre><code>// ❌ 反例：以为 private final 就安全了
+public final class Schedule {
+    private final Date start;
+    public Schedule(Date start) { this.start = start; }      // 存的是调用方的引用
+    public Date getStart() { return start; }                  // 又把同一个引用交了出去
+}
+
+Date d = new Date();
+Schedule s = new Schedule(d);
+d.setTime(0);                    // 事后改 d —— s 内部状态被穿透
+s.getStart().setTime(0);         // getter 泄漏的引用也能改 —— 双向裸奔
+
+// ✅ 修复：进拷一次、出拷一次
+public Schedule(Date start) { this.start = new Date(start.getTime()); }
+public Date getStart() { return new Date(start.getTime()); }</code></pre>
+  <h3>三条实战守则（Effective Java 的沉淀）</h3>
+  <ul>
+    <li><strong>进出都拷</strong>：构造器 / setter 对可变入参拷贝一份再存；getter 对可变字段每次返回副本。不可变类里"进"只需拷一次（拷完即私有状态），"出"看成本。</li>
+    <li><strong>别用 clone() 做防御性拷贝</strong>：非 final 类的 <code>clone()</code> 可能被恶意子类覆盖，返回带后门的副本。用 <code>new Date(d.getTime())</code>、<code>Arrays.copyOf</code>、<code>List.copyOf</code> 这类构造式拷贝。数组用 <code>clone()</code> 反而是安全的（数组 clone 不走用户代码）。</li>
+    <li><strong>拷贝要"先拷后用"（TOCTOU）</strong>：多线程下若先把入参存字段、再异步拷贝，拷贝窗口期调用方仍能改它。构造器第一步就拷贝，拷完再校验。</li>
+  </ul>
+  <div class="box warn"><p><strong>代价与优化</strong>：防御性拷贝每次 O(n)，大集合高频读的场景会疼。更好的姿势是<strong>构造期一次 <code>List.copyOf</code> 换成真不可变集合</strong>，之后 getter 直接返回它本身（它自己已经改不了），把 N 次拷贝摊销成 1 次。另注意 <code>Arrays.asList</code> 是数组的<strong>视图</strong>（可 set 不可 add），不是拷贝。</p></div>
+</section>
+
+<section id="tradeoff">
+  <h2><span class="no">07</span>不可变与线程安全 · 实战权衡</h2>
+  <h3>为什么"不可变对象天然线程安全"</h3>
+  <ul>
+    <li>状态在构造完成后只读，<strong>没有可争用的共享可变状态</strong>——线程安全问题的根被拔掉，不需要任何锁与同步。</li>
+    <li>加分层（7 年经验该说的）：JMM 对 final 字段有专门规则（JLS 17.5）——<strong>只要 <code>this</code> 没有在构造器中逸出，即使对象经由数据竞争（无同步）发布，其他线程看到的 final 字段也是正确构造后的值</strong>。这是不可变对象"免同步自由共享"的底层依据，普通可变字段没有这层保证。</li>
+    <li>连锁红利：静态常量自由共享；HashMap 的 key 安全（key 状态不变，hash 定位永不失效）；"快照"式读取天然一致。</li>
+    <li><strong>前提是深不可变</strong>：<code>final StringBuilder</code> 照样被并发 append 打爆——final 锁的是引用，不是对象状态。线程安全视角的展开见 <a href="../02-concurrency/README.html">02-concurrency 板块</a>。</li>
+  </ul>
+  <h3>实战权衡：不可变值对象 + 可变实体</h3>
+  <p>完全不可变在业务系统里成本很高：每次变更都新建整条对象链（GC 压力大），有生命周期的领域实体（JPA Entity 要被框架填充/脏检查）天然不适合。工业界的常见分层：</p>
+  <table>
+    <tr><th></th><th>不可变值对象</th><th>可变实体</th></tr>
+    <tr><td>内容</td><td>Money、各种 ID、DTO / VO、领域事件、配置快照</td><td>聚合根、Entity（订单、用户）</td></tr>
+    <tr><td>生命周期</td><td>创建即定型，跨线程 / 跨服务随便传</td><td>单线程事务内演进，边界清晰</td></tr>
+    <tr><td>并发策略</td><td>零同步自由共享</td><td>乐观锁 / 数据库事务保护</td></tr>
+  </table>
+  <ul>
+    <li><strong>原子替换模式</strong>：用 <code>volatile</code> 引用指向一个不可变配置对象，切换配置时整体换新引用，而不是在旧对象里逐字段改——并发板块的经典手法（类似 <code>CopyOnWriteArrayList</code> 的思想）。</li>
+    <li>复杂不可变对象的构造用 <strong>Builder</strong> 分步组装，最后 <code>build()</code> 一次性定型。</li>
+  </ul>
+  <div class="box tip"><p><strong>7 年经验答法</strong>：被问"你们业务里都用不可变吗"，别背教条。答分层：钱、ID、时间、事件这类<strong>事实型数据天然不可变</strong>；聚合根实体可变但边界收敛在事务内；最好带一个真实收益案例（配置快照原子切换、线程安全的本地缓存 key、事件对象跨线程无锁传递），比把五条规则再背一遍值钱得多。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：手写不可变类 → 字段是 Date 怎么办</strong> → 双向防御性拷贝；更漂亮的答案：换成 <code>LocalDateTime</code> / <code>Instant</code>——新日期 API 本身不可变，直接消灭拷贝问题。</li>
+    <li><strong>追问链：List.of 之后还能 add 吗</strong> → 抛 UnsupportedOperationException；那 Arrays.asList 呢 → 可 set 不可 add（数组的视图）；和 unmodifiableList 呢 → 视图 vs 拷贝。三个连问是标准套餐。</li>
+    <li><strong>陷阱：final 引用 ≠ 不可变对象</strong>：final 只锁"引用指向"，不锁"对象内部状态"。<code>final List</code> 换不了列表，照样能往里 add。</li>
+    <li><strong>陷阱：getter 返回内部数组/集合</strong> 是封装最常见的漏洞，也是很多安全 CVE 的入口（内部结构泄露可被探测和篡改）。</li>
+    <li><strong>陷阱：不可变类实现 Serializable 要小心</strong>：<code>readObject</code> 相当于第二个构造器，可变字段必须在里面重新拷贝，否则反序列化路径绕过构造器攻破防御性拷贝。</li>
+    <li><strong>追问：record 算不可变类吗</strong> → 算浅不可变（final 类 + final 字段 + 无 setter），在紧凑构造器里补 <code>List.copyOf</code> 等拷贝可以逼近深不可变。</li>
+    <li><strong>追问：不可变了还要 clone 吗</strong> → 不需要，复制它没有意义，直接共享引用就是最优解——这也是 JDK 不可变类不实现 <code>Cloneable</code> 的原因。</li>
+    <li><strong>追问链：String 底层为什么是 byte[] + coder</strong> → JEP 254 省内存（大多数串只含 Latin-1）；"abc们" 混着怎么存 → 整串一票否决、全按 UTF-16；那 3、4 字节字符呢 → UTF-16 没有 3 字节形态，4 字节 = 代理对两个代码单元；为什么不用 UTF-8 → 变长破坏 charAt 的 O(1)。完整展开见<a href="#string">第 04 节</a>。</li>
+    <li><strong>追问：为什么密码建议用 char[] 而不是 String？</strong>→ 不可变让 String 的清除变被动：① 字面量会进常量池，生命周期无法控制；② 用完只能等 GC，堆 dump 里长期可见明文；③ toString/日志容易顺手泄漏。char[] 用完可主动 <code>Arrays.fill(pwd, '\0')</code> 覆写。同一个思路的延伸：敏感字段 toString 脱敏、日志脱敏（第 03 章）。</li>
+    <li><strong>追问：Cloneable 深拷贝三坑还记得吗？</strong>→ 不调 super.clone 类型错、浅拷贝共享引用数组、Cloneable 是空标记接口却改变 Object.clone 行为（接口的非常规用法）；加上"克隆不走构造器绕过不变式校验"共四坑——展开在 <a href="02-面向对象.html#class-object">第 02 章对象拷贝三兄弟</a>。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>四种访问修饰符范围表能秒画，含"protected 隐含包访问"和"顶层类只有两档"两个细节。</li>
+    <li>手写不可变类五条规则能直接上白板，代码里体现双向防御性拷贝。</li>
+    <li>能说清浅不可变 vs 深不可变，并现场给出"final List 装可变元素"的破防反例。</li>
+    <li>unmodifiableList / List.of / Arrays.asList 三者差异能连着讲。</li>
+    <li>知道 record 是浅不可变，会用紧凑构造器补防御性拷贝。</li>
+    <li>能讲 final 字段的 JMM 特殊语义（安全发布）与"构造期间 this 逸出"为什么破坏它。</li>
+    <li>有"不可变值对象 + 可变实体"分层的实战表达，能举一个真实收益案例。</li>
+    <li>能从"类设计五条规则"的视角反向核验 String 的不可变实现。</li>
+    <li>能讲清 JDK 9 String 从 char[] 改 byte[] + coder 的动机（Latin-1 串内存减半）、混合串"一票否决"的存储方式，以及"为什么不用 UTF-8"（保 charAt 的 O(1)）。</li>
+    <li>说得出密码用 char[] 的三条理由与包私有在 JDK/Spring 里的实例。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章在 AlgoMaster 蓝本基础上，参考并合并了 <a href="https://javaguide.cn/java/basis/java-basic-questions-02.html">JavaGuide · Java 基础面试（中）</a>的 String 不可变与深浅拷贝口径（重构改写）。</p></div>
+  <div class="pager">
+    <a href="04-抽象与接口.html">⬅ 上一章：抽象与接口</a>
+    <a class="next" href="06-包与模块.html">下一章：包与模块 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 05 章 封装与不可变</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

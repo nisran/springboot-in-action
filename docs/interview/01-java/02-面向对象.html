@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 02 章 · 面向对象基础 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#class-object">类与对象 · OOP 三特征</a>
+  <a href="#ctor">构造器与 this</a>
+  <a href="#static">static 类级语义 ⭐</a>
+  <a href="#final">final 三种语义</a>
+  <a href="#init-order">类初始化顺序 ⭐⭐</a>
+  <a href="#init-block">初始化块</a>
+  <a href="#inner">内部类四种形态</a>
+  <a href="#anon">匿名类：Lambda 前身</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="01-基础语法.html">上一章：01 基础语法与类型系统</a>
+  <a href="03-继承与多态.html">下一章：03 继承与多态 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 02 章 · 面向对象基础</h1>
+    <div class="sub">类与对象 · 构造器 · this / static / final · 初始化顺序 · 内部类 —— OOP 基本功的"深水区"</div>
+    <div class="meta">
+      <span>⭐ 高频：初始化顺序 · static 存储位置 · final 语义</span>
+      <span>蓝本：AlgoMaster Java · OOP &amp; Classes</span>
+      <span class="tag exist">已合并：Java/java 基础.md（OOP 节）✅</span>
+      <span class="tag exist">JavaGuide 合并 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>父类静态块、子类静态块、实例块、构造器，new 一个子类对象时执行顺序是什么？⭐⭐</li>
+      <li>静态变量到底存在哪？方法区、元空间还是堆？（JDK 7 / 8 前后差别）⭐</li>
+      <li>static 方法能被重写吗？用父类引用调用子类的同名 static 方法会怎样？</li>
+      <li>final 修饰类、方法、变量分别是什么语义？final 的 List 还能 add 吗？⭐</li>
+      <li>构造器里能调用 <code>this()</code> 和 <code>super()</code> 吗？能不能同时调？</li>
+      <li>匿名类/局部类为什么只能捕获 final（或等效 final）的局部变量？</li>
+      <li>四种内部类分别怎么用？HashMap 的 Node 为什么是 static nested class？</li>
+      <li>静态内部类单例（Holder 模式）为什么是线程安全的？</li>
+      <li>new 出来的对象在堆里分哪几块？Mark Word 里存了什么？算过 hashCode 的对象还能进入偏向状态吗？⭐</li>
+      <li>引用拷贝、浅拷贝、深拷贝的区别？深拷贝有哪几种实现方式？⭐</li>
+      <li><code>Object.clone()</code> 为什么是 protected？实现了 Cloneable 为什么还要重写 clone()？</li>
+      <li><code>&lt;clinit&gt;</code> 和 <code>&lt;init&gt;</code> 分别是谁生成的、什么时候执行、线程安全由谁保证？⭐</li>
+      <li>静态方法为什么访问不了实例成员？（要求从字节码角度回答）</li>
+    </ol>
+  </div>
+  <p>这一章是"OOP 基本功"的深水区：概念人人会背，<strong>初始化顺序、static 存储、this 逃逸这些点能直接分出"背题的"和"理解的"</strong>。7 年经验的打法：每答一个概念，附带一个字节码或内存层面的佐证。</p>
+</section>
+
+<section id="class-object">
+  <h2><span class="no">02</span>类与对象：OOP 三特征与对象内存布局</h2>
+  <h3>三大特征一句话版（开场题）</h3>
+  <ul>
+    <li><strong>封装</strong>：私有化字段 private + 暴露受控方法，把"怎么做的"藏起来只留"做什么"——变化的防火墙。</li>
+    <li><strong>继承</strong>：子类复用/扩展父类，is-a 关系（细节在第 03 章）。</li>
+    <li><strong>多态</strong>：父类引用指向子类实例，运行期决定实际调谁的方法（底层在第 03 章展开）。</li>
+    <li><strong>为什么 OOP</strong>：易维护（改一处不扩散）、易复用（组合 + 继承）、易扩展（多态 + 接口注入新实现，对修改关闭、对扩展开放）。</li>
+  </ul>
+  <h3>开场题的深水区：三特征各自的追问点</h3>
+  <table>
+    <tr><th>特征</th><th>带来什么</th><th>失去什么 / 风险</th><th>面试官下一句</th></tr>
+    <tr><td>封装</td><td>降低耦合、可精确控制读写权限、内部实现可自由演进</td><td>过度封装成"贫血模型"（只有 getter/setter 没有行为）</td><td>封装只是 private 字段吗？——行为封装（把不变式锁在方法里）才是灵魂</td></tr>
+    <tr><td>继承</td><td>代码复用、建立 is-a 分型</td><td><strong>白盒复用</strong>：子类依赖父类实现细节，父类一改子类就碎（脆弱基类）</td><td>组合优于继承怎么讲？→ <a href="15-最佳实践.html#compose">第 15 章</a></td></tr>
+    <tr><td>多态</td><td>扩展新实现不动调用方（开闭原则的发动机）</td><td>字段与 static 方法<strong>没有多态</strong>（静态绑定）</td><td>多态的三个前提？——继承/实现 + 重写 + 父类引用指向子类对象，底层虚分派见 <a href="03-继承与多态.html#binding">第 03 章</a></td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：别只背"封装继承多态"三个词。每个特征补一句"代价/边界"（封装 ≠ 藏字段、继承是白盒复用、多态只覆盖实例方法），再各带一个追问的接法——这一段答完，面试官通常就会顺势进入内存布局或初始化顺序的深水区。</p></div>
+  <h3>类与对象在内存里是什么</h3>
+  <ul>
+    <li><strong>类</strong>：被类加载器加载后，类元数据（字段/方法描述、字节码）进入<strong>元空间（JDK 8+，替代永久代）</strong>，同时在堆里创建一个 <code>java.lang.Class</code> 实例作为访问入口。</li>
+    <li><strong>对象</strong>：堆中的一块内存 = <strong>对象头（Mark Word + 类型指针 klass pointer）+ 实例字段（含父类字段）+ 对齐填充</strong>。引用变量存的是这块内存的地址。</li>
+    <li>类型指针就是"对象找到自己类元数据"的钩子，<code>getClass()</code>、<code>instanceof</code>、虚方法分派都依赖它。</li>
+  </ul>
+  <div class="box note"><p>对象头与锁状态（无锁 → 偏向锁 → 轻量级锁 → 重量级锁）在 <a href="../02-concurrency/README.html">02-concurrency 板块</a>的 synchronized 原理里展开；类加载的七个阶段见 <a href="../03-jvm/README.html">03-jvm 板块</a>。</p></div>
+  <h3>Mark Word 细看（64 位 HotSpot）：一个 8 字节字段的四种身份</h3>
+  <p>64 位 JVM 上对象头的 Mark Word 占 8 字节，JVM 复用同一块比特位存"当前最需要的信息"，锁状态不同、布局就不同（这是 synchronized 锁升级能原地发生的物理基础）：</p>
+  <table>
+    <tr><th>锁标志（biased + lock）</th><th>状态</th><th>Mark Word 比特布局（64 位）</th></tr>
+    <tr><td>0 01</td><td>无锁</td><td>unused:25 | <strong>hashCode:31</strong> | unused:1 | <strong>分代年龄:4</strong> | 0 01</td></tr>
+    <tr><td>1 01</td><td>偏向锁</td><td><strong>线程 ID:54</strong> | Epoch:2 | unused:1 | 分代年龄:4 | 1 01</td></tr>
+    <tr><td>— 00</td><td>轻量级锁</td><td><strong>指向栈中 Lock Record 的指针:62</strong> | 00</td></tr>
+    <tr><td>— 10</td><td>重量级锁</td><td><strong>指向 ObjectMonitor 的指针:62</strong> | 10</td></tr>
+    <tr><td>— 11</td><td>GC 标记</td><td>标记整理算法下的转发指针等 | 11</td></tr>
+  </table>
+  <ul>
+    <li><strong>两个必考推论</strong>：① hashCode 占 31 位，偏向模式里线程 ID 要占 54 位——两者放不下，所以<strong>调用过 <code>identityHashCode()</code> 的对象无法进入偏向状态</strong>（只好直接轻量级起跳）；② 分代年龄只有 <strong>4 位 → 最大 15</strong>，这正是 <code>MaxTenuringThreshold</code> 上限 15 的由来（晋升细节见 <a href="../03-jvm/README.html">03-jvm 板块</a>）。</li>
+    <li><strong>布局验证工具</strong>：JOL（Java Object Layout）——<code>ClassLayout.parseInstance(obj).toPrintable()</code> 直接打出每个字段偏移；加 <code>-XX:MarkSweep... </code>不必，默认输出即含对象头 12 字节（开启压缩指针时 Mark Word 8 + klass 4）+ 实例数据 + 对齐填充到 8 的倍数。</li>
+    <li>锁标志怎么变化、偏向怎么撤销、为什么 JDK 15 起默认废弃偏向锁——这些<strong>锁策略</strong>属于 <a href="../02-concurrency/03-互斥与同步.html#upgrade">02-concurrency 锁升级一节</a>，本章只认布局不展开。</li>
+  </ul>
+  <h3>对象实例 vs 对象引用：气球与绳子（JavaGuide 经典问法）</h3>
+  <pre><code>User u1 = new User("alan");   // 右边在堆里"吹气球"，左边在栈局部变量表里"拴绳子"
+User u2 = u1;                 // 又拴了一根绳子到同一个气球——没有新对象，引用拷贝而已
+u1 == u2                      // true：两根绳子系着同一个气球
+u2.setName("bob");
+u1.getName()                  // "bob"：从任何一根绳子过去改的都是同一个气球</code></pre>
+  <ul>
+    <li>引用本身只是个地址值：局部变量时在<strong>栈帧的局部变量表</strong>；作为字段时随宿主对象在堆里。</li>
+    <li>追问接法："那 Java 参数是值传递还是引用传递？"——<strong>永远是值传递</strong>（传引用的拷贝），完整论证在 <a href="01-基础语法.html#pass-by">第 01 章值传递一节</a>。</li>
+  </ul>
+  <h3>对象相等 vs 引用相等</h3>
+  <pre><code>User a = new User("alan");
+User b = new User("alan");
+a == b        // false：引用相等——比较的是"是不是同一个气球"
+a.equals(b)   // true（若 User 重写了 equals）：对象相等——比较的是"内容是否一致"</code></pre>
+  <ul>
+    <li>不重写 equals 时继承自 Object 的版本就是 <code>==</code>。equals/hashCode 契约、重写规则与散列冲突是 <a href="03-继承与多态.html#object-methods">第 03 章 Object 常用方法</a>的主场，包装类型的 <code>==</code> 缓存陷阱见 <a href="01-基础语法.html#boxing">第 01 章</a>。</li>
+  </ul>
+  <h3>引用怎么找到对象：句柄 vs 直接指针（HotSpot 用后者）</h3>
+  <table>
+    <tr><th>方案</th><th>引用里存什么</th><th>优点</th><th>缺点</th></tr>
+    <tr><td>句柄（中间表）</td><td>句柄池里条目的地址</td><td>对象被 GC 移动时，<strong>只需改句柄表，引用本身不动</strong></td><td>多一次跳转，访问慢</td></tr>
+    <tr><td>直接指针（HotSpot）</td><td>对象地址本身</td><td>访问快（一次直达）</td><td>GC 移动对象（复制/整理）时要<strong>改所有指向它的引用</strong></td></tr>
+  </table>
+  <ul>
+    <li>HotSpot 选直接指针：对象访问是最高频操作，用 GC 时多改几个引用换日常访问零跳转——"停顿时间换吞吐"思路的又一例。</li>
+    <li>追问接法："GC 移动对象时引用怎么改？"→ 利用 OopMap / 安全点记录的引用位置精确修正（细节归 <a href="../03-jvm/README.html">03-jvm</a>）；顺带一句：对象引用是 4 还是 8 字节取决于压缩指针（<code>-XX:+UseCompressedOops</code>，堆 &lt; 32GB 默认开），这也是"堆超 32G 性能反而可能掉"的经典解释。</li>
+  </ul>
+  <h3>对象拷贝三兄弟：引用拷贝 / 浅拷贝 / 深拷贝 ⭐</h3>
+  <pre><code>class Address { String city; Address(String c){ city = c; } }
+class Person implements Cloneable {
+    String name; Address addr;
+    Person(String n, Address a) { name = n; addr = a; }
+    @Override protected Person clone() throws CloneNotSupportedException {
+        return (Person) super.clone();          // 浅拷贝：只复制第一层
+    }
+}
+
+Person p  = new Person("alan", new Address("HZ"));
+Person q  = p;                                  // ① 引用拷贝：q 和 p 是同一个对象
+Person s  = p.clone();                          // ② 浅拷贝：新 Person，但 addr 指向同一个 Address
+q  == p        // true
+s  == p        // false —— 拷贝出了新对象
+s.addr == p.addr   // true  ← 浅拷贝的铁证：引用字段仍然共享
+// ③ 深拷贝：s.addr 是 new Address("HZ")，两棵完全独立的对象图
+//    s.addr == p.addr → false，改 s.addr.city 不影响 p</code></pre>
+  <table>
+    <tr><th></th><th>引用拷贝</th><th>浅拷贝（super.clone）</th><th>深拷贝</th></tr>
+    <tr><td>新对象？</td><td>否</td><td>是（第一层）</td><td>是（整棵对象图）</td></tr>
+    <tr><td>引用类型字段</td><td>同一对象</td><td><strong>仍指向原对象</strong>（共享）</td><td>递归复制，各自独立</td></tr>
+    <tr><td>改一个影响另一个？</td><td>全影响</td><td>改引用字段内部状态会互相影响</td><td>互不影响</td></tr>
+  </table>
+  <ul>
+    <li><strong>clone 机制三层</strong>：① <code>Object.clone()</code> 是 <code>protected native</code>——子类不重写为 public 就调不到，且不重写返回的是 Object 要强转；② <code>Cloneable</code> 是<strong>标记接口</strong>（无方法），只用于给 Object.clone "授权"，没实现就调用抛 <code>CloneNotSupportedException</code>；③ <code>super.clone()</code> 做的是<strong>逐字段位复制</strong>——这就是它只能是浅拷贝的原因。</li>
+    <li><strong>String/包装类的迷惑项</strong>：浅拷贝复制的是引用，但 String 等不可变类型"改不了内容"，所以浅拷贝里它们<strong>表现如深拷贝</strong>——只有可变引用类型（Date、集合、数组、自定义可变类）才暴露浅拷问题。</li>
+    <li><strong>深拷贝三种实现</strong>：① 递归重写 clone（每层可变类都实现 Cloneable，样板代码多）；② <strong>拷贝构造器 / 静态工厂</strong>（<code>new Person(this)</code>，最清晰可控，推荐）；③ 序列化-反序列化一轮（对象图整体复制，写法最省但性能最差，且要求全图 Serializable）。</li>
+    <li><strong>clone 的坑</strong>：final 字段改不了引用（深拷贝时没法给 final 引用字段换新对象，只能拷构造器能救）；克隆不走构造器，不变式校验会被绕过——这正是"防御性拷贝别用 clone"的理由，实战见 <a href="05-封装与不可变.html#defensive">第 05 章防御性拷贝</a>。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：先给"新不新对象、引用字段独不独立"两个判定维度，再用 <code>s.addr == p.addr</code> 一行代码证明浅拷；追问实现方式时报"递归 clone / 拷贝构造器 / 序列化"三件套，最后主动补一句 clone 不走构造器会绕过校验——分层级收尾。</p></div>
+</section>
+
+<section id="ctor">
+  <h2><span class="no">03</span>构造器与 this</h2>
+  <h3>构造器的规则清单</h3>
+  <ul>
+    <li>没有返回值类型（连 void 都没有），与类同名；不写时编译器生成<strong>默认无参构造器</strong>（一旦手写任何构造器，默认的就不给了）。</li>
+    <li>可以被重载；不能被继承，因此<strong>不能被重写</strong>；不允许 abstract / static / final / synchronized 修饰。</li>
+    <li>同一个构造器里 <code>this(...)</code> 与 <code>super(...)</code> 都必须是第一条语句，所以<strong>只能二选一</strong>；链式 <code>this(...)</code> 最终一定走到某个调用 <code>super(...)</code> 的构造器（默认插入无参 <code>super()</code>）。</li>
+    <li><code>private</code> 构造器 = 禁止外部 new：工具类（如 <code>java.util.Objects</code>）、单例、枚举之外控制实例数（如 <code>IntegerCache</code> 那种受控实例）。</li>
+  </ul>
+  <h3>this 的四个面孔</h3>
+  <pre><code>public class User {
+    private String name;
+    private int age;
+
+    public User() { this("anonymous"); }        // 1. this()：构造器链，必须第一行
+
+    public User(String name) {
+        this.name = name;                        // 2. 区分成员与参数（最常见）
+    }
+
+    public User grow() {
+        this.age++;                              // 3. 当前对象引用
+        return this;                             //    链式调用的基础：user.grow().save()
+    }
+
+    class Label {
+        void print() {
+            System.out.println(User.this.name);  // 4. 内部类里限定外部实例：Outer.this
+        }
+    }
+}</code></pre>
+  <ul>
+    <li><strong>底层视角</strong>：实例方法的字节码里，<code>this</code> 就是隐式的第 0 个参数（<code>aload_0</code>）——所以 static 方法没有 this、不能引用实例成员。</li>
+    <li><strong>接口/抽象的价值</strong>：返回 <code>this</code> 支撑 Builder 链式 API（<code>StringBuilder.append</code>、Lombok <code>@Accessors(chain=true)</code>）。</li>
+  </ul>
+  <h3>new 的时候，对象是哪一刻"创建"的：先毛坯后装修</h3>
+  <p>常见误解是"构造器创建对象"。真实时序是<strong>先分配、后装修</strong>——构造器一行代码没跑，对象就已经存在了，构造器只负责初始化：</p>
+  <pre><code>new Child()
+① 分配堆内存：对象头 + 全部字段（含继承来的）先置默认值 0/null/false   ← 对象此刻已存在，this 已可用
+② 执行 &lt;init&gt;：super() 链 → 字段赋值 / 实例块（按源码顺序）→ 构造器体
+③ 最外层构造器体结束 = &lt;init&gt; 完成，new 表达式返回引用</code></pre>
+  <ul>
+    <li><strong>并发 new 天生安全</strong>：每次 new 分配各自的内存（HotSpot 靠 TLAB 线程私有分配缓冲，分配动作基本无锁），各线程装修各自的对象互不干扰——要防的不是并发 new，而是下面"装修没完就交钥匙"的 this 逃逸。</li>
+    <li>这个时序顺带解释了 <a href="03-继承与多态.html">第 03 章</a>"父类构造器调可重写方法 → NPE"反例的根因：父类构造器执行时，子类字段还停在第 ① 步的默认值。</li>
+  </ul>
+  <div class="box warn"><p><strong>this 逃逸（构造器泄漏）</strong>：在构造器里把 <code>this</code> 注册进监听器、缓存、或启动新线程——对象可能<strong>还没构造完就被其他线程看见</strong>，读到半初始化字段。这就是"不在构造器里调用可被重写的方法"的根因（第 03 章给 NPE 反例），也是并发里"不安全发布"的典型。口径：构造器只做字段赋值，注册/启动动作挪到 <code>start()</code> 方法。</p></div>
+  <h3>this 逃逸可运行示例：构造未完，watcher 先到</h3>
+  <pre><code>class Server extends Thread {
+    private final String name;                       // blank final：构造器末尾才赋值
+    Server() {
+        new Thread(this::watch, "watcher").start();  // ❌ this 在这里就逃逸了
+        try { Thread.sleep(10); } catch (InterruptedException ignored) { }
+        this.name = "server";                        // 赋值发生在 watcher 启动之后
+    }
+    private void watch() { System.out.println("watcher sees: " + name); }
+    @Override public void run() { }
+    public static void main(String[] args) { new Server(); }
+}
+// 大概率输出：watcher sees: null
+// 根因：start() 与 name 赋值之间没有任何 happens-before，
+// watcher 线程完全可能读到尚未初始化的字段（甚至因重排序看到"乱序"状态）</code></pre>
+  <ul>
+    <li>即便把赋值挪到 <code>start()</code> 之前也一样危险：缺少同步屏障时，另一个线程看到的写入顺序可能被打乱。修复不是调顺序，而是<strong>别在构造器里发布 this</strong>——先构造完，再由调用方（或工厂方法）负责注册/启动。</li>
+    <li><strong>构造器里调用可被重写的方法</strong>是 this 逃逸的"近亲"：父类构造器执行时子类字段还是默认值，重写方法一碰就 NPE——完整反例与规则（只调 private/final/static 方法）在 <a href="03-继承与多态.html#super">第 03 章 super 与构造器链</a>。</li>
+    <li><strong>两个小追问的答案</strong>：构造器互相调用不能成环（<code>this()</code> 递归循环直接编译错）；构造器不能加 synchronized——对象和监视器还没就绪，锁它没有意义，需要原子初始化该用静态工厂 + <code>&lt;clinit&gt;</code> 锁（见下节 Holder 单例）。</li>
+  </ul>
+</section>
+
+<section id="static">
+  <h2><span class="no">04</span>static：类级语义与存储真相 ⭐</h2>
+  <h3>一份、随类走、先于对象存在</h3>
+  <ul>
+    <li><strong>static 变量</strong>：全类<strong>只有一份</strong>，所有实例共享；生命周期 = 类的生命周期（类卸载才回收，一般活到进程结束）。</li>
+    <li><strong>static 方法</strong>：属于类，无 this，只能直接访问静态成员；用引用调静态方法是合法但误导的写法（编译器按声明类型解析，警告点）。</li>
+    <li><strong>static 块</strong>：类初始化时执行一次，多个按<strong>文本顺序</strong>执行（详见初始化顺序节）。</li>
+  </ul>
+  <h3>三种变量横向对比（JavaGuide 高频表）</h3>
+  <table>
+    <tr><th>维度</th><th>静态变量</th><th>实例变量</th><th>局部变量</th></tr>
+    <tr><td>归属</td><td>类（Class 对象）</td><td>对象</td><td>方法调用（栈帧）</td></tr>
+    <tr><td>存储（JDK 8+）</td><td>随堆中 Class 对象</td><td>随对象在堆</td><td>栈帧局部变量表</td></tr>
+    <tr><td>生命周期</td><td>类卸载（通常进程结束）</td><td>对象被 GC</td><td>方法返回即失效</td></tr>
+    <tr><td>默认值</td><td>有（0/null/false）</td><td>有</td><td><strong>无——未显式初始化就使用是编译错</strong></td></tr>
+    <tr><td>线程可见</td><td>全类共享（并发要自己保护）</td><td>对象内共享</td><td>线程私有，天然安全</td></tr>
+    <tr><td>修饰权限</td><td colspan="2">可用 private/protected/public 修饰</td><td>不能用访问修饰符（作用域即方法体）</td></tr>
+  </table>
+  <div class="box note"><p>"局部变量不初始化不能编过、成员变量却默认有值"常被追问<strong>为什么</strong>：成员变量随对象/类分配内存时 JVM 统一清零（第 03 节时序的第 ① 步），零成本顺手做了；局部变量在栈上复用槽位，强制清零每次方法调用都要付钱，JVM 选择把责任交给编译器检查。</p></div>
+  <h3>存哪里：速答版与深挖版</h3>
+  <ul>
+    <li><strong>速答版</strong>：方法区（逻辑概念）——静态变量属于类信息的一部分。辨析（规范 vs 实现）："方法区"是 JVM 规范定义的逻辑区域，好比接口；HotSpot 先后用<strong>永久代（JDK 7-，堆内）→ 元空间（JDK 8+，本地内存）</strong>落实它，好比两代实现——三者不是并列的三块内存，"元空间"只是当前实现的名字。</li>
+    <li><strong>深挖版（JDK 8+ HotSpot）</strong>：永久代被移除，类元数据进<strong>元空间（本地内存）</strong>；而<strong>静态变量实际存放在堆中的 <code>java.lang.Class</code> 对象里</strong>（Class 对象本身就是堆里一个普通对象）。字符串常量池 JDK 7 起也移到了堆。</li>
+    <li><strong>static final 编译期常量</strong>（基本类型/字符串字面量初始化）：进 class 文件的运行时常量池，访问<strong>不触发类初始化</strong>（经典陷阱，见追问节）。</li>
+  </ul>
+  <h3>static 方法"重写"其实是隐藏（hiding）</h3>
+  <pre><code>class Parent {
+    static void who() { System.out.println("Parent"); }
+    void hi()         { System.out.println("Parent hi"); }
+}
+class Child extends Parent {
+    static void who() { System.out.println("Child"); }   // 隐藏，不是重写！
+    @Override void hi() { System.out.println("Child hi"); }
+}
+
+Parent p = new Child();
+p.who();   // Parent  ← static 按编译期类型静态绑定
+p.hi();    // Child   ← 实例方法运行期动态绑定（多态）</code></pre>
+  <div class="box tip"><p><strong>答题口径</strong>："static 方法可以被继承、可以被同名同签名地再声明，但那是<strong>隐藏</strong>不是重写——它不参与多态，调用由编译期类型决定；同理字段也没有多态。"能把 hiding 和 override 区分清楚，这道题就赢了。</p></div>
+</section>
+
+<section id="final">
+  <h2><span class="no">05</span>final 的三种语义</h2>
+  <table>
+    <tr><th>修饰对象</th><th>语义</th><th>典型例子 / 目的</th></tr>
+    <tr><td><code>final class</code></td><td>不能被继承</td><td>String、Integer：实现安全（不可变类的封闭）、防子类破坏约定</td></tr>
+    <tr><td><code>final method</code></td><td>不能被子类重写（可重载）</td><td>模板方法里锁死的不变骨架；JIT 内联更友好</td></tr>
+    <tr><td><code>final 变量</code></td><td>只能赋值一次（常量/只读引用）</td><td>常量、不可变引用、Lambda 捕获前提</td></tr>
+  </table>
+  <h3>final 变量的三层细节</h3>
+  <ul>
+    <li><strong>基本类型</strong>：值不可变。<strong>引用类型</strong>：引用不可变，<strong>对象本身可变</strong>——<code>final List&lt;String&gt; list</code> 不能再指向别的 List，但照样能 <code>add()</code>。final ≠ 不可变，完整不可变见 <a href="05-封装与不可变.html">第 05 章</a>。</li>
+    <li><strong>空白 final（blank final）</strong>：声明时不赋值，构造器<strong>每条路径</strong>必须赋一次——适合"每个实例一个定值"的场景（天然线程安全：构造器写 final 字段有禁止重排序的语义保证，JMM final 字段规则）。</li>
+    <li><strong>static final 编译期常量</strong>：编译期直接<strong>宏替换（常量折叠）</strong>进调用方字节码——改了这个常量只重编译定义类不重编译使用方，运行期还是旧值，跨模块发布的经典生产事故。</li>
+    <li><strong>等效 final（effectively final）</strong>：JDK 8 起 Lambda / 匿名类捕获的局部变量只要求"从未重新赋值"，不必显式写 final。</li>
+  </ul>
+  <pre><code>final List&lt;String&gt; names = new ArrayList&lt;&gt;();
+names.add("alan");        // ✅ 合法：改的是对象内容
+// names = new ArrayList&lt;&gt;();  // ❌ 编译错误：引用不可再指向别处</code></pre>
+</section>
+
+<section id="init-order">
+  <h2><span class="no">06</span>类初始化顺序 ⭐⭐（必考）</h2>
+  <p><strong>骨架一句话：静态先于实例、父类先于子类、字段/块按文本顺序、构造器体最后。</strong>静态部分只在类初始化时执行一次，实例部分每 new 一次执行一轮。</p>
+  <h3>完整可运行验证代码</h3>
+  <pre><code>class Parent {
+    static String ps = log("1. 父类静态字段");
+    static { System.out.println("2. 父类静态代码块"); }
+    String pf = log("5. 父类实例字段");
+    { System.out.println("6. 父类实例代码块"); }
+    Parent() { System.out.println("7. 父类构造器体"); }
+    static String log(String m) { System.out.println(m); return m; }
+}
+
+public class Child extends Parent {
+    static String cs = log("3. 子类静态字段");
+    static { System.out.println("4. 子类静态代码块"); }
+    String cf = log("8. 子类实例字段");
+    { System.out.println("9. 子类实例代码块"); }
+    Child() { System.out.println("10. 子类构造器体"); }
+
+    public static void main(String[] args) {
+        System.out.println("--- 第一次 new ---");
+        new Child();
+        System.out.println("--- 第二次 new ---");
+        new Child();
+    }
+}</code></pre>
+  <h3>输出（背下来）</h3>
+  <pre><code>1. 父类静态字段      ┐
+2. 父类静态代码块    │ 类初始化 &lt;clinit&gt;：只在首次主动使用时执行一次
+3. 子类静态字段      │ 父类先行，再子类
+4. 子类静态代码块    ┘
+--- 第一次 new ---
+5. 父类实例字段      ┐
+6. 父类实例代码块    │ 实例初始化 &lt;init&gt;：每 new 一轮
+7. 父类构造器体      │ 字段与实例块按【文本顺序】内联进构造器
+8. 子类实例字段      │ （位于 super() 之后、构造器体之前）
+9. 子类实例代码块    │
+10. 子类构造器体     ┘
+--- 第二次 new ---
+5. 父类实例字段 … 10. 子类构造器体        ← 静态部分不再执行</code></pre>
+  <h3>字节码视角：两个魔法方法</h3>
+  <ul>
+    <li><code>&lt;clinit&gt;()</code>：javac 把<strong>所有静态字段初始化 + 静态块</strong>按文本顺序拼成的一个方法，在类加载的<strong>初始化阶段</strong>由 JVM 调用，且 JVM 保证<strong>加锁执行、只执行一次</strong>——这就是静态内部类单例线程安全的根源。</li>
+    <li><code>&lt;init&gt;()</code>：每个构造器对应一个；实例字段初始化和实例块的代码被<strong>复制内联到每个构造器</strong>的 <code>super()</code> 调用之后。所以"实例块在所有构造器前执行"更精确的说法是"实例块被织入每个构造器"。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：先背顺序（父静态 → 子静态 → 父实例+构造 → 子实例+构造），再补一句"静态块对应 &lt;clinit&gt;，类加载初始化阶段只跑一次且加锁；实例字段和实例块会被编译器织进每个构造器，位于 super() 之后"。能说到 &lt;clinit&gt;/&lt;init&gt; 基本就是这题的满分线，类加载七阶段细节链到 <a href="../03-jvm/README.html">03-jvm</a>。</p></div>
+  <h3>什么会触发类初始化（主动使用）</h3>
+  <ul>
+    <li>new 实例、读写非编译期常量的静态字段、调用静态方法、反射（<code>Class.forName</code>）、初始化子类连带父类、启动类（main 所在类）。</li>
+    <li><strong>不触发</strong>：访问 <code>static final</code> 编译期常量（常量池宏替换）；通过<strong>子类名访问父类定义的静态字段</strong>（只初始化父类，见追问节）；定义类数组。</li>
+  </ul>
+</section>
+
+<section id="init-block">
+  <h2><span class="no">07</span>初始化块：静态块与实例块</h2>
+  <table>
+    <tr><th></th><th>静态初始化块</th><th>实例初始化块</th></tr>
+    <tr><td>执行时机</td><td>类初始化，仅一次</td><td>每次 new，随构造器执行</td></tr>
+    <tr><td>能访问</td><td>仅静态成员</td><td>静态 + 实例成员（含 this）</td></tr>
+    <tr><td>多个块</td><td>按文本顺序</td><td>按文本顺序</td></tr>
+    <tr><td>典型用途</td><td>加载配置/驱动、初始化复杂静态表</td><td>多构造器公共逻辑去重、匿名类"构造逻辑"</td></tr>
+  </table>
+  <h3>实例块的独门用途：给匿名类"装构造器"</h3>
+  <pre><code>// 匿名类没有构造器（没有类名就没法写构造方法），实例块就是它的"构造器"：
+Runnable task = new Runnable() {
+    private final long start;          // 匿名类的字段
+    {                                   // 实例初始化块 = 它唯一的"构造逻辑"
+        start = System.currentTimeMillis();
+        System.out.println("task created at " + start);
+    }
+    @Override public void run() {
+        System.out.println("elapsed: " + (System.currentTimeMillis() - start));
+    }
+};</code></pre>
+  <ul>
+    <li>普通类里实例块的价值：<strong>多个重载构造器的公共初始化逻辑只写一遍</strong>（JDK 8 前没有"构造器委托到 this()"习惯时的主流写法，现在多推荐 this() 链）。</li>
+    <li>静态块经典场景：<code>Class.forName</code> 注册 JDBC 驱动的旧代码、单例的饿汉变体、构建静态查表（如敏感词 DFA）。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：静态块只能保证顺序，不能保证"别的类已就绪"——静态块里如果依赖另一个类的静态状态，而对方又依赖你（循环初始化），可能读到 null/0。另外静态块抛异常会导致 <code>ExceptionInInitializerError</code>，类直接不可用，后续访问全部 <code>NoClassDefFoundError</code>——排查时别被第二现场的错误骗了。</p></div>
+</section>
+
+<section id="inner">
+  <h2><span class="no">08</span>内部类四种形态</h2>
+  <table>
+    <tr><th>种类</th><th>声明位置</th><th>持外部引用</th><th>编译产物</th><th>典型场景</th></tr>
+    <tr><td>静态嵌套类<br><code>static class</code></td><td>成员位置（static）</td><td>否</td><td><code>Outer$Inner</code></td><td>HashMap.Node、Builder、Holder 单例</td></tr>
+    <tr><td>成员内部类</td><td>成员位置</td><td>是（<code>Outer.this</code>）</td><td><code>Outer$Inner</code></td><td>集合与它的 Iterator、事件源与适配器</td></tr>
+    <tr><td>局部内部类</td><td>方法体内</td><td>是（若在实例方法中）</td><td><code>Outer$1Inner</code></td><td>方法内一次性辅助类（少见）</td></tr>
+    <tr><td>匿名内部类</td><td>表达式位置</td><td>是</td><td><code>Outer$1</code>（编号）</td><td>回调、Comparator、JDK 8 前监听器</td></tr>
+  </table>
+  <h3>为什么 HashMap.Node 是 static 的（高频追问）</h3>
+  <ul>
+    <li>嵌套类如果不加 static，每个实例都会隐式持有<strong>外部类实例的引用（this$0）</strong>——纯粹为了"存数据"的 Node 根本不需要访问 HashMap 的实例成员，白白拖着宿主对象，<strong>妨碍 GC</strong>（外部大对象本可回收却被 Node 引着）。</li>
+    <li>规则：<strong>不需要访问外部实例成员的嵌套类，一律加 static</strong>（Effective Java Item 24）。这也是"内存泄漏排查"场景的高频考点。</li>
+  </ul>
+  <h3>成员内部类怎么读外部 private 字段（加分点）</h3>
+  <ul>
+    <li>早期实现：编译器合成 <code>this$0</code> 字段 + 静态 <code>access$xxx</code> 桥接方法"绕过"private。</li>
+    <li>JDK 11 起 <strong>nestmates（JEP 181）</strong>：同一嵌套结构算一个"巢"，JVM 层面直接允许互访私有成员，不再生成合成方法——反射 <code>getDeclaredMethods</code> 结果因此变干净。</li>
+  </ul>
+  <h3>静态内部类单例（Holder 模式）</h3>
+  <pre><code>public class Singleton {
+    private Singleton() {}
+    private static class Holder {                       // 外部类加载时不加载 Holder
+        static final Singleton INSTANCE = new Singleton();
+    }
+    public static Singleton getInstance() { return Holder.INSTANCE; }
+}</code></pre>
+  <ul>
+    <li>线程安全：靠 <code>&lt;clinit&gt;</code> 的加锁 + 只执行一次（JVM 保证，不加 synchronized）。</li>
+    <li>懒加载：只有首次调 <code>getInstance()</code> 触发 Holder 类初始化才 new——比饿汉懒、比双重检查锁简洁，标准答案之一。</li>
+  </ul>
+</section>
+
+<section id="anon">
+  <h2><span class="no">09</span>匿名内部类：Lambda 的前身</h2>
+  <h3>语法与三个限制</h3>
+  <pre><code>// 形式：new 父类构造器(实参) { 类体 }  /  new 接口() { 实现体 }
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+list.sort(new Comparator&lt;String&gt;() {          // 匿名实现 Comparator
+    @Override
+    public int compare(String a, String b) {
+        return b.length() - a.length();       // 按长度降序
+    }
+});
+
+// JDK 8+ 等价 Lambda（语法糖层面之外的差异见下表）：
+list.sort((a, b) -&gt; b.length() - a.length());</code></pre>
+  <ul>
+    <li><strong>没有名字</strong>（编译产物是 <code>Outer$1.class</code>），<strong>没有构造器</strong>（用实例初始化块模拟），<strong>只能继承一个父类或实现一个接口</strong>。</li>
+    <li>匿名类里的 <code>this</code> 指向<strong>匿名类实例自己</strong>；外部实例要 <code>Outer.this</code>。</li>
+    <li>捕获的局部变量必须 final / effectively final。</li>
+  </ul>
+  <h3>为什么捕获的局部变量必须 effectively final ⭐</h3>
+  <pre><code>int counter = 0;
+Runnable task = () -&gt; System.out.println(counter);  // ✅ 读，合法
+// counter++;  // 若放开：Local variable counter defined in an enclosing scope must be final
+
+int[] box = {0};
+Runnable incr = () -&gt; box[0]++;   // ✅ "曲线救国"——数组引用没变，改的是数组内容</code></pre>
+  <ul>
+    <li><strong>根因是生命周期错位</strong>：局部变量活在栈帧，方法一返回栈帧就弹出；而 Lambda/匿名类对象可能活得比方法久（被缓存、提交到线程池）。所以编译器<strong>捕获的不是变量而是值拷贝</strong>——把值复制进 Lambda 对象的合成字段（匿名类里能看到 <code>val$counter</code>）。</li>
+    <li>既然是拷贝，原变量再改也同步不到副本里——两个"变量"从此是两份独立数据。Java 干脆禁止捕获后再赋值，避免"看起来是一个变量、实际各改各的"的认知陷阱（语言设计的诚实原则：做不到共享，就别假装共享）。</li>
+    <li>对比：成员变量/静态变量<strong>不需要 final</strong>——它们在堆里，Lambda 捕获的是引用，改的是同一份。</li>
+    <li><code>int[] box</code> 是常见的绕过写法，但并发下非原子（<code>box[0]++</code> 丢更新）；真要跨线程计数用 <code>AtomicInteger</code>——链 <a href="../02-concurrency/05-无锁编程.html">02-concurrency 无锁编程</a>。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>："局部变量在栈上会随方法结束销毁，Lambda 可能活得更久，所以捕获的是值拷贝；拷贝后两边独立，Java 禁止捕获后再修改以免误导；成员变量不拷贝引用，故无需 final。"——四个要点按顺序说完整就是满分。</p></div>
+  <h3>匿名类 vs Lambda（不是简单语法糖）</h3>
+  <table>
+    <tr><th>维度</th><th>匿名内部类</th><th>Lambda</th></tr>
+    <tr><td>编译产物</td><td>独立 class 文件</td><td>不生成类，编译为 <code>invokedynamic</code> 指令</td></tr>
+    <tr><td>运行机制</td><td>普通对象创建</td><td>首次调用时 <code>LambdaMetafactory</code> 动态生成/映射实现类</td></tr>
+    <tr><td>this 语义</td><td>匿名类实例</td><td>外部实例（词法 this）</td></tr>
+    <tr><td>变量遮蔽</td><td>可定义与外部同名的成员变量（遮蔽）</td><td>不能遮蔽外部局部变量</td></tr>
+    <tr><td>适用范围</td><td>任意接口/抽象类（可加状态字段）</td><td>仅函数式接口（无状态）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：匿名类是"声明同时实例化"的一次性类，Lambda 出现前的回调全靠它；两者最本质的差异是<strong>实现机制</strong>（独立 class vs invokedynamic）和 <strong>this 指向</strong>。深入展开在 <a href="10-Lambda与Stream.html">第 10 章 Lambda 与 Stream</a>。</p></div>
+  <div class="box warn"><p><strong>泄漏陷阱</strong>：匿名类持外部引用——Android 里 Handler/Runnable 匿名类拖住 Activity；服务端里注册到全局事件总线的匿名监听器忘记反注册，拖住整个大对象图。排查手段：heap dump 看 <code>this$0</code> 引用链。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">10</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：初始化顺序 → 局部变量放块里行吗？</strong>→ 不能，静态块/实例块都在类/实例层面，方法内声明的"块"只有 <code>{}</code> 普通代码块（属于方法作用域，按位置顺序执行，不参与初始化语义）。</li>
+    <li><strong>追问链：通过子类名访问父类静态字段，子类会初始化吗？</strong>→ 不会。<code>Child.PS</code>（PS 声明在 Parent）编译期直接优化为 <code>Parent.PS</code>，只触发 Parent 的 <code>&lt;clinit&gt;</code>——和"3. 子类静态字段"输出对不上的经典题眼。</li>
+    <li><strong>追问链：静态块加锁 → 那多线程同时第一次用这个类会怎样？</strong>→ 一个线程执行 <code>&lt;clinit&gt;</code>，其余阻塞等待；这也是"静态块死锁"的来源（两个类互相依赖、两个线程各自持有一个类的初始化锁）。</li>
+    <li><strong>追问链：构造器是创建对象的那一步吗</strong>→ 不是，先分配后装修：内存分配与字段默认值先于 &lt;init&gt;（第 03 节时序图）；那多线程同时 new 会怎样 → TLAB 各自分配，天生安全；什么时候才真出事 → this 逸出，或"全局只许 new 一次"的单例首次并发。</li>
+    <li><strong>陷阱：final 字段在构造器里"被重写方法"读到 null</strong>→ 父类构造器调用被子类重写的方法，此时子类 final 字段尚未赋值——完整反例在第 03 章构造器链一节。</li>
+    <li><strong>陷阱：<code>static final</code> 引用对象 ≠ 编译期常量</strong>→ 只有基本类型和 String 字面量才会宏替换；<code>static final List</code> 的访问仍会触发类初始化。</li>
+    <li><strong>陷阱：接口里也可以有初始化…吗</strong>→ 接口不能有初始化块和构造器，但接口的初始化（<code>&lt;clinit&gt;</code>）会初始化其中的字段常量；初始化实现类不会触发初始化其接口（初始化接口的只有访问其字段等少数路径）。</li>
+    <li><strong>追问：内部类的 class 文件名？反射能拿到匿名类名字吗？</strong>→ <code>Outer$Inner</code> / <code>Outer$1</code>；匿名类 <code>getClass().getName()</code> 形如 <code>Outer$1</code>，日志里见到别慌。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">11</span>面试自查清单</h2>
+  <ol>
+    <li>能默写完整初始化顺序并解释 &lt;clinit&gt;（一次、加锁）与 &lt;init&gt;（每次 new、实例块内联进构造器）。</li>
+    <li>能说清静态变量存储的版本差异：规范层方法区 → JDK 8+ 元空间存类元数据、静态变量随堆中 Class 对象。</li>
+    <li>能区分 static 方法的 hiding 与实例方法的 override，并用一段代码证明字段/static 均无多态。</li>
+    <li>final 三种语义 + "final 引用仍可改对象内容" + 空白 final + 编译期常量宏替换的坑。</li>
+    <li>this 的四种用法，this() 与 super() 互斥且必须第一行；理解 this 逃逸为什么危险。</li>
+    <li>能讲清 new 的时序：内存分配与字段默认值先于 &lt;init&gt;，构造器只初始化不创建；并发 new 各自安全（TLAB），危险在 this 逸出。</li>
+    <li>四种内部类的位置、引用关系、编译产物，能讲出"嵌套类能 static 就 static"的 GC 理由。</li>
+    <li>能写出 Holder 单例并解释它线程安全 + 懒加载的原理（&lt;clinit&gt; 加锁）。</li>
+    <li>能对比匿名类与 Lambda 的实现机制（独立 class vs invokedynamic）和 this 指向差异。</li>
+    <li>能从"栈帧弹出 vs Lambda 生命周期"讲清 effectively final 的根因（值拷贝 + 禁止回写）。</li>
+    <li>知道引用定位两种方案（句柄/直接指针）、压缩指针与堆 32G 的关系。</li>
+  </ol>
+  <div class="box note"><p><strong>内容来源</strong>：本章在 AlgoMaster 蓝本与仓库笔记基础上，参考并合并了 <a href="https://javaguide.cn/java/basis/java-basic-questions-02.html">JavaGuide · Java 基础常见面试题（中）</a>的问答口径（对象实例 vs 引用、深浅拷贝、成员变量对比表等，重构改写）。</p></div>
+  <div class="pager">
+    <a href="01-基础语法.html">⬅ 上一章：基础语法与类型系统</a>
+    <a class="next" href="03-继承与多态.html">下一章：继承与多态 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 02 章 面向对象基础</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

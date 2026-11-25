@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 14 章 · 新特性演进 Java 8 → 21+ — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#map">版本全景与 LTS</a>
+  <a href="#j8">Java 8 ⭐⭐</a>
+  <a href="#j9-11">Java 9~11</a>
+  <a href="#j12-16">Java 12~16</a>
+  <a href="#j17">Java 17：sealed</a>
+  <a href="#j21">Java 21 LTS ⭐</a>
+  <a href="#j22-25">Java 22~25：新 LTS ⭐</a>
+  <a href="#adt">sealed+record 新范式</a>
+  <a href="#choice">生产版本怎么答</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="13-日期时间.html">上一章：13 日期时间</a>
+  <a href="15-最佳实践.html">下一章：15 最佳实践 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 14 章 · 新特性演进 Java 8 → 21+</h1>
+    <div class="sub">按版本串联：每个特性讲"解决什么痛点 + 怎么用" —— 面试考的不是背清单，是你有没有跟着语言一起成长</div>
+    <div class="meta">
+      <span>⭐ 高频：record / 虚拟线程 / 模式匹配 / 生产版本选型</span>
+      <span>蓝本：AlgoMaster Java · Java Features Evolution</span>
+      <span>JavaGuide 合并 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>你们生产环境用哪个 Java 版本？为什么选它、为什么没升？⭐⭐</li>
+      <li>Java 8 有哪些核心新特性？接口的 default 方法解决了什么问题？</li>
+      <li>var 是动态类型吗？它有哪些使用限制？</li>
+      <li>record 和 Lombok @Data 有什么区别？record 能被继承吗？⭐</li>
+      <li>sealed 类解决什么问题？和 record、模式匹配怎么配合？</li>
+      <li>switch 的模式匹配、记录模式是怎么回事？</li>
+      <li>虚拟线程是什么？和平台线程什么关系？适合什么场景？⭐</li>
+      <li>从 8 升级到 17 你们踩过什么坑？（模块封装 / --add-opens）</li>
+    </ol>
+  </div>
+  <p>这一章是<strong>区分"API 使用者"和"跟着语言演进的人"</strong>的章节。答法上忌讳背流水账（"8 有 Lambda，9 有模块，10 有 var……"），正确姿势是<strong>每个特性都用"痛点 → 方案 → 我怎么用"</strong>三段式讲，最后一定要落到"我们生产在哪个版本、为什么"，这是高级岗必问。</p>
+</section>
+
+<section id="map">
+  <h2><span class="no">02</span>版本全景：发布节奏与 LTS</h2>
+  <p>2018 年起 Java 改为<strong>每 6 个月发一版</strong>（3 月 / 9 月），每 2 年一个 LTS。面试只需要记牢 LTS 骨架：</p>
+  <table>
+    <tr><th>版本</th><th>年份</th><th>定位</th><th>面试聊点（每版 2~3 个）</th></tr>
+    <tr><td><strong>8</strong> (LTS)</td><td>2014</td><td>函数式转折点</td><td>Lambda / Stream / 新日期时间 / 接口 default</td></tr>
+    <tr><td>9</td><td>2017</td><td>模块化</td><td>JPMS 模块系统 / 接口私有方法 / Compact Strings（String char[]→byte[]，详见 <a href="05-封装与不可变.html#string">05 章</a>）</td></tr>
+    <tr><td>10</td><td>2018.3</td><td>语法减负</td><td>var 局部变量类型推断</td></tr>
+    <tr><td><strong>11</strong> (LTS)</td><td>2018.9</td><td>首个新节奏 LTS</td><td>HTTP Client / String 增强 / 单文件运行</td></tr>
+    <tr><td>12~14</td><td>2019~2020</td><td>预览孵化期</td><td>switch 表达式（14 转正）</td></tr>
+    <tr><td>15~16</td><td>2020~2021</td><td>数据载体成型</td><td>文本块（15）/ record、instanceof 模式（16）</td></tr>
+    <tr><td><strong>17</strong> (LTS)</td><td>2021</td><td>生态分水岭</td><td>sealed 转正；Spring Boot 3 最低版本</td></tr>
+    <tr><td><strong>21</strong> (LTS)</td><td>2023</td><td>并发新时代</td><td>虚拟线程 / 模式匹配 for switch / 记录模式 / 分代 ZGC</td></tr>
+    <tr><td><strong>25</strong> (LTS)</td><td>2025</td><td>最新 LTS</td><td>虚拟线程 pinning 修复、紧凑对象头等持续优化</td></tr>
+  </table>
+  <div class="box tip"><p><strong>记法</strong>：LTS 链 "8 → 11 → 17 → 21 → 25"。中间小版本的意义是"新特性以预览形式快速试错，转正后再进 LTS"——所以聊特性时要能说清它是哪个版本转正的（如 record 16、sealed 17、switch 模式 21），这是体现熟练度的细节。</p></div>
+</section>
+
+<section id="j8">
+  <h2><span class="no">03</span>Java 8 ⭐⭐：现代 Java 的起点</h2>
+  <h3>Lambda 与函数式接口：行为参数化</h3>
+  <p><strong>痛点</strong>：把"一段行为"当参数传，过去只能写匿名内部类——四五行为了一行逻辑，且冗余的语法淹没了意图（著名的垂直问题）。</p>
+  <pre><code>// <span class="cm">排序逻辑从"传入一个对象"变成"传入一个行为"，且只保留意图本身：</span>
+list.sort(Comparator.comparing(User::getAge).thenComparing(User::getName));
+
+Runnable r = () -&gt; System.out.println("go");          // <span class="cm">@FunctionalInterface 单抽象方法才能用 Lambda</span>
+
+// <span class="cm">四大内置函数式接口（背下来，面试常考搭配）：</span>
+// Predicate&lt;T&gt;   boolean test(T t)        —— 断言：filter 的参数
+// Function&lt;T,R&gt;  R apply(T t)             —— 转换：map 的参数
+// Consumer&lt;T&gt;    void accept(T t)         —— 消费：forEach 的参数
+// Supplier&lt;T&gt;    T get()                  —— 供给：懒加载 / 工厂</code></pre>
+  <ul>
+    <li>Lambda 的本质：函数式接口的实例（编译期生成 invokedynamic 指令 + LambdaMetafactory 运行期生成，而非匿名内部类——后者每次都生成 class 文件，这是追问点）。机制详解在 <a href="10-Lambda与Stream.html">第 10 章</a>。</li>
+    <li>方法引用 <code>Class::method</code> 是 Lambda 的进一步简化，四类形式要认得。</li>
+  </ul>
+  <h3>Stream：声明式的集合处理</h3>
+  <p><strong>痛点</strong>：命令式循环 + 中间状态变量，样板代码多且难并行。<strong>Stream 把"怎么做（循环）"换成"做什么（算子）"</strong>：source → 中间操作（惰性）→ 终端操作（触发），如 <code>filter</code> / <code>map</code> / <code>flatMap</code> / <code>collect(groupingBy)</code>。深入（惰性求值、短路、并行流坑）同样在 <a href="10-Lambda与Stream.html">第 10 章</a>，本章不重复。</p>
+  <h3>接口的 default / static 方法：接口演进</h3>
+  <p><strong>痛点</strong>：接口一旦发布，加一个抽象方法 = 破坏全世界所有实现类。Java 8 要给 <code>Collection</code> 加 <code>stream()</code>，靠的就是 default 方法给存量实现类兜底。</p>
+  <pre><code>public interface PaymentChannel {
+    String channelCode();
+
+    default boolean supportsRefund() {        // <span class="cm">默认实现，老实现类不改造也能编译通过</span>
+        return true;
+    }
+    static PaymentChannel of(String code) {   // <span class="cm">接口静态方法：工厂逻辑收进接口本身</span>
+        return ChannelRegistry.find(code);
+    }
+}</code></pre>
+  <ul>
+    <li><strong>多实现冲突规则</strong>（高频追问）：① 类里的方法永远优先于接口 default；② 两个接口都有同名 default 时，编译器强制你重写，需要的话用 <code>X.super.m()</code> 指定调谁。</li>
+    <li>新日期时间 API 也是 8 的大件，已在 <a href="13-日期时间.html">第 13 章</a>完整覆盖。</li>
+  </ul>
+</section>
+
+<section id="j9-11">
+  <h2><span class="no">04</span>Java 9~11：模块化 · var · HTTP Client</h2>
+  <h3>Java 9：JPMS 模块系统</h3>
+  <p><strong>痛点</strong>：classpath 是一锅粥——JAR 缺失 / 冲突只有运行期才炸（NoClassDefFoundError），JDK 内部 API 被随意反射（sun.misc.Unsafe 一堆黑魔法），无法按模块裁剪运行时。</p>
+  <pre><code>module com.order.service {
+    requires java.sql;                 // <span class="cm">显式依赖，启动期校验，缺了直接起不来（错误左移）</span>
+    requires transitive java.logging;  // <span class="cm">传递依赖：用我的模块的人自动可见</span>
+    exports com.order.service.api;     // <span class="cm">只导出 api 包，内部实现对外不可见（强封装）</span>
+}</code></pre>
+  <ul>
+    <li>业务系统一般<strong>不写 module-info</strong>（Spring 生态按普通 classpath 跑，称 automatic module / unnamed module），但模块化带来的<strong>JDK 内部强封装</strong>影响所有人：JDK 16 起（JEP 396/403）默认拒绝反射访问 JDK 内部，这正是很多老项目从 8 升 11/17 时报 <code>InaccessibleObjectException</code>、要加 <code>--add-opens java.base/java.lang=ALL-UNNAMED</code> 的原因——<strong>升级实战故事的标配素材</strong>。</li>
+    <li>另一个红利是 <code>jlink</code>：按模块裁剪出几十 MB 的自定义运行时（配合 jpackage 做 CLI 工具分发）。</li>
+    <li><strong>接口私有方法</strong>（9 正式）：default 方法多了之后抽公共私有逻辑，接口的演进能力补完。</li>
+    <li>顺带：<code>List.of()</code> / <code>Set.of()</code> / <code>Map.of()</code> 集合工厂，一行造不可变集合。</li>
+  </ul>
+  <h3>Java 10：var 局部变量类型推断</h3>
+  <pre><code>var users = new ArrayList&lt;User&gt;();              // <span class="cm">右边信息足够时，左边不啰嗦</span>
+var map = new HashMap&lt;String, List&lt;Order&gt;&gt;();  // <span class="cm">泛型钻石的样板代码消失</span>
+for (var entry : map.entrySet()) { ... }</code></pre>
+  <ul>
+    <li><strong>var 仍是静态类型</strong>：编译期推断出确定类型，不是 JS 的 var、也不是动态类型——推断完就是 <code>ArrayList&lt;User&gt;</code>，之后不能再赋别的类型。</li>
+    <li><strong>限制</strong>（追问高频）：只能用于<strong>局部变量</strong>（要有初始化器）；不能用于字段、方法参数、返回值、catch 参数；<code>var a = null</code> 不行（推不出来）；<code>var</code> 是保留类型名不是关键字，老代码里叫 var 的变量名仍合法。</li>
+    <li>使用品味：右边类型显而易见才用（new 表达式、工厂方法），<code>var x = service.process()</code> 这种右边看不出类型的，写了降低可读性。</li>
+  </ul>
+  <h3>Java 11：HTTP Client / String 增强 / 单文件运行</h3>
+  <pre><code>HttpClient client = HttpClient.newHttpClient();            // <span class="cm">内建 HTTP/2、同步异步双模</span>
+HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.example.com/orders"))
+        .header("Accept", "application/json").build();
+HttpResponse&lt;String&gt; resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+
+// <span class="cm">异步：返回 CompletableFuture，天然融入响应式/回调编排</span>
+client.sendAsync(req, HttpResponse.BodyHandlers.ofString())
+      .thenApply(HttpResponse::body)
+      .thenAccept(body -&gt; log.info("{}", body));
+
+// <span class="cm">String 增强：isBlank / strip（懂 Unicode 空格，trim 不懂）/ lines / repeat</span>
+"  hi  ".strip();
+"a,b,c".lines().count();
+"-".repeat(20);
+
+// <span class="cm">单文件运行：脚本化的第一步，不用先 javac</span>
+$ java Hello.java</code></pre>
+  <ul>
+    <li><strong>痛点</strong>：HttpURLConnection API 古老（2011 年前的设计）、回调式读流难用，多数人被迫引 Apache HttpClient / OkHttp；JDK 11 把现代化客户端标准化，小工具 / SDK 可以零依赖。</li>
+    <li>11 还悄悄删了 Nashorn（JS 引擎）、JEE 模块（java.xml.bind 等）——升级时 <code>NoClassDefFoundError: javax/xml/bind</code> 也是常见坑，答"升级踩坑"时用得上。</li>
+  </ul>
+</section>
+
+<section id="j12-16">
+  <h2><span class="no">05</span>Java 12~16：switch 表达式 · 文本块 · record</h2>
+  <h3>switch 表达式（12 预览，14 转正）</h3>
+  <p><strong>痛点</strong>：老 switch 的 fall-through 忘 break 是万 bug 之源；switch 只是语句不能直接"求值"；case 齐不齐编译器不管。</p>
+  <pre><code>// <span class="cm">箭头语法：无 fall-through、一个 case 多值、switch 成了"表达式"能直接返回值</span>
+int days = switch (month) {
+    case JAN, MAR, MAY, JUL, AUG, OCT, DEC -&gt; 31;
+    case FEB -&gt; 28;
+    default -&gt; 30;
+};
+// <span class="cm">复杂分支用 yield 返回：</span>
+String label = switch (status) {
+    case PAID -&gt; "已支付";
+    case REFUNDING -&gt; {
+        log.info("refund in progress");
+        yield "退款中";                   // <span class="cm">块里用 yield 而不是 return</span>
+    }
+    default -&gt; "未知";
+};</code></pre>
+  <ul>
+    <li>对枚举 switch 时，穷尽了所有枚举值可以省 default——<strong>编译器帮你检查漏分支</strong>，这是后续"模式匹配 + sealed"路线的第一步。</li>
+  </ul>
+  <h3>文本块（13 预览，15 转正）</h3>
+  <pre><code>String json = """
+        {
+          "orderId": "%s",
+          "amount": %d
+        }
+        """.formatted(orderId, amount);
+// <span class="cm">三引号：换行、缩进原样保留；公共缩进自动剥离（incidental indent）</span>
+// <span class="cm">行尾 \\ 续行拼一行；\\s 保留尾随空格 —— 写 JSON / SQL / HTML 模板不再手拼 \n</span>
+String sql = """
+        select id, amount from t_order
+        where user_id = ? and status = ?
+        """;</code></pre>
+  <h3>record（14 预览，16 转正）：不可变数据载体</h3>
+  <pre><code>// <span class="cm">一行 = 构造器 + 全只读访问器 + equals/hashCode/toString（按字段值）</span>
+public record OrderResponse(Long orderId, BigDecimal amount, String status) {}
+
+// <span class="cm">紧凑构造器：做参数校验 / 规范化的位置，不用重写整个构造器</span>
+public record Money(BigDecimal amount, String currency) {
+    public Money {                              // <span class="cm">无参数列表，编译器仍帮你赋值</span>
+        Objects.requireNonNull(currency);
+        amount = amount.setScale(2, RoundingMode.HALF_UP);
+    }
+    public boolean isZero() { return amount.signum() == 0; }  // <span class="cm">可以加普通方法 / 静态工厂</span>
+}</code></pre>
+  <ul>
+    <li><strong>解决什么</strong>：Java 写纯数据类要 IDE 生成上百行（getter/equals/hashCode/toString），Lombok 是社区补丁，record 是语言级答案——而且语义更强：<strong>值语义</strong>（两个字段相同的 record equals 为 true），天然适合当 Map key、DTO、多返回值。</li>
+    <li><strong>限制</strong>（必考）：隐式 final <strong>不能被继承</strong>（也不能继承别的类，只能实现接口）；<strong>字段全部 final</strong>，没有 setter——它是不可变载体，不是 JavaBean；组件可以可变（字段是 List 时不防御拷贝，需要自己在紧凑构造器里 <code>List.copyOf()</code>）。</li>
+    <li><strong>record vs Lombok @Data</strong>：@Data 生成 setter（可变）、生成的是"逐字段 equals"但类仍是普通类；record 不可变 + 值语义 + 可解构（配合记录模式）。DTO / 值对象优先 record，需要可变 JavaBean（部分 ORM / 老框架绑定）才用 Lombok。</li>
+  </ul>
+  <div class="box note"><p>16 还有 <strong>instanceof 模式匹配</strong>：<code>if (obj instanceof String s &amp;&amp; !s.isBlank())</code> 判断 + 转型 + 绑定变量一步完成，告别"先 instanceof 再强转"两行。它是后面 switch 模式匹配的前置语法。</p></div>
+</section>
+
+<section id="j17">
+  <h2><span class="no">06</span>Java 17 LTS：sealed 转正与生态分水岭</h2>
+  <h3>sealed（17 转正）：受控继承</h3>
+  <p><strong>痛点</strong>：接口/抽象类的继承要么全开（谁都能 implements，分支永远写不全）要么全关（final）。<strong>sealed 把"谁能实现我"写进类型声明</strong>，介于两者之间。</p>
+  <pre><code>public sealed interface Payment permits AliPay, WeChatPay, BankCard {}  // <span class="cm">白名单：只有这三个</span>
+public record AliPay(String tradeNo)      implements Payment {}   // <span class="cm">子类必须 final / sealed / non-sealed 三选一</span>
+public record WeChatPay(String openId)    implements Payment {}
+public record BankCard(String cardNo)     implements Payment {}</code></pre>
+  <ul>
+    <li><strong>它的价值要靠组合兑现</strong>：sealed 限定了实现集合 → 编译器知道 switch 覆盖了所有情况 → <strong>穷尽性检查</strong>（漏 case 直接编译错误，新增实现时所有 switch 自动报错提醒）——这是 Java 版"代数数据类型"的最后一块拼图（下一节展开）。</li>
+    <li>子类必须与父类同模块（或同包），且必是 final / sealed / non-sealed 之一——继承关系在编译期完全可见。</li>
+    <li><strong>17 是生态分水岭</strong>：Spring Boot 3 / Spring 6 最低要求 17，这条几乎是"要不要升级"的决策开关。所以国内大量公司停在 11 的直接原因消失，17→21 成为当前主流升级路径。</li>
+  </ul>
+</section>
+
+<section id="j21">
+  <h2><span class="no">07</span>Java 21 LTS ⭐：虚拟线程 / 模式匹配 / 分代 ZGC</h2>
+  <h3>虚拟线程（JDK 19 预览，21 转正）—— 本章只做入口</h3>
+  <pre><code>// <span class="cm">三种创建方式：</span>
+Thread t = Thread.ofVirtual().name("v-", 0).start(runnable);   // <span class="cm">直接建</span>
+Runnable r = Thread.ofVirtual().unstarted(() -&gt; handle(req));
+
+try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {  // <span class="cm">每任务一线程，来一百万个也不慌</span>
+    IntStream.range(0, 100_000).forEach(i -&gt; executor.submit(() -&gt; {
+        var data = httpClient.send(...);   // <span class="cm">阻塞在 IO 上时，虚拟线程被"卸载"，载体线程去跑别的</span>
+        return db.query(data);
+    }));
+}</code></pre>
+  <ul>
+    <li><strong>一句话是什么</strong>：JVM 调度的轻量线程（非 OS 线程），由 JDK 自己把虚拟线程<strong>挂载到少量平台线程（载体线程）</strong>上；阻塞调用（HTTP、JDBC）会被 JVM 拦截，把载体线程让出去。</li>
+    <li><strong>解决什么</strong>：线程 = 资源的旧模型下，IO 密集服务想扛高并发只能"每连接一线程（内存撑不住）"或"回调/响应式（难写难调）"。虚拟线程让你<strong>用同步阻塞的写法拿到异步的吞吐</strong>——"每请求一线程"模型复活。</li>
+    <li><strong>适合</strong>：IO 密集（Web、网关、爬虫、调外部接口）。<strong>不适合</strong>：CPU 密集（虚拟线程不提升计算吞吐，线程数再多核还是那几个）。</li>
+    <li>注意：不要池化虚拟线程；synchronized 块内阻塞会 pin 载体线程（JDK 21 已知问题，24 才修复）；ThreadLocal 滥用在百万线程下内存翻车——这些深入机制全部在 <a href="../02-concurrency/10-虚拟线程.html">02 并发板块 · 第 10 章虚拟线程</a>展开（原理 mount/unmount、M:N 调度、pin 演进、迁移清单共 10 节）。</li>
+  </ul>
+  <h3>模式匹配 for switch + 记录模式（21 转正）</h3>
+  <pre><code>String describe(Object obj) {
+    return switch (obj) {
+        case Integer i when i &gt; 0 -&gt; "正整数 " + i;   // <span class="cm">类型模式 + when 守卫</span>
+        case Integer i      -&gt; "非正整数";
+        case String s       -&gt; "字符串: " + s;         // <span class="cm">自带绑定，无强转</span>
+        case Point(int x, int y) -&gt; "点(%d,%d)".formatted(x, y);  // <span class="cm">记录模式：直接解构 record</span>
+        case null           -&gt; "空";                   // <span class="cm">null 也能接住（旧 switch 直接 NPE）</span>
+        default             -&gt; "其他";
+    };
+}
+public record Point(int x, int y) {}</code></pre>
+  <ul>
+    <li><strong>对比 JDK 16 的 instanceof 模式</strong>：if 版只能"一个类型一个 if"，switch 版可以穷尽、可以解构嵌套（<code>case Line(Point a, Point b)</code> 一路拆到底）、编译器查穷尽性。</li>
+    <li>记录模式 = record 的"反操作"：构造时聚合，解构时拆开——数据和类型配对成完整闭环。</li>
+  </ul>
+  <h3>分代 ZGC（JDK 21 转正，JEP 439）</h3>
+  <ul>
+    <li>ZGC 此前不分代（所有对象一个堆），优点是停顿 &lt;1ms，缺点是为维持低停顿整体 CPU 开销偏高；<strong>分代 ZGC 引入分代假设</strong>（朝生夕死对象占多数），年轻代独立回收，吞吐开销显著降低。</li>
+    <li>用法：<code>-XX:+UseZGC -XX:+ZGenerational</code>（JDK 23 起分代成为默认、JDK 24 移除开关方向不变）。面试口径：大堆（几十 GB）+ 低延迟（P99 不抖）的服务，21 时代首选分代 ZGC；一般吞吐型应用 G1 仍然够用。GC 深入在 <a href="../03-jvm/README.html">03 JVM 板块</a>。</li>
+  </ul>
+  <div class="box tip"><p><strong>21 一句话总结</strong>（可直接背）："21 是并发模型换代 + 数据建模范式成型双重意义的 LTS：虚拟线程把 IO 密集服务的吞吐天花板抬高一个数量级，sealed+record+模式匹配让业务建模有了函数式的表达力，分代 ZGC 补齐了低延迟 GC 的吞吐短板。"</p></div>
+</section>
+
+<section id="j22-25">
+  <h2><span class="no">08</span>Java 22~25：新 LTS 25 与最新演进 ⭐（2026 年的区分度题）</h2>
+  <p>JDK 25（2025-09 发布）是继 8/11/17/21 之后的第五个 LTS。面试聊到它不要求精通，但<strong>要能说出两三个特性和方向</strong>——这直接证明你的知识停在"现役"，而不是停在 JDK 8/17。</p>
+  <table>
+    <tr><th>版本</th><th>时间</th><th>值得面试提的点</th></tr>
+    <tr><td>JDK 22</td><td>2024-03</td><td>未命名变量 <code>_</code> 转正（JEP 456：<code>catch (Exception _) </code>）；FFM API 转正（443→454，替代 Unsafe 调本地库）；G1 区域固定（423）</td></tr>
+    <tr><td>JDK 23</td><td>2024-09</td><td><strong>分代 ZGC 成为默认</strong>（474，非分代被废弃）；Markdown 文档注释预览（467）；<strong>字符串模板被撤回</strong>——21/22 预览过、23 说不做了，"预览特性 ≠ 承诺"的活教材</td></tr>
+    <tr><td>JDK 24</td><td>2025-03</td><td><strong>虚拟线程不再固定载体线程</strong>（491：synchronized 块内 park 也不再钉住平台线程——21 虚拟线程最大的痛点被修掉）；紧凑对象头转正（450）；Stream Gatherers 转正（485）；后量子密码转正（496/497）；SecurityManager 永久失效（486）</td></tr>
+    <tr><td><strong>JDK 25 LTS</strong></td><td>2025-09</td><td><strong>紧凑对象头设为默认</strong>（519）；AOT 缓存系列（514/515，启动加速）；<strong>结构化并发第五次预览</strong>（505）、Scoped Values 转正（506）；<strong>构造器灵活方法体转正</strong>（513）；<strong>简单源文件与实例 main 转正</strong>（512：<code>void main()</code> 直接能跑）；模块导入声明转正（511）；基本类型模式转正（507）；32 位 x86 移植移除（503）</td></tr>
+  </table>
+  <h3>三个能展开 30 秒的亮点</h3>
+  <ul>
+    <li><strong>紧凑对象头（Compact Object Headers，JEP 450→519）</strong>：把 Mark Word + klass pointer 从 12~16 字节压到一个 <strong>8 字节字</strong>（锁定状态、GC 元数据、类指针压缩进一个 64 位编码）。默认开启后<strong>堆里几十亿小对象普遍省 10%~20% 内存</strong>，对象越碎收益越大——和第 <a href="02-面向对象.html">02 章</a>的 Mark Word 布局直接呼应："对象头的四种身份"被整体重新编码了。</li>
+    <li><strong>构造器灵活方法体（Flexible Constructor Bodies，JEP 513）</strong>：以前 super(...)/this(...) 必须是第一行；现在允许在调用父构造器<strong>之前</strong>先写字段赋值、参数校验等"不碰本实例成员"的代码——解决"参数先校验再传给 super"的老痛点，继承体系的初始化规则（02 章初始化顺序）不变，只是编译器多了更细的"不得访问未初始化实例"检查。</li>
+    <li><strong>简单源文件与实例 main（JEP 512）</strong>：<code>void main()</code> 不用类壳、不用 static、不用 String[] args——Java 终于有了"脚本式入口"，教学/原型/单文件工具（jshell 之外的另一条路）。配合 JEP 511 的模块导入声明，Java 25 起的"新手第一课"代码已经和 Python 一样短。</li>
+  </ul>
+  <pre><code>// JDK 25：第一个 Java 程序的全部（JEP 512 转正）
+void main() {
+    IO.println("Hello, JDK 25!");      // java Hello.java 直接跑
+}
+
+// 未命名变量（JEP 456）：
+try { ... } catch (Exception _) { ... }        // 我知道会炸，但我不关心是谁
+record Point(int x, int y) {}
+if (obj instanceof Point(int x, _)) { ... }    // 模式匹配里只取要的组件</code></pre>
+  <div class="box tip"><p><strong>答题口径</strong>："我们 17/21 的存量 + 在评估 25：最想吃到的是<strong>紧凑对象头默认化</strong>（小对象多的服务直接省内存）和 <strong>JDK 24 修掉的虚拟线程 synchronized 钉住问题</strong>；另外提一句字符串模板被撤回、结构化并发还在预览——说明你知道预览特性怎么跟。"这段话覆盖了 5 个知识点，且全部是 2024-2025 的新鲜事。</p></div>
+  <div class="box warn"><p><strong>预览特性纪律</strong>：Java 半年一版后，"预览（preview）/转正（final）/撤回（withdrawn）"成了独立的考点维度。可背案例：字符串模板 21/22 两轮预览后 23 撤回；结构化并发 19 起至今五轮预览未转正；record 却是 14/15 两轮预览后 16 准时转正——<strong>生产别上预览特性，评估时看它第几轮预览</strong>。</p></div>
+</section>
+
+<section id="adt">
+  <h2><span class="no">09</span>sealed + record + 模式匹配：业务建模的新范式</h2>
+  <p>三个特性单独看都只是语法，组合起来是 <strong>代数数据类型（ADT）</strong>：sealed 定义"和类型"（Payment = AliPay <em>或</em> WeChatPay <em>或</em> BankCard），record 定义"积类型"（AliPay = tradeNo <em>且</em> amount），模式匹配做"和类型的消费"。这是 21 时代写业务代码的新范式，也是本章最值得背的一段代码。</p>
+  <h3>旧写法（Java 8 风格）</h3>
+  <pre><code>public interface Payment {}                               // <span class="cm">开放接口：谁都能实现</span>
+public class AliPay {
+    private final String tradeNo;
+    private final BigDecimal feeRate;
+    // <span class="cm">构造器 / getter / equals / hashCode 手写或 Lombok…</span>
+}
+
+BigDecimal fee(Payment p) {
+    if (p instanceof AliPay) {
+        AliPay a = (AliPay) p;                            // <span class="cm">强转</span>
+        return a.getFeeRate();
+    } else if (p instanceof WeChatPay) {
+        WeChatPay w = (WeChatPay) p;
+        return w.getFeeRate().multiply(new BigDecimal("1.1"));
+    }
+    throw new IllegalArgumentException("unknown payment"); // <span class="cm">新增渠道时这里静默漏掉，运行期才炸</span>
+}</code></pre>
+  <h3>新写法（Java 21）</h3>
+  <pre><code>public sealed interface Payment permits AliPay, WeChatPay, BankCard {}
+public record AliPay(String tradeNo, BigDecimal feeRate)      implements Payment {}
+public record WeChatPay(String openId, BigDecimal feeRate)    implements Payment {}
+public record BankCard(String cardNo, boolean domestic)       implements Payment {}
+
+BigDecimal fee(Payment p) {
+    return switch (p) {                                   // <span class="cm">对 sealed 类型 switch：编译器查穷尽性</span>
+        case AliPay(BigDecimal tradeNo, BigDecimal rate) -&gt; rate;               // <span class="cm">记录模式解构</span>
+        case WeChatPay w -&gt; w.feeRate().multiply(new BigDecimal("1.1"));
+        case BankCard b when !b.domestic() -&gt; new BigDecimal("3.00");          // <span class="cm">when 守卫细分</span>
+        case BankCard b -&gt; new BigDecimal("1.50");
+    };
+}
+// <span class="cm">明年加新渠道 BankTransfer：implements Payment 一写，所有未覆盖的 switch 直接编译失败，</span>
+// <span class="cm">IDE 一键定位所有要改的地方 —— 错误从"运行期线上事故"左移成"编译期必改项"。</span></code></pre>
+  <table>
+    <tr><th>维度</th><th>旧写法</th><th>sealed + record + 模式匹配</th></tr>
+    <tr><td>类型封闭性</td><td>开放，分支永远写不全</td><td>permits 白名单，编译器穷尽检查</td></tr>
+    <tr><td>样板代码</td><td>构造器/getter/equals 手写或 Lombok</td><td>record 一行全包，且不可变</td></tr>
+    <tr><td>取值方式</td><td>instanceof + 强转 + getter</td><td>模式匹配绑定 + 记录模式解构</td></tr>
+    <tr><td>新增实现的代价</td><td>静默漏分支，运行期异常</td><td>编译失败，改动点全部暴露</td></tr>
+  </table>
+  <div class="box tip"><p><strong>面试价值</strong>：能主动写出/讲出这段对比，等于同时证明了"跟到了 21"+"有建模品味"。可以补一句实战定位：对外暴露的 SPI 用不上 sealed（外部本来就该能扩展），<strong>内部业务分支建模</strong>（支付渠道、订单状态、消息类型）才是它的主场——这句边界感能再加一分。</p></div>
+</section>
+
+<section id="choice">
+  <h2><span class="no">10</span>面试必问："你们生产用什么版本、为什么"</h2>
+  <div class="box tip">
+    <p><strong>标准答法（骨架，按自己实际情况填充）</strong>：</p>
+    <ol>
+      <li><strong>现状</strong>："生产主体是 8 / 11 / 17（按事实说），国内多数公司分布也大致如此；我们是 __，新服务已经上 __。"</li>
+      <li><strong>为什么选它</strong>：选 17/21 的动机——Spring Boot 3 生态门槛（17 起）、GC 与启动性能收益、虚拟线程解决 IO 密集吞吐（21）、record/模式匹配降低样板代码量；</li>
+      <li><strong>为什么不激进</strong>：升级成本不在 JVM 本身，在生态——内部字节码增强框架（老版 ASM/CGLIB）、APM agent、JNI 原生库要逐个验证；模块强封装带来的 <code>--add-opens</code> 改造；回归测试成本。</li>
+      <li><strong>落地节奏</strong>：灰度一台 → 观察 GC/内存/RT → 分批；新服务直接新 LTS，老服务按"有需求才动"原则排期。</li>
+    </ol>
+  </div>
+  <ul>
+    <li><strong>升级实战素材（背一两个）</strong>：8→11：<code>javax.xml.bind</code> 没了要补依赖 / Nashorn 删除；11→17：JDK 内部反射默认被封，老 ORM / 序列化框架报 <code>InaccessibleObjectException</code>，加 <code>--add-opens</code> 或升级框架版本解决；17→21：检查 synchronized 长阻塞导致虚拟线程 pinning、CMS GC 早被移除（8 里用了 CMS 的要先换 G1）。</li>
+    <li><strong>反问预判</strong>："如果让你推动升级你怎么做？"——答：先立收益（压测数据：启动时间、内存、吞吐），再盘生态兼容清单，最后灰度 + 回滚预案。这是在考工程推动能力，不只是技术。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">11</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：record 能继承吗？→ 能实现接口吗？</strong>→ 不能被继承也 不能继承类（隐式 final，因为要保证 equals/hashCode 语义稳定）；可以实现接口、加静态工厂和普通方法。</li>
+    <li><strong>追问链：var 能用在 lambda 参数上吗？</strong>→ JDK 11 起可以（<code>(var x, var y) -&gt; ...</code>），唯一价值是能给参数加注解 <code>(@NonNull var x)</code>；成员变量、方法参数（非 lambda）、返回值都不行。</li>
+    <li><strong>陷阱：switch 表达式的 case 后两种写法</strong>——<code>-&gt;</code> 无 fall-through；老式 <code>:</code> 仍会 fall-through 必须 break。表达式里块分支用 yield 不是 return。</li>
+    <li><strong>陷阱：文本块第一行换行被忽略</strong>——<code>"""</code> 后必须换行，内容从下一行开始；尾部公共缩进以最后一行的缩进为基准剥离，格式不对时先看结尾 <code>"""</code> 的位置。</li>
+    <li><strong>追问链：虚拟线程能替代线程池吗？</strong>→ IO 密集高并发场景可以（任务粒度小、来多少开多少）；CPU 密集仍要平台线程池限流保护 CPU；也别拿它当"免费并行"用——细节（调度、pinning、结构化并发）见 <a href="../02-concurrency/10-虚拟线程.html">02 并发板块 · 第 10 章</a>。</li>
+    <li><strong>追问链：接口能定义构造器/成员变量吗？</strong>→ 不能构造器；成员变量只能 public static final 常量；能有的：抽象方法、default、static、私有方法（9+）、私有静态方法。</li>
+    <li><strong>陷阱：sealed 的子类和 permits 必须可互相访问</strong>（同模块或同包），且 permits 列表里的类漏写/多写都编译不过——它就是靠编译器强约束吃饭的。</li>
+    <li><strong>追问链：虚拟线程在 21 有什么坑，后来修了吗？</strong>→ synchronized 块内 park 会把虚拟线程"钉"在载体上（pinning），拖垮吞吐；JDK 24（JEP 491）改为不钉——评估虚拟线程时这是版本下限。另一坑：ThreadLocal 大量使用在百万虚拟线程下内存爆炸，官方替代是 Scoped Values（JDK 25 转正）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">12</span>面试自查清单</h2>
+  <ol>
+    <li>能背出 LTS 链 8→11→17→21→25，并说出每 6 个月一版、LTS 每 2 年的节奏。</li>
+    <li>Java 8 四大件（Lambda/Stream/default 方法/新日期）都能用"痛点+方案"讲，Lambda 字节码层面是 invokedynamic 知道即可。</li>
+    <li>var 的本质（静态类型推断）与四条限制能一次说全。</li>
+    <li>record 的自动生成清单、紧凑构造器、三条限制（final/不可变/不能继承）脱口而出，能对比 Lombok @Data。</li>
+    <li>能写一段 sealed + record + switch 模式匹配的完整例子，讲清穷尽性检查和错误左移。</li>
+    <li>虚拟线程能讲"是什么/挂载卸载/IO 密集收益/什么时候不适用"四点，并知道深入话题在哪。</li>
+    <li>分代 ZGC 能一句话说清它补了 ZGC 什么短板。</li>
+    <li>"生产用什么版本、为什么"有自己版本的四段式答法，且备好一个升级踩坑故事（--add-opens / javax.xml.bind / pinning 任一）。</li>
+    <li>知道 JDK 25 是新 LTS：紧凑对象头默认化、构造器体前置代码、void main()；说得出字符串模板被撤回、结构化并发仍在预览、JDK 24 修了虚拟线程 pinning。</li>
+  </ol>  <div class="box note"><p><strong>内容来源</strong>：参考并合并 JavaGuide（javaguide.cn）对应章节的问答口径与深度点，重构改写非照抄。</p></div>
+  <div class="pager">
+    <a href="13-日期时间.html">⬅ 上一章：日期时间</a>
+    <a class="next" href="15-最佳实践.html">下一章：最佳实践 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 14 章 新特性演进 Java 8 → 21+</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

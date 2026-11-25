@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 12 章 · 注解与反射 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#builtin">内置注解与元注解 ⭐</a>
+  <a href="#custom">自定义注解</a>
+  <a href="#reflectapi">反射 API 全景</a>
+  <a href="#perf">反射的性能与开销</a>
+  <a href="#accessible">setAccessible 与模块封装</a>
+  <a href="#practice">注解 + 反射实战 ⭐</a>
+  <a href="#proxy">JDK 动态代理 vs CGLIB ⭐</a>
+  <a href="#spi">SPI 机制</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="11-IO与NIO.html">← 上一章：11 IO 与 NIO</a>
+  <a href="13-日期时间.html">下一章：13 日期时间 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 12 章 · 注解与反射</h1>
+    <div class="sub">注解与保留策略 · 反射 API · 性能开销 · setAccessible 与模块封装 · 手写迷你框架 · JDK 动态代理 vs CGLIB · SPI —— Spring 的一切魔法都从这一章开始</div>
+    <div class="meta">
+      <span>⭐ 高频：保留策略 · JDK 动态代理 vs CGLIB · 反射性能</span>
+      <span>蓝本：AlgoMaster Java · Annotations &amp; Reflection</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span>已合并：Java/java 基础.md（反射/动态代理/SPI 一节） ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>注解的保留策略有哪几种？RUNTIME 和 SOURCE 分别对应什么框架用法？⭐⭐</li>
+      <li>元注解有哪些？@Retention 和 @Target 各控制什么？</li>
+      <li>获取 Class 对象有哪几种方式？有什么区别？</li>
+      <li>反射为什么慢？有哪些缓解手段？⭐</li>
+      <li>setAccessible(true) 做了什么？JDK 9 模块化之后它为什么经常失效？⭐</li>
+      <li>JDK 动态代理的原理？为什么只能代理接口？⭐⭐</li>
+      <li>CGLIB 和 JDK 动态代理的区别？Spring 里怎么选？⭐⭐</li>
+      <li>什么是 SPI？JDBC 驱动加载和它、和双亲委派有什么关系？</li>
+      <li>让你手写一个迷你 @Test 注解 + 运行器，思路是什么？</li>
+    </ol>
+  </div>
+  <p>注解 + 反射 + 动态代理是"懂 Spring"的前置知识：@Component 扫描、@Autowired 注入、@Transactional 事务、AOP 切面，全部建立在这三者之上。这一章的答题目标是：API 熟、原理清、能手写 30 行迷你框架、能讲框架选型。</p>
+</section>
+
+<section id="builtin">
+  <h2><span class="no">02</span>内置注解与元注解 ⭐</h2>
+  <h3>常用内置注解</h3>
+  <table>
+    <tr><th>注解</th><th>作用</th><th>保留策略</th></tr>
+    <tr><td><code>@Override</code></td><td>编译期检查覆写签名是否正确（父类/接口确有该方法）</td><td>SOURCE</td></tr>
+    <tr><td><code>@Deprecated</code></td><td>标记过时，调用处编译警告</td><td>RUNTIME</td></tr>
+    <tr><td><code>@SuppressWarnings</code></td><td>压制指定类型警告（unchecked、rawtypes…）</td><td>SOURCE</td></tr>
+    <tr><td><code>@FunctionalInterface</code></td><td>编译期校验"有且只有一个抽象方法"</td><td>RUNTIME</td></tr>
+    <tr><td><code>@SafeVarargs</code></td><td>声明泛型可变参数不做堆污染检查（只能用于 final/static/private 方法）</td><td>RUNTIME</td></tr>
+  </table>
+  <h3>元注解（用来注解"注解"的注解）</h3>
+  <table>
+    <tr><th>元注解</th><th>控制什么</th><th>常用取值</th></tr>
+    <tr><td><code>@Target</code></td><td>注解能贴在哪些位置</td><td>TYPE / METHOD / FIELD / PARAMETER / CONSTRUCTOR / ANNOTATION_TYPE …</td></tr>
+    <tr><td><code>@Retention</code></td><td>注解保留到哪个阶段（核心）</td><td>SOURCE / CLASS / RUNTIME</td></tr>
+    <tr><td><code>@Documented</code></td><td>是否进入 javadoc</td><td>—</td></tr>
+    <tr><td><code>@Inherited</code></td><td>子类是否可继承父类的注解（只对类有效，方法/字段不继承）</td><td>—</td></tr>
+    <tr><td><code>@Repeatable</code></td><td>同一位置可重复标注（JDK 8+，配合容器注解）</td><td>—</td></tr>
+  </table>
+  <h3>保留策略三档（高频）</h3>
+  <table>
+    <tr><th>策略</th><th>保留到哪</th><th>能否反射读取</th><th>典型代表</th></tr>
+    <tr><td><code>SOURCE</code></td><td>只存在于源码，编译后丢弃</td><td>否</td><td>@Override、@SuppressWarnings；<strong>Lombok</strong>（编译期注解处理器改 AST 生成代码）</td></tr>
+    <tr><td><code>CLASS</code>（默认值）</td><td>编进 class 文件，运行时 JVM 不加载</td><td>否</td><td>字节码增强工具（如一些 APT/字节码分析框架）</td></tr>
+    <tr><td><code>RUNTIME</code></td><td>运行时可通过反射读取</td><td><strong>是</strong></td><td>Spring 全家桶：@Component/@Autowired/@Transactional；MyBatis @Select；JUnit @Test</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>："自定义注解要被运行时读到必须 @Retention(RUNTIME)，否则反射拿不到——这是新手写注解框架最常见的第一坑。Lombok 是 SOURCE 级，编译期改字节码所以没有反射开销。"一句话区分"编译期注解处理"和"运行时反射处理"两条技术路线，就是加分点。</p></div>
+  <div class="box note"><p>注解本质：编译后注解是继承了 <code>java.lang.annotation.Annotation</code> 接口的特殊接口，注解成员是接口方法，取值存在编译期生成的常量池/运行时结构里——所以"注解不继承类、不能有未加 default 的成员缺省"。</p></div>
+</section>
+
+<section id="custom">
+  <h2><span class="no">03</span>自定义注解</h2>
+  <pre><code>@Target(ElementType.METHOD)                 // 只能贴方法
+@Retention(RetentionPolicy.RUNTIME)        // 运行时可通过反射读取
+public @interface Log {
+    String value() default "";             // 成员：以"无参方法"形式声明
+    boolean required() default true;       // 必须给默认值或使用时必须显式赋值
+}
+
+// 使用：value 可省略名字直接写
+@Log("查询用户")
+public User findUser(Long id) { ... }
+
+// 反射读取：
+Method m = clazz.getMethod("findUser", Long.class);
+if (m.isAnnotationPresent(Log.class)) {
+    Log log = m.getAnnotation(Log.class);
+    System.out.println(log.value());       // 查询用户
+}</code></pre>
+  <ul>
+    <li><strong>成员类型限制</strong>：基本类型、String、Class、枚举、注解、以及它们的一维数组——不能是 Integer 包装类以外的对象、不能是二维数组。</li>
+    <li>成员名叫 <code>value</code> 时使用处可省略 <code>value=</code>；只有一个成员时强烈建议就叫 value。</li>
+    <li>注解不能显式继承（没有 extends）；注解本身只是"贴标签"，<strong>所有行为都由处理方（反射处理器 / 编译器插件）赋予</strong>——这句是"注解是元数据而非逻辑"的正确理解。</li>
+  </ul>
+</section>
+
+<section id="reflectapi">
+  <h2><span class="no">04</span>反射 API 全景</h2>
+  <p><strong>反射：运行时动态获取类信息、操作类成员（字段/方法/构造器）的能力</strong>（笔记定义）。入口都是 <code>java.lang.Class</code> 对象——每个已加载的类在方法区/元空间有且只有一份 Class。</p>
+  <h3>获取 Class 的三种方式（+ 初始化差异，笔记要点补深）</h3>
+  <pre><code>Class&lt;?&gt; clazz1 = Class.forName("com.example.Person");  // 全限定名，会触发类初始化（静态块执行）
+Class&lt;?&gt; clazz2 = Person.class;                       // 类字面量，加载但不初始化
+Class&lt;?&gt; clazz3 = personInstance.getClass();          // 运行时对象的实际类型（多态下是子类）
+// 第 4 种：ClassLoader.loadClass("com.example.Person") —— 也不初始化，可控制加载器</code></pre>
+  <table>
+    <tr><th>方式</th><th>触发类加载</th><th>触发初始化（static 块）</th><th>场景</th></tr>
+    <tr><td>Class.forName</td><td>是</td><td><strong>是</strong></td><td>按名字动态加载（JDBC 老式 Class.forName 加载驱动）</td></tr>
+    <tr><td>X.class / loadClass</td><td>是</td><td>否</td><td>只要类型信息、不想执行静态代码</td></tr>
+    <tr><td>obj.getClass()</td><td>（类已加载）</td><td>否</td><td>拿到运行时真实类型</td></tr>
+  </table>
+  <h3>操作字段 / 方法 / 构造器</h3>
+  <pre><code>Class&lt;?&gt; clazz = Person.class;
+
+// 创建实例（JDK 9+ 推荐；clazz.newInstance() 已废弃——绕不过检查异常）
+Object obj = clazz.getDeclaredConstructor().newInstance();
+
+// 字段
+Field field = clazz.getDeclaredField("name");  // getDeclaredXxx：含 private，不含继承
+field.setAccessible(true);                     // 突破 private 限制（见第 06 节）
+field.set(obj, "张三");
+// getField/getMethod：只返回 public，含继承自父类/接口的
+
+// 方法
+Method method = clazz.getMethod("getName");    // 公有方法
+Object result = method.invoke(obj);            // 反射调用
+// 私有方法：getDeclaredMethod + setAccessible(true)
+
+// 元数据（笔记要点）：注解、泛型、接口、父类
+clazz.getAnnotation(MyAnno.class);
+clazz.getGenericSuperclass();                  // 泛型父类（TypeToken/超类型 token 靠它）
+clazz.getInterfaces();
+clazz.getSuperclass();</code></pre>
+  <table>
+    <tr><th>API 家族</th><th>getXxx（public + 继承）</th><th>getDeclaredXxx（本类全部 + private）</th></tr>
+    <tr><td>字段</td><td><code>getField(s)</code></td><td><code>getDeclaredField(s)</code></td></tr>
+    <tr><td>方法</td><td><code>getMethod(s)</code></td><td><code>getDeclaredMethod(s)</code></td></tr>
+    <tr><td>构造器</td><td><code>getConstructor(s)</code></td><td><code>getDeclaredConstructor(s)</code></td></tr>
+  </table>
+  <h3>为什么框架离不开它（笔记场景清单）</h3>
+  <ul>
+    <li><strong>Spring</strong>：DI 依赖注入——反射创建对象并注入依赖；AOP——反射生成代理对象，在目标方法前后插入切面逻辑（日志、事务）；注解驱动——@Component 自动扫描、@RequestMapping 路由注册。</li>
+    <li><strong>ORM</strong>（MyBatis/Hibernate）：查询结果集按属性名反射赋值到实体；@Select/@Table 注解映射。</li>
+    <li><strong>JUnit</strong>：扫描 @Test 方法反射调用；<strong>序列化框架</strong>：反射读写字段。</li>
+    <li>优点：灵活、动态、通用性强（一份代码处理所有类）；缺点：性能开销、破坏封装、绕过编译期检查（错误推迟到运行时）、代码可读性差。</li>
+  </ul>
+</section>
+
+<section id="perf">
+  <h2><span class="no">05</span>反射的性能与开销 ⭐</h2>
+  <h3>为什么慢（四个原因）</h3>
+  <ol>
+    <li><strong>方法查找</strong>：<code>getMethod</code> 要按名字遍历方法数组做字符串匹配，还要检查访问权限（每次 invoke 都过 AccessibleObject 的安全检查）。</li>
+    <li><strong>装箱与数组分配</strong>：参数打包成 <code>Object[]</code>（可变参数数组每次分配），基本类型来回装箱拆箱。</li>
+    <li><strong>JIT 难以优化</strong>：调用目标运行时才确定，JIT 无法像普通虚调用那样内联（inline）、无法做激进的去虚化/逃逸分析优化——<strong>这是差距的根本来源</strong>。</li>
+    <li><strong>无法利用编译期绑定</strong>：普通调用在编译期就完成了符号解析与静态绑定检查，反射全部推迟到运行时。</li>
+  </ol>
+  <h3>缓解手段（框架都在做）</h3>
+  <ul>
+    <li><strong>缓存元数据</strong>：Method/Field 对象查一次存 Map（Spring 的 ReflectionUtils、BeanUtils 内部都有缓存）；JDK 自己也会缓存 root Copy。</li>
+    <li><strong>提前 setAccessible(true)</strong>：跳过每次 invoke 的访问安全检查。</li>
+    <li><strong>MethodHandles（JDK 7+）</strong>：更接近字节码 invokedynamic 语义的方法句柄，JIT 友好，配合 <code>LambdaMetafactory</code> 甚至能把反射调用变成像 Lambda 一样的直接调用——"把反射转成 Lambda"是现代框架的高阶优化。</li>
+  </ul>
+  <div class="box tip"><p><strong>量级口径</strong>：冷调用（未 JIT 优化）反射比直接调用慢 10~100 倍；热点调用经 JIT 优化后差距收窄到约 2~3 倍。回答时给"冷热两档 + 原因是 JIT 无法内联"比背一个固定数字可信得多。</p></div>
+</section>
+
+<section id="accessible">
+  <h2><span class="no">06</span>setAccessible 与模块封装 ⭐</h2>
+  <ul>
+    <li><strong>作用</strong>：<code>AccessibleObject.setAccessible(true)</code> 让反射绕过 Java 语言访问检查，直接读写 private 成员/调私有方法（笔记：突破 private 限制）。它只跳过"语言级检查"，不改变成员本身的访问属性。</li>
+    <li><strong>代价</strong>：破坏封装（绕过类设计者的约束）、可能破坏不可变对象（改 String.value 这类 hack）、与 SecurityManager 安全策略冲突。</li>
+    <li><strong>JDK 9 模块化的变化</strong>：模块系统对未显式 open 的包实施强封装——对这类包里的私有成员调 setAccessible(true) 会抛 <code>InaccessibleObjectException</code>。这就是升级 JDK 17 后 Spring/Hibernate/日志增强框架报错的原因，常见解法是启动参数逐个开洞：</li>
+  </ul>
+  <pre><code>--add-opens java.base/java.lang=ALL-UNNAMED
+--add-opens java.base/java.util=ALL-UNNAMED
+# 含义：让 java.base 模块向未命名模块（普通 classpath 应用）开放这些包的深反射</code></pre>
+  <div class="box warn"><p><strong>面试高频踩分点</strong>："你项目升级 JDK 17 遇到过什么坑？"标准素材就是 InaccessibleObjectException——根因是 JPMS 强封装，方案是 --add-opens 或升级框架版本（新版本改用 MethodHandles/var handles 合规访问）。能把这个经历讲完整，模块化这块就过关了。</p></div>
+</section>
+
+<section id="practice">
+  <h2><span class="no">07</span>注解 + 反射实战：手写迷你框架 ⭐</h2>
+  <h3>三十行迷你 @Test Runner</h3>
+  <pre><code>// 1. 自定义注解（RUNTIME 保留 + 只贴方法）
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyTest { }
+
+// 2. 运行器：扫描类里带 @MyTest 的方法，反射调用并统计结果
+public class MyTestRunner {
+    public static void main(String[] args) throws Exception {
+        Class&lt;?&gt; clazz = CalculatorTest.class;
+        Object instance = clazz.getDeclaredConstructor().newInstance();  // 反射建实例
+        int passed = 0, failed = 0;
+        for (Method m : clazz.getDeclaredMethods()) {                    // 遍历方法
+            if (m.isAnnotationPresent(MyTest.class)) {                   // 找注解
+                try {
+                    m.invoke(instance);                                  // 反射调用
+                    passed++;
+                } catch (InvocationTargetException e) {
+                    System.out.println("FAIL: " + m.getName()
+                            + " -&gt; " + e.getCause());                    // 真实异常在 cause 里
+                    failed++;
+                }
+            }
+        }
+        System.out.println("passed=" + passed + ", failed=" + failed);
+    }
+}
+// 这就是 JUnit 的雏形：注解打标 → 反射扫描 → invoke 执行 → 异常断言结果</code></pre>
+  <h3>简化版 @Autowired（迷你依赖注入思路）</h3>
+  <pre><code>@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface Inject { }
+
+public class MiniContainer {
+    private final Map&lt;Class&lt;?&gt;, Object&gt; beans = new HashMap&lt;&gt;();
+
+    public &lt;T&gt; T getBean(Class&lt;T&gt; clazz) throws Exception {
+        Object bean = beans.get(clazz);
+        if (bean == null) {
+            bean = clazz.getDeclaredConstructor().newInstance();     // ① 反射实例化
+            beans.put(clazz, bean);
+            for (Field f : clazz.getDeclaredFields()) {               // ② 扫描字段
+                if (f.isAnnotationPresent(Inject.class)) {           //    找 @Inject
+                    f.setAccessible(true);                            //    突破 private
+                    f.set(bean, getBean(f.getType()));                // ③ 递归注入依赖
+                }
+            }
+        }
+        return (T) bean;
+    }
+}
+// Spring 的主干就是这条链的工业化版本：
+// @Component 扫描建 BeanDefinition → 反射实例化 → @Autowired 递归注入 → AOP 代理增强</code></pre>
+  <div class="box tip"><p><strong>面试答法</strong>：被问"手写迷你框架"时先讲三步范式（打标记 → 扫描 → 反射执行/注入），再主动指出这个玩具版的缺口：没有循环依赖处理、没有单例/原型作用域、没有按名字匹配、性能上应缓存 Field/Method——把不足讲出来比代码本身更加分。</p></div>
+</section>
+
+<section id="proxy">
+  <h2><span class="no">08</span>JDK 动态代理 vs CGLIB ⭐⭐</h2>
+  <h3>JDK 动态代理：运行时生成接口的实现类</h3>
+  <p>（笔记要点）JDK 动态代理是 Java 提供的在<strong>运行时</strong>动态生成代理类和代理对象的技术：程序运行时，JVM 通过反射机制生成目标接口的代理实现类并代替目标类。<strong>前提：目标类必须实现接口。</strong></p>
+  <ul>
+    <li><strong>InvocationHandler</strong>：实现此接口来增强目标类，核心方法 <code>Object invoke(Object proxy, Method method, Object[] args)</code>。</li>
+    <li><strong>Proxy</strong>：核心工具类（方法都是静态的），核心方法 <code>static Object newProxyInstance(ClassLoader loader, Class&lt;?&gt;[] interfaces, InvocationHandler h)</code>——生成的代理类实现了目标接口，拥有目标接口的方法。</li>
+  </ul>
+  <pre><code>// 1. 业务接口
+interface UserService {
+    void addUser(String name);
+}
+// 2. 业务实现
+class UserServiceImpl implements UserService {
+    @Override
+    public void addUser(String name) {
+        System.out.println("添加用户: " + name);
+    }
+}
+// 3. 用 InvocationHandler 的 invoke 来增强
+class LogHandler implements InvocationHandler {
+    private Object target;                          // 持有目标对象（被代理者）
+    public LogHandler(Object target) {
+        this.target = target;
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 【前置增强】在调用真实方法前执行
+        System.out.println("[日志] 开始执行方法: " + method.getName() + ", 参数: " + Arrays.toString(args));
+
+        // 调用目标对象(target)的原始方法
+        Object result = method.invoke(target, args);
+
+        // 【后置增强】在调用真实方法后执行
+        System.out.println("[日志] 方法执行结束: " + method.getName() + ", 结果: " + result);
+        return result;
+    }
+}
+// 4. 客户端
+class Client {
+    public static void main(String[] args) {
+        // 创建目标对象
+        UserService target = new UserServiceImpl();
+
+        // 创建调用处理器，并传入目标对象
+        InvocationHandler handler = new LogHandler(target);
+
+        // 使用 Proxy 动态创建代理对象
+        UserService proxy = (UserService) Proxy.newProxyInstance(
+                target.getClass().getClassLoader(), // 1. 类加载器：与目标同加载器
+                target.getClass().getInterfaces(),  // 2. 代理类要实现的接口数组
+                handler                             // 3. 调用处理器：方法调用全部转发给它
+        );
+
+        // 调用代理对象的方法
+        proxy.addUser("张三");
+    }
+}</code></pre>
+  <h3>原理：代理类长什么样</h3>
+  <ul>
+    <li><code>newProxyInstance</code> 运行时生成形如 <code>$Proxy0 extends Proxy implements UserService</code> 的类：继承 Proxy 是为了拿到 InvocationHandler 字段，所以<strong> JDK 代理只能走接口</strong>（Java 单继承的名额已被 Proxy 占用）。</li>
+    <li>代理类的方法体只是把调用转发成 <code>h.invoke(this, method, args)</code>；你的 invoke 里再 <code>method.invoke(target, args)</code> 反射调真实对象——增强逻辑就插在两者之间。</li>
+    <li>生成方式 JDK 8 是 <code>sun.misc.ProxyGenerator</code>（可用 <code>-Dsun.misc.ProxyGenerator.saveGeneratedFiles=true</code> 导出 class 反编译验证），JDK 17 后改为 jdk.internal.reflect；代理类有 WeakCache 缓存，同一组接口只生成一次。</li>
+    <li><code>equals/hashCode/toString</code> 也会被拦截进 invoke——在 invoke 里对这些方法处理不当会产生诡异递归（拿 proxy 再调 equals）。</li>
+  </ul>
+  <h3>CGLIB：运行时生成子类</h3>
+  <p>CGLIB（Code Generation Library）是基于 <strong>ASM 字节码生成库</strong>的代理方案：运行时动态生成<strong>目标类的子类</strong>，重写父类方法并织入增强逻辑。<strong>不需要目标类实现接口。</strong></p>
+  <pre><code>class UserService {                        // 没有实现任何接口
+    public void addUser(String name) { System.out.println("添加用户: " + name); }
+}
+
+Enhancer enhancer = new Enhancer();
+enhancer.setSuperclass(UserService.class);           // 代理类继承目标类
+enhancer.setCallback((MethodInterceptor) (obj, method, args, methodProxy) -&gt; {
+    System.out.println("[日志] 前置: " + method.getName());
+    Object result = methodProxy.invokeSuper(obj, args);  // 调用父类（原始）实现
+    System.out.println("[日志] 后置");
+    return result;
+});
+UserService proxy = (UserService) enhancer.create(); // 生成并返回代理子类实例
+proxy.addUser("张三");</code></pre>
+  <ul>
+    <li>核心组件：<code>Enhancer</code>（生成器）+ <code>MethodInterceptor</code>（拦截器，<code>intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy)</code>）。</li>
+    <li><strong>限制（笔记要点）</strong>：生成子类要调 <code>super()</code>，所以<strong>目标类必须有无参构造器</strong>（有参构造的类要额外配置）；<strong>final 类不能被继承、final/private/static 方法不能被覆写</strong>，代理不了。</li>
+  </ul>
+  <h3>两种代理怎么选（口径）</h3>
+  <table>
+    <tr><th>维度</th><th>JDK 动态代理</th><th>CGLIB</th></tr>
+    <tr><td>代理方式</td><td>接口 + java.lang.reflect.Proxy</td><td>继承目标类（ASM 生成子类）</td></tr>
+    <tr><td>前提</td><td>目标类实现接口</td><td>类和方法非 final，能调 super()</td></tr>
+    <tr><td>依赖</td><td>JDK 原生</td><td>第三方库（Spring 内置 repackaged 版）</td></tr>
+    <tr><td>性能</td><td>JDK 8 起优化很好，与 CGLIB 差距很小</td><td>生成慢一点、首次调用有 FastClass 机制</td></tr>
+    <tr><td>典型用户</td><td>MyBatis Mapper、RPC 客户端 stub</td><td>Spring 默认（Boot 2.x+）、无接口 Bean</td></tr>
+  </table>
+  <ul>
+    <li><strong>Spring 的规则</strong>：目标实现了接口默认走 JDK 代理，没实现接口走 CGLIB；可用 <code>proxyTargetClass=true</code> 强制 CGLIB。<strong>Spring Boot 2.x 起默认就强制 CGLIB</strong>——避免 JDK 代理"注入类型必须是接口"导致的 NoSuchBeanDefinitionException 系列问题，统一行为。</li>
+    <li><strong>实战坑</strong>：注解打在实现类方法上时，JDK 代理拿不到（代理的是接口）；CGLIB 代理下自调用（this.method()）不走代理——@Transactional 失效的经典场景，本质是 this 不是代理对象（详见 <a href="../04-spring/README.html">04-spring 板块</a>）。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>："JDK 动态代理运行时生成实现接口的 $Proxy 类，方法调用统一转发给 InvocationHandler.invoke，受单继承限制只能代理接口；CGLIB 用 ASM 生成子类，MethodInterceptor.intercept 里 invokeSuper，final 类/方法不行。选型上：有接口用 JDK，没接口用 CGLIB；Spring Boot 2.x 默认统一 CGLIB 是为了避免接口注入的坑。另外自调用失效问题我是从 AOP 这条线排查过的。"</p></div>
+</section>
+
+<section id="spi">
+  <h2><span class="no">09</span>SPI 机制：ServiceLoader 与打破双亲委派</h2>
+  <p><strong>SPI（Service Provider Interface）：接口定义在框架/规范方，实现由第三方提供，运行时按约定发现并加载——"面向接口 + 可插拔"的发现机制。</strong>与 API 的区别：API 是"实现方提供接口给你调"，SPI 是"你定义接口，实现方来填"（如 JDBC：java.sql 是 JDK 的，Driver 实现是 MySQL/Oracle 各自的）。</p>
+  <h3>使用三步</h3>
+  <pre><code>// 1. 定义接口
+public interface PayService { void pay(String order); }
+
+// 2. 实现方在自己的 jar 里建文件：META-INF/services/com.example.PayService
+//    文件内容是实现类的全限定名（一行一个）：
+//    com.alipay.AlipayPayService
+
+// 3. 使用方统一发现，不依赖任何具体实现
+ServiceLoader&lt;PayService&gt; loaders = ServiceLoader.load(PayService.class);
+for (PayService pay : loaders) {       // 懒加载：迭代到才实例化
+    pay.pay("order-123");
+}</code></pre>
+  <ul>
+    <li>实现类必须有无参公共构造器（ServiceLoader 反射实例化）；找不到实现、类不在 classpath 只在迭代时抛 ServiceConfigurationError。</li>
+    <li>JDK 内置 SPI 到处都是：JDBC（java.sql.Driver）、字符集 Charset、DateFormatProvider、spring 的 spring.factories / AutoConfiguration.imports（Spring Boot 自动装配是 SPI 思想的加强版，允许按 key 取多个实现 + 条件装配）。</li>
+  </ul>
+  <h3>为什么说 SPI 打破了双亲委派 ⭐</h3>
+  <ul>
+    <li>矛盾：<code>ServiceLoader</code> / <code>DriverManager</code> 在 <code>java.base</code> 里，由<strong>启动类加载器（Bootstrap）</strong>加载；而第三方实现 jar 在<strong>应用 classpath</strong>，按双亲委派，Bootstrap 加载器是"看不见"应用类的（它只认 JDK 核心）。</li>
+    <li>解法：<strong>线程上下文类加载器（TCCL, Thread Context Class Loader）</strong>——<code>ServiceLoader.load()</code> 默认用 <code>Thread.currentThread().getContextClassLoader()</code>（应用类加载器）去加载实现类，相当于父层加载器"借"子层加载器干活，<strong>在加载这一环上打破了双亲委派的单向性</strong>。</li>
+    <li>类加载器层次与双亲委派的完整分析（含 JDBC DriverManager 源码链路）见 <a href="../03-jvm/README.html">03-jvm 板块</a>。</li>
+    <li>缺点与演进：ServiceLoader 全量串行、无依赖注入、无法按条件选择实现——这正是 Spring 的 spring.factories、Dubbo 自研 SPI（按 key + 自适应扩展）要解决的问题。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">10</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：注解怎么生效 → 编译期和运行时两条路</strong>→ SOURCE 级走 APT/编译器插件（Lombok 改 AST）；RUNTIME 级靠反射读取。回答任何"注解框架原理"先分这两条路。</li>
+    <li><strong>追问链：动态代理 → Spring AOP 和它什么关系</strong>→ Spring AOP 底层就是这两种动态代理的封装（JdkDynamicAopProxy / CglibAopProxy），AspectJ 是编译/类加载期织入，功能更强（能织入字段/构造器）。</li>
+    <li><strong>追问链：代理对象的 Class 名字 → 怎么看到生成的类</strong>→ JDK 代理 <code>$Proxy0</code>（-Dsun.misc.ProxyGenerator.saveGeneratedFiles=true 导出）、CGLIB（DebuggingClassWriter 指定输出目录）——能说出"我反编译看过"非常加分。</li>
+    <li><strong>陷阱：method.invoke 的异常被包了一层</strong>：真实业务异常在 <code>InvocationTargetException.getCause()</code> 里，直接 catch Exception 打印会看不到真实堆栈。</li>
+    <li><strong>陷阱：反射拿不到注解，先查 @Retention</strong>：默认 CLASS 级，反射不可见，必须显式 RUNTIME。</li>
+    <li><strong>陷阱：CGLIB 代理 final 方法静默失效</strong>：不报错，直接走父类原方法，增强没生效——排查 AOP 失效时记得查 final。</li>
+    <li><strong>陷阱：ServiceLoader 迭代完不换线程复用</strong>：ServiceLoader 非线程安全，多线程下各自 load 新实例。</li>
+    <li><strong>场景题口径</strong>："设计一个通用的接口耗时日志组件"——答：RUNTIME 注解打标 + 动态代理增强 + InvocationHandler 里计时与上报，再补一句"Spring 里我会直接用 AOP + 自定义切点"，展示从手写轮子到工程化选择的层次感。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">11</span>面试自查清单</h2>
+  <ol>
+    <li>三种保留策略 + 各自代表框架（Lombok/SOURCE，Spring/RUNTIME）能秒答。</li>
+    <li>五大元注解作用清楚，自定义注解的成员类型限制说得出来。</li>
+    <li>获取 Class 三种方式 + 初始化差异（forName 会执行静态块）。</li>
+    <li>getXxx 与 getDeclaredXxx 的区别、JDK 9+ 推荐的 newInstance 写法。</li>
+    <li>反射慢的四个原因（查找/装箱/JIT 无法内联/运行期绑定）与三个缓解（缓存、setAccessible、MethodHandles）。</li>
+    <li>setAccessible 的作用 + JDK 9 后 InaccessibleObjectException 的原因与 --add-opens 解法。</li>
+    <li>能手写迷你 @Test runner 或简化 @Autowired（打标 → 扫描 → 反射执行/注入三步范式）。</li>
+    <li>JDK 动态代理完整代码（Proxy + InvocationHandler）+ $Proxy0 生成原理 + 为什么只能代理接口。</li>
+    <li>CGLIB 原理（ASM 子类 + MethodInterceptor）+ 限制（final、无参构造）+ 与 JDK 代理选型口径（Spring Boot 默认 CGLIB）。</li>
+    <li>SPI 三步用法 + 为什么需要 TCCL 打破双亲委派。</li>
+  </ol>  <div class="box note"><p><strong>内容来源</strong>：参考并合并了 <a href="https://javaguide.cn/java/basis/reflection-and-annotation.html">JavaGuide · 反射机制详解</a>与 <a href="https://javaguide.cn/java/basis/dynamic-proxy.html">动态代理详解</a>的问答口径（重构改写非照抄）。</p></div>
+  <div class="pager">
+    <a href="11-IO与NIO.html">⬅ 上一章：11 IO 与 NIO</a>
+    <a class="next" href="13-日期时间.html">下一章：13 日期时间 →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 12 章 注解与反射</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>

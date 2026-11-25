@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 09 章 · 泛型 — Java 语言核心</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 01 Java 语言核心</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#basics">泛型类 · 方法 · 接口</a>
+  <a href="#bounded">有界类型参数</a>
+  <a href="#wildcard">通配符与 PECS ⭐</a>
+  <a href="#erasure">类型擦除 ⭐</a>
+  <a href="#bridge">擦除问题与桥方法</a>
+  <a href="#array">泛型数组</a>
+  <a href="#reflect">泛型与反射</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="08-集合框架.html">⬅ 上一章：08 集合框架</a>
+  <a href="10-Lambda与Stream.html">下一章：10 Lambda 与 Stream →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 09 章 · 泛型</h1>
+    <div class="sub">泛型类与方法 · 有界类型参数 · 通配符与 PECS · 类型擦除与桥方法 · 泛型数组 · 泛型与反射 —— 考"懂不懂语言设计"的一章</div>
+    <div class="meta">
+      <span>⭐ 高频：类型擦除 · PECS · 桥方法</span>
+      <span>蓝本：AlgoMaster Java · Generics</span>
+      <span>JavaGuide 合并 ✅</span>
+      <span class="tag exist">已合并：Java/java 基础.md（泛型提纲）✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>泛型是什么？解决了什么问题？没有泛型的世界（JDK 4 之前）怎么写代码？</li>
+      <li>泛型类、泛型接口、泛型方法分别怎么声明？泛型方法的类型参数什么时候能省略？</li>
+      <li><code>&lt;T extends Number&gt;</code> 是什么意思？多个上界怎么写？</li>
+      <li><code>? extends</code> 和 <code>? super</code> 的区别？为什么 <code>List&lt;? extends Number&gt;</code> 不能 add？⭐</li>
+      <li>什么是 PECS？JDK 里哪些 API 用到了？让你设计 <code>copy(dest, src)</code> 的签名怎么写？⭐</li>
+      <li>什么是类型擦除？擦除发生在编译期还是运行期？擦成什么？⭐⭐</li>
+      <li>类型擦除带来了哪些限制？（不能 new T()、不能 T.class、不能 List&lt;int&gt; …）⭐</li>
+      <li>什么是桥方法？没有它，泛型继承的多态为什么会破？</li>
+      <li>为什么不能创建泛型数组 <code>new T[]</code>？什么是堆污染（heap pollution）？</li>
+      <li>泛型信息被擦除了，Gson / Jackson 是怎么拿到 <code>List&lt;Foo&gt;</code> 里的 Foo 的？</li>
+    </ol>
+  </div>
+  <p>泛型是"语言机制题"的主场：面试官考的不是 API 使用，而是<strong>你有没有把编译期/运行期的边界想清楚</strong>。7 年经验的打法：所有问题最终都收束到一句话——<strong>泛型是编译期的类型检查，运行期没有泛型</strong>，围绕这句话组织全部答案。</p>
+</section>
+
+<section id="basics">
+  <h2><span class="no">02</span>泛型类 · 泛型方法 · 泛型接口</h2>
+  <p>泛型 = 把"操作的类型"参数化。没有泛型的年代只能用 <code>Object</code> + 强转：编译期不查错、运行期 ClassCastException 随时炸、读出来必转型。泛型把类型检查<strong>前移到编译期</strong>，三个收益（对应既有笔记里的提纲：类型安全 / 代码通用 / 减少手动转换）：</p>
+  <ul>
+    <li><strong>编译期类型安全</strong>：错误类型根本塞不进去，ClassCastException 在源头消灭；</li>
+    <li><strong>消除强制转换</strong>：取值自动是声明类型，代码干净；</li>
+    <li><strong>一套代码多种类型复用</strong>：集合框架就是最大受益者。</li>
+  </ul>
+  <pre><code>// 泛型类：类型参数跟在类名后
+public class Box&lt;T&gt; {
+    private T value;
+    public void set(T value) { this.value = value; }
+    public T get() { return value; }
+}
+
+// 泛型接口：实现类要么继续泛型化，要么钉死类型参数
+interface Converter&lt;S, T&gt; { T convert(S source); }
+class StringToIntConverter implements Converter&lt;String, Integer&gt; {
+    public Integer convert(String s) { return Integer.valueOf(s); }
+}
+
+// 泛型方法：类型参数跟在返回类型前，作用域仅限本方法（static 方法只能这样用泛型）
+public static &lt;K, V&gt; boolean compare(Pair&lt;K, V&gt; p1, Pair&lt;K, V&gt; p2) {
+    return p1.getKey().equals(p2.getKey()) &amp;&amp;
+           p1.getValue().equals(p2.getValue());
+}
+
+// 调用时通常可省略类型参数（目标类型推断）：
+compare(new Pair&lt;&gt;("a", 1), new Pair&lt;&gt;("a", 1));      // K, V 被推断为 String/Integer
+Main.&lt;String, Integer&gt;compare(p1, p2);                     // 显式写法（歧义时才用）</code></pre>
+  <ul>
+    <li><strong>类型参数命名惯例</strong>：T（Type）、E（Element）、K/V（Key/Value）、R（Result）、T/U/V 多参数。</li>
+    <li><strong>泛型可以有多个类型参数</strong>；菱形 <code>&lt;&gt;</code> 从 JDK 7 起用于构造器侧的推断。</li>
+    <li><strong>static 方法不能用类的类型参数</strong>（类级 T 属于实例的类信息，static 成员不依赖实例；且擦除后无法区分），要泛型就声明成泛型方法。</li>
+  </ul>
+</section>
+
+<section id="bounded">
+  <h2><span class="no">03</span>有界类型参数（Bounded Type Parameters）</h2>
+  <p>不加约束的 T 只能当 Object 用；加 <strong>上界</strong>后，T 就拥有了上界的能力——这是"既泛化又有能力约束"的手段（对应既有笔记里的"向上界定"）：</p>
+  <pre><code>// 单上界：T 至少是 Number，可以调 Number 的方法
+public static &lt;T extends Number&gt; double sum(List&lt;T&gt; list) {
+    double s = 0;
+    for (T t : list) s += t.doubleValue();   // 没上界这里根本编译不过
+    return s;
+}
+
+// 多上界：&amp; 连接，第一个可以是类（最多一个），其余必须全是接口
+public static &lt;T extends Number &amp; Comparable&lt;T&gt;&gt; T max(List&lt;T&gt; list) {
+    T m = list.get(0);
+    for (T t : list) if (t.compareTo(m) &gt; 0) m = t;   // 同时拥有两个上界的能力
+    return m;
+}
+
+// 递归类型约束：Java 没有自类型（self type），用"可与其超类比较"模拟
+public static &lt;T extends Comparable&lt;? super T&gt;&gt; void sort(List&lt;T&gt; list) { }
+// 这就是 Collections.sort 的真实签名 —— 和 PECS 一起考</code></pre>
+  <ul>
+    <li>通配符也有单上界 <code>? extends Number</code> 和<strong>下界</strong> <code>? super Integer</code>——但类型参数 T 只有上界，<strong>没有下界语法</strong>（<code>&lt;T super X&gt;</code> 不存在），下界需求交给通配符。</li>
+    <li>有界类型参数 vs 有界通配符：前者是"声明一个具体的类型 T"（方法体内可当类型用），后者是"一个未知类型"（只能读写受限），面试常考这个辨析。</li>
+  </ul>
+</section>
+
+<section id="wildcard">
+  <h2><span class="no">04</span>通配符与 PECS ⭐（高频）</h2>
+  <h3>泛型不变性是理解一切的前提</h3>
+  <p><strong>泛型不是协变的</strong>：<code>List&lt;String&gt;</code> 不是 <code>List&lt;Object&gt;</code> 的子类——否则下面的代码就能把 Integer 塞进 String 列表：</p>
+  <pre><code>List&lt;String&gt; strs = new ArrayList&lt;&gt;();
+// List&lt;Object&gt; objs = strs;      // ❌ 编译错：泛型不变（invariant）
+// objs.add(42);                   // 若允许，strs 里就混进了 Integer
+
+Object[] arr = new String[3];      // ✅ 数组是协变的（这是运行期 ArrayStoreException 的根源）
+// arr[0] = 42;                    // 编译过、运行时才炸 —— 泛型把这个错误提前到了编译期</code></pre>
+  <p>为了在"不变"的框架下表达灵活性，JDK 提供了两个方向的有界通配符：</p>
+  <h3>? extends（上界通配符）：只读不写</h3>
+  <pre><code>static double sum(List&lt;? extends Number&gt; src) {
+    double s = 0;
+    for (Number n : src) s += n.doubleValue();   // ✅ 读出来保证是 Number
+    // src.add(1);  src.add(2.0);  src.add(null 只除外)   // ❌ 一律编译错
+    return s;
+}</code></pre>
+  <ul>
+    <li><code>List&lt;? extends Number&gt;</code> 表示"某种未知的、Number 的子类型"的 List——可能是 <code>List&lt;Integer&gt;</code> 也可能是 <code>List&lt;Double&gt;</code>，编译器不知道是哪种，<strong>无论 add 什么都可能破坏类型安全，干脆全禁</strong>（除 add(null)）。</li>
+    <li>读取永远安全：取出的元素至少是 Number。</li>
+  </ul>
+  <h3>? super（下界通配符）：只写不读（读只能当 Object）</h3>
+  <pre><code>static void fill(List&lt;? super Integer&gt; dst) {
+    dst.add(1);  dst.add(2);                    // ✅ Integer 放进"Integer 或其父类的列表"必然安全
+    // Integer x = dst.get(0);                   // ❌ 读出来只能当 Object
+    Object o = dst.get(0);                       // ✅
+}</code></pre>
+  <ul>
+    <li><code>List&lt;? super Integer&gt;</code> 是"某种 Integer 的父类型"的 List（List&lt;Number&gt;、List&lt;Object&gt;…），往里 add Integer 一定类型安全；但读出来只知道是 Object。</li>
+  </ul>
+  <h3>PECS：Producer Extends, Consumer Super ⭐</h3>
+  <ul>
+    <li><strong>生产者用 extends</strong>：这个参数是给你"读数据"的（生产数据给你用）→ <code>? extends T</code>；</li>
+    <li><strong>消费者用 super</strong>：这个参数是给你"写数据"的（消费你产出的数据）→ <code>? super T</code>；</li>
+    <li>既要读又要写 → 别用通配符，用确切类型。</li>
+  </ul>
+  <pre><code>// JDK 标准答案：Collections.copy 的签名
+public static &lt;T&gt; void copy(List&lt;? super T&gt; dest, List&lt;? extends T&gt; src)
+//                         ^^^^^^^^^^^^^^^ 消费者（往里写）  ^^^^^^^^^^^^^^ 生产者（从里读）
+
+// 让 copy 支持把 List&lt;Integer&gt; 拷进 List&lt;Number&gt;，非 PECS 写不出来：
+List&lt;Number&gt; dest = new ArrayList&lt;&gt;();
+List&lt;Integer&gt; src = List.of(1, 2, 3);
+Collections.copy(dest, src);        // T 推断为 Integer：dest 是 Integer 的消费者
+
+// 其他 JDK 实例：
+boolean addAll(Collection&lt;? extends E&gt; c);                 // 生产者：读 c 灌进来
+void sort(Comparator&lt;? super E&gt; c);                          // 消费者：把元素喂给比较器
+void forEach(Consumer&lt;? super T&gt; action);                    // 消费者：把元素喂给动作</code></pre>
+  <div class="box tip"><p><strong>答题口径</strong>：先一句"泛型不变，通配符是给不变性开的两个口子"；再讲 extends 只读 / super 只写及其编译器原因；最后甩出 PECS + <code>Collections.copy</code> 签名。能现场写出 copy 签名的，这题基本满分。追问"为什么 List 不能协变"→ 用上面的 add 反例回答，并对比数组协变的 ArrayStoreException。</p></div>
+</section>
+
+<section id="erasure">
+  <h2><span class="no">05</span>类型擦除（Type Erasure）⭐⭐</h2>
+  <h3>是什么、擦成什么</h3>
+  <p>Java 泛型由编译器在<strong>编译期</strong>实现：做完类型检查后，把类型参数<strong>擦除</strong>，生成的字节码里没有泛型信息（这是为了兼容 JDK 5 之前的老代码——迁移兼容是当年压倒一切的设计目标）。</p>
+  <table>
+    <tr><th>源码声明</th><th>擦除后（字节码层面）</th></tr>
+    <tr><td><code>Box&lt;T&gt;</code>（无界）</td><td><code>Box</code>，T 的位置变成 <code>Object</code></td></tr>
+    <tr><td><code>Box&lt;T extends Number&gt;</code>（单上界）</td><td>T 的位置变成 <code>Number</code></td></tr>
+    <tr><td><code>&lt;T extends A &amp; B&gt;</code>（多上界）</td><td>变成第一个界 <code>A</code></td></tr>
+    <tr><td><code>List&lt;String&gt;</code></td><td>就是 <code>List</code></td></tr>
+    <tr><td><code>T[]</code></td><td><code>Object[]</code></td></tr>
+  </table>
+  <pre><code>// 证据一：运行期 class 相同
+List&lt;String&gt; a = new ArrayList&lt;&gt;();
+List&lt;Integer&gt; b = new ArrayList&lt;&gt;();
+System.out.println(a.getClass() == b.getClass());   // true —— 都是 ArrayList.class
+
+// 证据二：参数化类型的 Class 不存在
+// Class&lt;List&lt;String&gt;&gt; c = List&lt;String&gt;.class;      // ❌ 编译错，根本没有这个 Class 对象
+
+// 证据三：javap -c 反编译可见——编译器在"取值处"插入了 checkcast
+// T get()  编译后返回 Object，调用处编译器补一句  checkcast java/lang/String
+List&lt;String&gt; list = new ArrayList&lt;&gt;();
+String s = list.get(0);     // 字节码：invokeinterface get / checkcast String / astore
+
+// 证据四：擦除后签名相同，无法重载
+// void f(List&lt;String&gt; a) {}  void f(List&lt;Integer&gt; b) {}   // ❌ 都擦成 f(List)，编译错</code></pre>
+  <h3>编译器实际做了什么（答题时展开）</h3>
+  <ul>
+    <li><strong>编译前检查</strong>：所有泛型类型安全检查发生在编译期（调 add 时校验实参类型）；</li>
+    <li><strong>擦除类型参数</strong>：无界 → Object，有界 → 上界（首个界）；</li>
+    <li><strong>插入强制转换</strong>：取值处自动补 checkcast（这就是"不用手写强转"的真相——编译器替你写了）；</li>
+    <li><strong>合成桥方法</strong>：保证擦除后多态仍然成立（§06 专讲）。</li>
+  </ul>
+  <div class="box note"><p><strong>为什么 Java 选擦除而 C# 选具化（reification）</strong>：JDK 5 引入泛型时，海量的老类库都在用 Object，擦除让新老字节码无缝互操作（迁移兼容优先）。C# 的泛型是运行期真实的 <code>List&lt;int&gt;</code>，代价是与老集合不兼容。追问"以后会改吗"→ Valhalla 项目的具化泛型方向（允许 <code>List&lt;int&gt;</code> 特化布局），提一句即是加分。</p></div>
+</section>
+
+<section id="bridge">
+  <h2><span class="no">06</span>擦除带来的问题与桥方法 ⭐</h2>
+  <h3>一系列"不能"（全部源于运行期没有 T）</h3>
+  <pre><code>// ① 不能实例化类型参数
+T t = new T();                          // ❌ 运行期不知道 T 是谁
+
+// ② 不能创建泛型数组
+T[] arr = new T[10];                    // ❌ 数组需要运行期做协变检查，T 不可得（§07）
+
+// ③ 不能取 T 的 Class 对象 / 静态成员上不能用类类型参数
+Class&lt;T&gt; c = T.class;                   // ❌
+static T field;                         // ❌ static 不属于实例化的类型
+
+// ④ 不能用于 instanceof 的参数化形式
+if (o instanceof List&lt;String&gt;) {}       // ❌ 擦除后无法区分
+if (o instanceof List) {}               // ✅ 只能裸类型
+
+// ⑤ 基本类型不能做类型参数
+List&lt;int&gt; list;                          // ❌ 擦除后是 Object 引用，int 不是对象 → 只能 List&lt;Integer&gt;（装箱开销）
+
+// ⑥ 泛型类不能继承 Throwable
+class MyEx&lt;T&gt; extends Exception {}      // ❌ catch(T e) 无法保证类型安全
+
+// ⑦ 不能重载"擦除后签名相同"的方法
+void f(List&lt;String&gt; a) {}
+void f(List&lt;Integer&gt; b) {}              // ❌ 都是 f(List)</code></pre>
+  <h3>“不能 new T()” 的标准解法：把运行期类型信息传进来</h3>
+  <pre><code>// 方案一：传 Class&lt;T&gt;，反射 newInstance
+public static &lt;T&gt; T create(Class&lt;T&gt; clazz) throws Exception {
+    return clazz.getDeclaredConstructor().newInstance();
+}
+
+// 方案二：传工厂 / Supplier（推荐，无反射开销）
+public static &lt;T&gt; T create(Supplier&lt;T&gt; factory) {
+    return factory.get();
+}
+// 这正是 Spring 泛型注入、JDK 的 Optional.orElseGet(Supplier) 的姿势</code></pre>
+  <h3>桥方法（Bridge Method）：擦除下多态的救火队员 ⭐</h3>
+  <pre><code>class Node&lt;T&gt; {
+    private T data;
+    public void setData(T data) { System.out.println("Node.setData"); this.data = data; }
+}
+class StringNode extends Node&lt;String&gt; {
+    @Override
+    public void setData(String data) { System.out.println("StringNode.setData"); }
+}
+
+Node&lt;String&gt; node = new StringNode();
+node.setData("hi");     // 期望（且实际）调用 StringNode 的重写 —— 但擦除后怎么分派？</code></pre>
+  <p>问题：擦除后父类的方法签名是 <code>setData(Object)</code>，而子类写的是 <code>setData(String)</code>——<strong>签名都不一样，按 JVM 方法解析规则根本不构成重写</strong>，多态会失灵。编译器的解法是给 StringNode <strong>合成一个桥方法</strong>：</p>
+  <pre><code>// javap 可见 StringNode 编译后有两个方法：
+public void setData(java.lang.String);          // 你写的
+public void setData(java.lang.Object);          // 编译器合成的桥方法（flag: ACC_BRIDGE, SYNTHETIC）
+    Code: aload_0 / aload_1 / checkcast String / invokevirtual setData(String) / return
+    // 桥方法体内：强制转换参数，再转调真正的 setData(String)
+
+// 分派链：node.setData("hi") → 多态调到 StringNode.setData(Object)（桥方法）→ 转调 setData(String)</code></pre>
+  <ul>
+    <li>桥方法 = <strong>父类擦除后签名 → 子类具体签名</strong>的转发垫片，JVM 的方法表多态因此完好。</li>
+    <li>顺带解释了两个高频现象：① 反射 <code>getDeclaredMethods()</code> 会看到签名怪异的合成方法；② 桥方法里的 checkcast 在参数类型不匹配时抛 ClassCastException——<strong>堆污染在"消费端"炸出来的位置就在这</strong>。</li>
+  </ul>
+</section>
+
+<section id="array">
+  <h2><span class="no">07</span>泛型数组</h2>
+  <h3>为什么 new T[] 被禁止</h3>
+  <p>数组的类型检查是<strong>运行期</strong>做的（协变 + ArrayStoreException 机制依赖运行期知道组件类型），而擦除让运行期<strong>根本不知道 T</strong>——两者天然矛盾：</p>
+  <pre><code>T[] create() { return (T[]) new Object[10]; }   // ⚠ 能编译，但返回的是 Object[] 强转视图
+
+// 危险场景：把 T[] 当真实类型的数组用
+String[] arr = factory.create();      // 堆里实际是 Object[]，强转 String[] 通过（编译器视角）
+arr[0] = "ok";                        // 运行时 ArrayStoreException / ClassCastException 在某处引爆
+// 根因：数组在运行期保留了组件类型并做存储检查，而擦除后的 Object[] 顶不住</code></pre>
+  <ul>
+    <li><strong>泛型集合用 E[]，泛型数组用 Object[]</strong>——这是 JDK 自己的取舍：<code>ArrayList&lt;E&gt;</code> 的 <code>elementData</code> 声明为 <code>Object[]</code>，在 get 处强转 E；而 <code>Arrays.asList</code> / <code>toArray(T[] a)</code> 在无参时返回 Object[]。</li>
+    <li>业务代码正解：<strong>用 <code>List&lt;T&gt;</code> 代替 <code>T[]</code></strong>（类型安全交给编译器）；确要数组就用 <code>toArray(new T[0])</code>（传入真实类型的数组，由调用方提供运行期类型）。</li>
+  </ul>
+  <h3>堆污染（Heap Pollution）与 @SafeVarargs</h3>
+  <pre><code>// 泛型可变参数：varargs 底层是数组，等价于 List&lt;String&gt;... → List[]（擦除）
+@SafeVarargs                            // JDK 7+：向编译器承诺"我只读，不做破坏类型安全的事"
+static &lt;T&gt; void printAll(List&lt;T&gt;... lists) {
+    for (List&lt;T&gt; l : lists) System.out.println(l);
+}
+
+// 堆污染反例：一个"标着 List&lt;String&gt; 实际装了 Integer"的引用逃逸出去
+static List&lt;String&gt; polluted() {
+    List l = new ArrayList();           // 裸类型，跳过检查
+    l.add(42);
+    return (List&lt;String&gt;) l;            // ⚠ 编译警告 unchecked，运行期埋雷
+}
+String s = polluted().get(0);           // ClassCastException —— 在消费端的 checkcast 处爆炸</code></pre>
+  <ul>
+    <li><strong>堆污染定义</strong>：变量声明类型与实际引用对象的泛型类型不一致（脏引用进了堆）。它本身不报错，<strong>在读出来强转那一刻才炸</strong>（往往离案发现场很远）。</li>
+    <li><code>@SafeVarargs</code> 只能标注 static / final / private 方法（可重写的方法无法保证承诺），提示"我知道 varargs 有泛型数组风险，此处安全"。JDK 9 起也可用于 private 实例方法。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>：<code>toArray()</code> 无参版返回 <code>Object[]</code>，强转 <code>(String[]) list.toArray()</code> 必炸 ClassCastException（运行期还是 Object[]）；必须用 <code>toArray(new String[0])</code>。这是堆污染最常见的一线事故。</p></div>
+</section>
+
+<section id="reflect">
+  <h2><span class="no">08</span>泛型与反射</h2>
+  <h3>擦除了，为什么反射还能拿到泛型？</h3>
+  <p>关键：<strong>擦除擦的是"对象/数组里的运行期类型"，但写在字段、方法参数、返回值、父类/接口签名里的泛型会被写进 class 文件的 Signature 属性</strong>，反射 API 能读到它——泛型元数据保存在"声明处"而非"实例里"。</p>
+  <pre><code>class Dao {
+    List&lt;String&gt; names;                       // 字段签名里有 &lt;String&gt;
+}
+
+Field f = Dao.class.getDeclaredField("names");
+Type g = f.getGenericType();                  // 不是 getDeclaredType（擦成 List）！
+if (g instanceof ParameterizedType pt) {
+    System.out.println(pt.getActualTypeArguments()[0]);   // class java.lang.String
+}
+
+// 方法签名同理：method.getGenericParameterTypes() / getGenericReturnType()</code></pre>
+  <h3>Super Type Token：匿名子类的魔法</h3>
+  <p>直接 <code>new TypeToken&lt;List&lt;Foo&gt;&gt;()</code> 的泛型拿不到（实例不带泛型），但<strong>匿名子类</strong>会把参数化父类签名固化到自己的 class 文件里：</p>
+  <pre><code>List&lt;String&gt; list = new ArrayList&lt;String&gt;() {};   // 注意末尾 {}：匿名子类
+ParameterizedType pt = (ParameterizedType) list.getClass().getGenericSuperclass();
+System.out.println(pt.getActualTypeArguments()[0]);   // class java.lang.String
+
+// Gson / Jackson / Feign 的套路同源：
+TypeToken&lt;List&lt;Foo&gt;&gt; token = new TypeToken&lt;List&lt;Foo&gt;&gt;() {};
+List&lt;Foo&gt; foos = gson.fromJson(json, token.getType());   // 没它只能拿到 List，Foo 丢失
+
+// JDK 内置的简化版：TypeReference（Jackson）
+List&lt;Foo&gt; foos = mapper.readValue(json, new TypeReference&lt;List&lt;Foo&gt;&gt;() {});</code></pre>
+  <ul>
+    <li>这就是为什么 <code>gson.fromJson(json, List.class)</code> 会得到 <code>List&lt;Object&gt;</code>（元素实际是 Map）——泛型没进 class 文件；必须用 TypeToken 把签名"种"进匿名子类。</li>
+    <li>实战关联：通用 DAO / MyBatis 泛型 Mapper、Spring 的 <code>ResolvableType</code>（解析容器里 Bean 的泛型层次）都建立在这套机制上；更系统的反射内容见 <a href="12-注解与反射.html">第 12 章 注解与反射</a>。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：一句话纠正误区——"擦除不等于元数据全丢，Signature 属性保留了声明处的泛型"；然后给"字段 getGenericType + 匿名子类 TypeToken"两段证据；最后带一句 Gson/Jackson 的实际用法。这一题答好，直接体现"编译期/运行期边界"的功底。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">09</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：擦除 → 那 List&lt;String&gt; 和 List&lt;Integer&gt; 是同一个类吗</strong>→ 是（同一个 ArrayList.class），泛型只活在编译期；追问"能通过反射往 List&lt;Integer&gt; 里塞 String 吗"→ 能，<code>list.getClass().getMethod("add", Object.class).invoke(list, "abc")</code> 绕过编译期检查，取出时才在 checkcast 处炸——堆污染的教科书演示。</li>
+    <li><strong>追问链：PECS → 为什么 JDK 的 sort 签名是 Comparator&lt;? super T&gt;</strong>→ 比较器是消费者（吃元素吐序号），允许传"按父类维度写的比较器"复用逻辑；配合 <code>&lt;T extends Comparable&lt;? super T&gt;&gt;</code> 一起答满分。</li>
+    <li><strong>追问链：泛型 vs 数组协变 → 为什么数组要协变</strong>→ JDK 1.0 没泛型，集合只能收 Object[]，协变让 Object[] 能装任何子类数组——代价是 ArrayStoreException 运行期兜底；泛型出现后"不变 + 通配符"是更安全的替代。</li>
+    <li><strong>陷阱：原始类型混用</strong>：<code>List list = new ArrayList&lt;String&gt;()</code> 能编译（裸类型跳过检查），一堆 unchecked 警告——老代码迁移的常见污染源，团队规范应禁裸类型。</li>
+    <li><strong>陷阱：静态泛型</strong>：<code>class Box&lt;T&gt; { static T x; }</code> 编译错——类的类型参数随实例化确定，static 属于类本身；正解是 static 泛型方法自带 <code>&lt;T&gt;</code>。</li>
+    <li><strong>陷阱：instanceof 与 Class.cast</strong>：<code>List&lt;?&gt;</code> 判断用裸类型 List；拿到 Class&lt;T&gt; 后用 <code>clazz.cast(obj)</code> 代替裸强转，编译器能沿途保住 T。</li>
+    <li><strong>陷阱：泛型与重载</strong>：方法重载看擦除后签名，<code>f(List&lt;String&gt;)</code> 与 <code>f(List&lt;Integer&gt;)</code> 冲突；但返回类型不同的两个方法若只有泛型实参不同也会冲突（擦后同签名）。</li>
+    <li><strong>场景题口径</strong>："设计通用 JSON 反序列化工具"→ TypeToken/Super Type Token；"写通用对象工厂"→ Supplier&lt;T&gt; / Class&lt;T&gt;；"写通用仓库层"→ 泛型 DAO + 反射 getGenericSuperclass 拿实体 Class（MyBatis-Plus 的 BaseMapper 思路）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">10</span>面试自查清单</h2>
+  <ol>
+    <li>能说出泛型三大收益（编译期类型安全 / 免强转 / 复用）并对应 JDK 4 的 Object 写法反例。</li>
+    <li>泛型类 / 接口 / 泛型方法声明语法熟练，知道 static 成员不能用类类型参数。</li>
+    <li>单上界、多上界（<code>&amp;</code>、类在前）能写，认得 <code>&lt;T extends Comparable&lt;? super T&gt;&gt;</code> 这种签名。</li>
+    <li>能解释泛型不变性 + 数组协变的对比，及 extends 只读 / super 只写的编译器原因。</li>
+    <li>PECS 口诀脱口而出，能默写 <code>Collections.copy(List&lt;? super T&gt;, List&lt;? extends T&gt;)</code> 并举 2 个 JDK 实例。</li>
+    <li>类型擦除的规则（无界→Object、有界→上界、多界→首界）+ 四条证据（同 class / 无 List&lt;String&gt;.class / checkcast / 不能重载）。</li>
+    <li>"不能 new T() / T.class / new T[] / List&lt;int&gt; / instanceof 泛型 / 继承 Throwable"六大限制及各自解法。</li>
+    <li>能画/讲桥方法的合成过程（setData(Object) 转发 setData(String)）并说明它保住了多态。</li>
+    <li>知道堆污染的成因、炸点（消费端 checkcast）与 @SafeVarargs 的适用范围。</li>
+    <li>能解释"擦除了为何反射还能拿泛型"（Signature 属性）+ TypeToken 匿名子类原理。</li>
+  </ol>  <div class="box note"><p><strong>内容来源</strong>：参考并合并了 <a href="https://javaguide.cn/java/basis/java-basic-questions-03.html">JavaGuide · Java 基础常见面试题（下）</a>泛型部分（什么是类型擦除、通配符、限定符，重构改写）。</p></div>
+  <div class="pager">
+    <a href="08-集合框架.html">⬅ 上一章：08 集合框架</a>
+    <a class="next" href="10-Lambda与Stream.html">下一章：10 Lambda 与 Stream →</a>
+  </div>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">01 Java 语言核心</a> · 第 09 章 泛型</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+
+
+</script>
+</body>
+</html>
