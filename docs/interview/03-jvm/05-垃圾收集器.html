@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 05 章 · 垃圾收集器 — JVM 与内存模型</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 03 JVM 与内存模型</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#evolve">演进总览</a>
+  <a href="#serial">Serial 与 Parallel</a>
+  <a href="#cms">CMS 深挖 ⭐</a>
+  <a href="#tricolor">三色标记与漏标 ⭐</a>
+  <a href="#g1">G1 ⭐⭐</a>
+  <a href="#zgc">ZGC 与低延迟</a>
+  <a href="#choose">收集器怎么选</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="04-GC基础.html">⬅ 上一章：04 GC 基础</a>
+  <a href="06-内存泄漏.html">下一章：06 内存泄漏与 OOM →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 05 章 · 垃圾收集器</h1>
+    <div class="sub">CMS（并发四阶段与退化）· 三色标记与 SATB · G1 Region 模型 · ZGC 染色指针 —— 收集器演进的每一步都是在换掉一种代价</div>
+    <div class="meta">
+      <span>⭐⭐ 必考：CMS 四阶段与退化 · G1 vs CMS · 为什么并发收集会漏标</span>
+      <span>蓝本：AlgoMaster Java 课程 JVM 章</span>
+      <span class="tag exist">三源生成：JavaGuide + pdai + 美团 ✅</span>
+      <span class="tag exist">已合并：java 基础.md 收集器节（900-939 行）✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>常见的垃圾收集器有哪些？各自的特点和适用场景？⭐</li>
+      <li>CMS 的四个阶段？哪两个 STW、哪两个并发？⭐⭐</li>
+      <li>CMS 有什么缺点？concurrent mode failure 是怎么发生的？发生了会怎样？⭐⭐</li>
+      <li>CMS 为什么从来没有成为任何 JDK 的默认收集器？各收集器的版本账本（引入/弃用）？⭐</li>
+      <li>并发标记时应用线程还在改引用，为什么会漏标？怎么解决？（三色标记）⭐</li>
+      <li>增量更新和 SATB（原始快照）的区别？CMS 和 G1 各用的哪个？⭐</li>
+      <li>G1 的 Region 模型？和传统分代有什么不同？⭐⭐</li>
+      <li>G1 的 RSet（记忆集）是干什么的？Mixed GC 的流程？</li>
+      <li>G1 有 Major GC 吗？Young / Mixed / Full 三种回收各自的触发时机、时长与收摊条件？⭐⭐</li>
+      <li>-XX:MaxGCPauseMillis 设得越小越好吗？⭐</li>
+      <li>ZGC 为什么能做到停顿 &lt;10ms 且与堆大小无关？染色指针是什么？⭐（新热点）</li>
+      <li>ZGC 里还有 Minor/Major/Mixed GC 吗？单代 ZGC 的兜底是什么？⭐（术语纠偏）</li>
+      <li>ZGC 怎么知道一个地址"所有指向都转移完了"？吞吐损失 ~10% 的口径是什么？⭐（追问热点）</li>
+      <li>线上服务该选哪个收集器，怎么决策？</li>
+    </ol>
+  </div>
+  <p>收集器是 JVM 面试的<strong>深水区主战场</strong>：CMS 和 G1 的对比是二面高频原题，三色标记是"并发正确性"的必答题。7 年经验层的答法不是背特性表，而是讲<strong>"每种收集器换掉了什么代价、又引入了什么新代价"</strong>——这条演进逻辑线能让你在连续追问下不崩。</p>
+</section>
+
+<section id="evolve">
+  <h2><span class="no">02</span>演进总览：一张表看清楚</h2>
+  <table>
+    <tr><th>收集器</th><th>作用代</th><th>算法</th><th>并行/并发</th><th>目标</th><th>备注</th></tr>
+    <tr><td>Serial / Serial Old</td><td>新生代 / 老年代</td><td>复制 / 标记-整理</td><td>单线程，全程 STW</td><td>简单省资源</td><td>客户端、小内存（笔记：客户端应用）</td></tr>
+    <tr><td>ParNew</td><td>新生代</td><td>复制</td><td>多线程并行，STW</td><td>CMS 的年轻代搭档</td><td>本质是 Serial 的多线程版</td></tr>
+    <tr><td>Parallel Scavenge / Parallel Old</td><td>新生代 / 老年代</td><td>复制 / 标记-整理</td><td>多线程并行，STW</td><td><strong>吞吐量优先</strong>（笔记：后台运算不关注响应时间）</td><td>JDK 8 默认</td></tr>
+    <tr><td><strong>CMS</strong></td><td>老年代</td><td>标记-清除</td><td>标记与清除<strong>并发</strong></td><td>最短停顿</td><td>JDK 9 弃用 / 14 移除，存量仍常见</td></tr>
+    <tr><td><strong>G1</strong></td><td>整堆（Region 化）</td><td>复制 + 标记-整理</td><td>并发标记 + 并行回收</td><td><strong>可预测停顿</strong></td><td>JDK 9+ 默认</td></tr>
+    <tr><td><strong>ZGC</strong></td><td>整堆（单代）</td><td>着色指针 + 读屏障</td><td>几乎全程并发</td><td>停顿 &lt;10ms，与堆大小无关</td><td>JDK 15+ 生产可用，17+ 成熟</td></tr>
+  </table>
+  <p><strong>版本账本</strong>：默认收集器的演进跟着「组合」走，不是跟着单个收集器走——新生代 + 老年代各挑一个配对使用，面试报组合、别报单点。别误以为"没人关注新生代"：它恰恰是<strong>回收最频繁</strong>的区域，只是它在组合里只是一个位置。</p>
+  <table>
+    <tr><th>收集器</th><th>引入</th><th>弃用 / 移除</th></tr>
+    <tr><td>Serial / Serial Old</td><td>1.2（HotSpot 初代）</td><td>仍在（小堆、客户端场景）</td></tr>
+    <tr><td>ParNew</td><td>1.4</td><td>JDK 9 弃用 → <strong>14 随 CMS 一起移除</strong>（唯一搭档没了，失去存在意义）</td></tr>
+    <tr><td>Parallel Scavenge</td><td>1.4</td><td>仍在</td></tr>
+    <tr><td>Parallel Old</td><td>1.6</td><td>仍在（JDK 14 弃用的是 <strong>PS + SerialOld 组合</strong>，JEP 366，不是它本身）</td></tr>
+    <tr><td><strong>CMS</strong></td><td>1.4</td><td><strong>JDK 9 弃用（JEP 291）→ 14 移除（JEP 363）</strong></td></tr>
+    <tr><td><strong>G1</strong></td><td>7u4 生产可用（6u14 实验）</td><td><strong>JDK 9 起默认</strong>（JEP 248）</td></tr>
+    <tr><td>ZGC</td><td>11 实验（JEP 333）</td><td>15 生产（JEP 377）→ <strong>21 分代 ZGC</strong>（JEP 439）</td></tr>
+    <tr><td>Shenandoah</td><td>12 实验</td><td>15 生产（JEP 379）</td></tr>
+  </table>
+  <div class="box tip"><p><strong>面试指纹（版本只需记这三行）</strong>：① JDK 8 默认 = Parallel Scavenge + Parallel Old（吞吐量优先）；② JDK 9+ 默认 = G1，CMS 停止维护；③ 问「CMS 为什么被废」= 碎片 + 浮动垃圾 + 并发失败退化为 Serial Old。口诀：<strong>Scavenge 结尾 = 新生代，Old 结尾 = 老年代，CMS 单独 = 老年代，G1 全都要</strong>。</p></div>
+  <div class="box note"><p><strong>演进主线（比背表更重要）</strong>：Serial → Parallel 解决"单线程慢"；CMS 解决"STW 长"但引入碎片与并发失败；G1 解决"碎片 + 停顿不可控"；ZGC 解决"停顿随堆增长"。每一步都是拿 A 代价换 B 收益——按这条线答，任何"XX 和 YY 的区别"都能现场推导。</p></div>
+</section>
+
+<section id="serial">
+  <h2><span class="no">03</span>Serial 与 Parallel：吞吐时代的两代</h2>
+  <ul>
+    <li><strong>Serial（笔记并入）</strong>：单线程、Stop The World；适合客户端应用、小内存——没有线程协调开销，小场景反而最快。</li>
+    <li><strong>Parallel（笔记并入）</strong>：多线程并行 GC，<strong>注重吞吐量</strong>（用户代码时间占比），适合后台运算、批处理这类"不关注单次响应、关注总产出"的场景。JDK 8 默认组合是 Parallel Scavenge + Parallel Old。</li>
+    <li>注意"并行（parallel，多线程 GC）"与"并发（concurrent，GC 与应用同时跑）"是两个维度——CMS/G1/ZGC 的"并发"指后者，这是面试表述准确性的送分点。</li>
+  </ul>
+</section>
+
+<section id="cms">
+  <h2><span class="no">04</span>CMS 深挖 ⭐⭐（笔记四阶段并入展开）</h2>
+  <p><strong>CMS（Concurrent Mark Sweep）</strong>：老年代收集器，目标是<strong>最短停顿</strong>——大部分工作与用户线程并发执行。</p>
+  <pre><code>① 初始标记（STW，短）   —— 只标记 GC Roots 直接关联的对象，速度很快
+② 并发标记（并发，长）   —— 从 Roots 直达对象沿引用链遍历，与用户线程同时跑
+③ 重新标记（STW，短）   —— 修正并发标记期间用户线程导致的引用变动（增量更新）
+④ 并发清除（并发，长）   —— 清理垃圾对象，与用户线程同时跑
+
+停顿 = ① + ③ 两小段；② ④ 虽长但不停止用户线程 —— 这就是"低停顿"的全部秘密</code></pre>
+  <h3>CMS 的三个代价（高频追问）</h3>
+  <ul>
+    <li><strong>① CPU 敏感</strong>（笔记：对 CPU 资源敏感）：并发阶段默认占走一半核，本就紧张的 CPU 被分流，应用吞吐下降。</li>
+    <li><strong>② 浮动垃圾 + concurrent mode failure</strong>：并发清除阶段用户线程还在产生垃圾（本次收不掉的"浮动垃圾"），所以 CMS 必须<strong>预留空间</strong>（老年代用到 68%~92% 就要启动，-XX:CMSInitiatingOccupancyFraction）。如果预留不够——并发标记期间对象晋升放不下——触发 <strong>concurrent mode failure</strong>，<strong>退化为 Serial Old 单线程 STW 整理整个老年代</strong>（几秒到几十秒），是 CMS 最臭名昭著的事故。</li>
+    <li><strong>③ 内存碎片</strong>（笔记：产生内存碎片）：标记-清除不整理，碎片积累导致"总空间够、连续空间不够"，大对象放不下 → 触发 Full GC。缓解：-XX:+UseCMSCompactAtFullCollection（Full GC 时顺带整理，代价是停顿更长）。</li>
+  </ul>
+  <h3>追问：CMS 为什么从来没有成为任何 JDK 的默认收集器 ⭐</h3>
+  <p>事实先摆清：从 1.4 到 8，服务端默认一直是 Parallel 系列；JDK 9 起直接换 G1——<strong>CMS 一天默认都没当过</strong>。原因一句话：<strong>默认的定义是"开箱即用、不调参也稳、行为可预测"，CMS 恰恰每条都不满足</strong>。</p>
+  <table>
+    <tr><th>默认的要求</th><th>CMS 的现实</th></tr>
+    <tr><td>不调参也稳</td><td>必须调 <code>-XX:CMSInitiatingOccupancyFraction</code> 才能跑好：阈值低了易 concurrent mode failure，高了碎片提前耗尽——默认参数下两头都是险</td></tr>
+    <tr><td>行为可预测</td><td>失败模式不可预测：预留空间一旦不够，退化 <strong>Serial Old 单线程整理整堆</strong>，尾延迟方差极大，没人敢把它交给"无人值守"的默认值</td></tr>
+    <tr><td>能自愈</td><td><strong>碎片只进不出</strong>：标记-清除不整理，长期运行必然积累，靠 Full GC 顺带整理本身又是长停顿——治碎片的药和病同源</td></tr>
+  </table>
+  <div class="box note"><p><strong>但历史地位极高——开路先锋</strong>：第一个真正并发的收集器，证明"GC 可以和业务线程并行"，把 STW 从"整个 GC 过程"压缩到"两个标记段"。它暴露的碎片、浮动垃圾、并发失败三大问题，直接催生了 G1（Region 间复制 = 整理，无碎片）、ZGC/Shenandoah（并发整理）——<strong>后续每个收集器都在补它的短板</strong>。面试指纹：CMS = 用吞吐量换延迟的先驱，死于碎片和不可预测的失败模式，被 G1 接班（9 默认、14 移除）。</p></div>
+  <h3>美团《9 种 CMS GC 问题》选讲两个生产案例 ⭐</h3>
+  <ul>
+    <li><strong>案例一：动态扩容空间震荡</strong>（见 <a href="01-运行时数据区.html">第 01 章</a>参数节埋的点）：Xms ≠ Xmx 时，堆在"扩容 → Full GC → 缩容 → 再扩容"里循环，GC 时间曲线周期性震荡——<strong>一个 -Xms=-Xmx 就治好</strong>。"先怀疑参数与容量，再怀疑玄学"的样板。</li>
+    <li><strong>案例二：过早晋升（Premature Promotion）</strong>：Survivor 太小（或新生代整体太小），对象还没死透就被动态年龄判断提前推进老年代 → 老年代被短命对象灌满 → Old GC 频繁。识别信号：GC 日志里<strong>每次 Young GC 的晋升量高、但老年代涨完又跌</strong>（说明晋升的对象很快就死了，死错了地方）。治法：调大新生代/Survivor，让短命对象"死在新生代"。</li>
+  </ul>
+  <div class="box tip"><p><strong>"CMS 都被移除了为什么还问"</strong>的标准答法：大量存量系统（JDK 8）仍在跑，且 CMS 的三色标记、并发失败、碎片化是理解 G1/ZGC 的参照系——懂 CMS 才知道 G1 的每个设计在补什么。</p></div>
+</section>
+
+<section id="tricolor">
+  <h2><span class="no">05</span>三色标记与并发漏标 ⭐（CMS 与 G1 的分水岭）</h2>
+  <p>并发标记期间用户线程还在改引用，怎么保证不把活对象当垃圾（漏标 = 还在用的对象被回收 = 灾难）？用<strong>三色标记抽象</strong>来推：</p>
+  <ul>
+    <li><strong>白</strong>：未被扫描（垃圾候选）；<strong>灰</strong>：自己已扫完但成员还没扫完；<strong>黑</strong>：自己和成员都扫完（确认存活）。</li>
+    <li>扫描结束后白色 = 垃圾。<strong>漏标（活对象被当白）必须同时满足两个条件</strong>：</li>
+  </ul>
+  <pre><code>条件① 黑色对象 新增了 指向白色对象的引用（黑不重扫，看不见这条新边）
+条件② 灰色对象 原来指向该白色对象的引用 被删除（白失去最后的"被扫到"机会）
+
+// 两种解法 = 破坏其中一个条件：
+增量更新（Incremental Update，CMS 采用）：破坏①
+  —— 黑→白的新引用记录下来，重新标记阶段把该黑对象降级为灰重扫
+原始快照 SATB，Snapshot At The Beginning（G1 采用）：破坏②
+  —— 删除的引用记录下来，按"标记开始那一刻的对象图快照"处理：
+     快照里活着的，这一轮都算活的（宁可漏杀不可错杀）→ 产生浮动垃圾也认了</code></pre>
+  <div class="box note"><p><strong>追问预埋</strong>："CMS 和 G1 的本质区别之一是什么"——就答<strong>并发漏标的解决方案不同（增量更新 vs SATB）</strong>，顺便带出 G1 用 SATB 换来"快照一致性"，代价是浮动垃圾。这是本章分水岭级答案，链 <a href="04-GC基础.html">第 04 章</a>可达性分析的钩子在此兑现。</p></div>
+</section>
+
+<section id="g1">
+  <h2><span class="no">06</span>G1（Garbage First）⭐⭐（笔记 Region 模型并入展开）</h2>
+  <h3>核心变化：物理分代 → 逻辑分代</h3>
+  <ul>
+    <li>G1 之前的收集器：分代是<strong>连续物理区域</strong>；G1：把堆切成约 <strong>2048 个等大 Region</strong>（笔记：G1 分区域，region 可以不连续），每个 Region 动态扮演 Eden / Survivor / Old / <strong>Humongous</strong>（大对象，≥ Region 一半就整个 Region 装，可连续占用多个）四种角色。</li>
+    <li>回收时<strong>不以代为单位、而以 Region 为单位</strong>：优先回收"垃圾占比最高"的 Region（Garbage First 名字由来）——用最少工作量换最多空间。</li>
+  </ul>
+  <h3>Eden/S0/S1 只是"角色标签"⭐（面试易误答点）</h3>
+  <p>G1 里的 Eden/Survivor 是<strong>户口不是地</strong>——物理上全是等大 Region，代际只剩逻辑语义：</p>
+  <table>
+    <tr><th></th><th>经典分代（Serial/ParNew/PS）</th><th>G1</th></tr>
+    <tr><td>Eden/S0/S1</td><td>三块固定物理空间，比例 8:1:1</td><td><strong>动态 Region 集合</strong>，每轮数量都变</td></tr>
+    <tr><td>复制方式</td><td>from/to <strong>半区交换</strong>，两块 Survivor 对半预留</td><td><strong>没有半区交换</strong>：每次 Young GC 现场挑空闲 Region 当新 Survivor，装完存活对象，旧 Eden/Survivor Region 整体释放——顺手完成整理</td></tr>
+    <tr><td>各占几个</td><td>固定比例</td><td>全部动态：Region 总数默认 ~2048（大小取 2 的幂，1–32MB，<code>G1HeapRegionSize</code>）；年轻代占堆 <strong>5%~60%</strong>（<code>G1NewSizePercent</code>/<code>G1MaxNewSizePercent</code>，停顿模型自适应）；Survivor 只按存活量留<strong>几片</strong>（个位数~十几片，装不下直接晋升）；Eden = 年轻代 − Survivor</td></tr>
+  </table>
+  <div class="box note"><p>保留的只有<strong>年龄语义</strong>：每熬一次 Young GC 岁 +1，超过 <code>MaxTenuringThreshold</code>（默认 15）或触发动态年龄判断就晋升 Old——概念没变，变的只是容器。面试指纹：<strong>G1 = 分代从"三块地"降级成"三种户口"，半区交换没了，换来回收即整理、无碎片。</strong></p></div>
+  <h3>三个关键机制</h3>
+  <ul>
+    <li><strong>RSet（ remembered Set 记忆集）</strong>：每个 Region 记一份"谁引用了我"的跨 Region 引用表（卡表实现），Young GC / 并发标记时<strong>不用扫整堆</strong>就能知道本 Region 被谁引用——空间换时间，解决 Region 化后"跨代引用扫描成本"的问题。</li>
+    <li><strong>并发标记（SATB）</strong>：全局标记跑完后才知道每个 Region 的垃圾比例，为 Mixed GC 做"性价比排序"。</li>
+    <li><strong>停顿预测模型</strong>：<code>-XX:MaxGCPauseMillis=200</code>（默认）是<strong>软目标</strong>——G1 按历史每个 Region 回收耗时建模，在停顿预算内尽量多装高价值 Region 进 CSet（Collection Set）。<strong>设得过小（如 10ms）→ 每次 CSet 只装一点点 → 回收赶不上分配 → 最终退化 Full GC</strong>，这是"调参调崩"的经典反面案例（笔记已列该参数）。</li>
+  </ul>
+  <h3>Young GC 与 Mixed GC</h3>
+  <pre><code>Young GC（STW，并行）：Eden/Survivor Region 中存活对象 → 复制到新 Survivor/Old Region
+                        空出来的 Region 整体回收 —— Region 间复制即"整理"，无碎片问题
+Mixed GC（G1 的招牌） ：并发标记后，回收【全部 Young + 部分高垃圾率 Old】Region
+                        每次 Mixed 只选 CSet 里的一部分，分多轮完成 —— 停顿可控的原因
+退化：并发标记赶不上分配 / Humongous 不断插入 / 晋升失败
+      → Full GC 整堆整理（JDK 10 起并行化 JEP 307，仍是秒级灾难，要靠监控提前发现）</code></pre>
+  <h3>三种 STW 回收：Young / Mixed / Full（G1 没有"Major GC"）⭐⭐</h3>
+  <p>术语先纠偏：<strong>"Major GC"是老术语（≈老年代整堆回收，CMS 语境）</strong>；G1 把"回收老年代"拆成<strong>并发标记（只统计、不回收）+ Mixed GC（真回收）</strong>两步——所以 G1 只有三种 STW 回收：</p>
+  <table>
+    <tr><th></th><th>Young GC</th><th>Mixed GC</th><th>Full GC</th></tr>
+    <tr><td>触发</td><td>Eden Region 满，分配不进来</td><td>并发标记完成后紧接着，<strong>没有独立触发条件</strong></td><td>兜底：分配赶不上回收 / Humongous 挤爆 / 晋升失败</td></tr>
+    <tr><td>范围</td><td>全部年轻代 Region</td><td>全部年轻代 + <strong>部分</strong>高垃圾率 Old Region</td><td>整堆整理</td></tr>
+    <tr><td>STW</td><td>是，并行复制</td><td>是，并行复制</td><td>是（JDK 10 起并行化 JEP 307，之前单线程）</td></tr>
+    <tr><td>时长</td><td>几 ms~几十 ms（停顿预算内）</td><td>每轮与 Young 同量级，<strong>连续 3~8 轮</strong>（<code>G1MixedGCCountTarget=8</code>）</td><td><strong>秒~几十秒</strong>，灾难</td></tr>
+    <tr><td>收摊条件</td><td>—</td><td>可回收垃圾占比 &lt; 5%（<code>G1HeapWastePercent</code>）提前结束</td><td>—</td></tr>
+  </table>
+  <pre><code>运作时序：
+平时：   Eden 满 → Young GC（几ms）→ 接着分配 → 又满 → Young GC …反复
+老年代 ≥ 45%（IHOP）→ 借下一次 Young GC 的 STW 顺带做初始标记
+                      → 并发标记（不 STW，给老年代 Region 按"垃圾占比"排队）
+标记完成 → Mixed × N 轮（每轮 = Young + 一批 Old Region）
+出事：   某一步撑不住 → Full GC（秒级全停）= 调优失败信号</code></pre>
+  <p><strong>"选择"分三层</strong>：① <strong>什么时候干</strong>——Young 没得选（Eden 满就干），并发标记由 <strong>IHOP（InitiatingHeapOccupancyPercent，默认 45%）</strong>决定，JDK 9+ 自适应调整该阈值；② <strong>选谁进 CSet</strong>——年轻代 Region 全进，老年代按垃圾占比排序、停顿预算内挑性价比最高的（Garbage First 本义）；③ <strong>多长</strong>——不靠设置长短，靠<strong>动态调年轻代 Region 数</strong>适配 MaxGCPauseMillis 预算（"别手动设 -Xmn"铁律的根因）。</p>
+  <div class="box warn"><p><strong>G1 使用两条铁律</strong>：① 堆 6GB+、停顿敏感才选 G1（小堆上 Parallel 可能更快）；② <strong>不要手动设置 -Xmn / SurvivorRatio</strong>（笔记未提但极重要）——G1 的核心能力就是动态调整年轻代 Region 数来实现停顿目标，手动定死等于废掉它的自适应。</p></div>
+</section>
+
+<section id="zgc">
+  <h2><span class="no">07</span>ZGC 与低延迟路线 ⭐（新热点）</h2>
+  <ul>
+    <li><strong>目标</strong>：停顿 <strong>10ms 以下（实测亚毫秒级），且与堆大小无关</strong>——TB 级堆也一样；代价是吞吐量损失约 10% 量级。JDK 11 实验、15 生产可用、17+ 成熟（JDK 21 起分代 ZGC 进一步降开销）。</li>
+    <li><strong>染色指针（Colored Pointer）</strong>：在 64 位指针的<strong>地址位里</strong>直接存"标记状态"（Marked0/Marked1/Remapped/Finalizable）——对象元信息不再需要额外结构，GC 状态写在指针上。</li>
+    <li><strong>读屏障（Load Barrier）</strong>：应用线程<strong>读引用时</strong>的一小段检查代码：发现指针"颜色不对"（指向旧地址/未标记），就现场自愈（转发到新地址）。这是 ZGC 能<strong>并发移动对象</strong>的关键——搬完家不 STW 全局修正引用，谁读到谁修。</li>
+    <li><strong>并发整理</strong>：标记、转移、重定位几乎全部与应用并发 → 停顿只剩极短的根扫描等固定环节，与堆大小解耦。</li>
+    <li><strong>美团《ZGC 的探索与实践》要点</strong>：低延时场景（交易链路、网关）收益显著——P99 延迟大幅平稳；注意点：吞吐换延迟的取舍、单代 ZGC 的对象晋升特征（JDK 21 分代 ZGC 缓解）、超大堆下内存占用略高。7 年经验口径：不是无脑上，是<strong>"延迟 SLA 卡得紧、堆又大"时才切</strong>。</li>
+  </ul>
+  <h3>为什么停顿与堆大小无关（三行动作对照）⭐</h3>
+  <pre><code>一次 GC 三动作：标记（找活对象）→ 转移/整理（搬对象）→ 修正引用
+停顿的根：只要在"搬"，就得 STW——业务线程不能看见"搬到一半"的中间状态
+
+CMS：  STW(标记段) + 并发(清除)        → 躲掉了整理 → 碎片死
+G1：   STW(标记段) + STW(小批搬)       → 搬是分批的 → 停顿随堆涨
+ZGC：  STW(根扫描，固定) + 并发(其余全部) → 停顿 = 常数</code></pre>
+  <p><strong>并发搬对象的死结</strong>：GC 把对象从地址 1 搬到地址 2 时，业务线程手里指着地址 1 的旧引用读谁？解法 = 染色指针 + 读屏障配合的自愈链：</p>
+  <pre><code>GC 搬走对象，旧址放转发指针（forwarding pointer）
+  ↓
+业务线程读到旧引用 → 读屏障发现颜色不对（慢路径）
+  ↓
+沿转发指针找到新家 → 改【自己这一份】引用 + 重新着色 → 返回新地址
+  ↓
+第一次访问贵，之后全走快路径；GC 收尾 remap 阶段并发遍历对象图补漏</code></pre>
+  <div class="box tip"><p><strong>追问热点：三个引用指向旧址，怎么知道"所有指向都转移完了"？</strong>——<strong>不存在、也不需要全局判定</strong>。修复按引用、惰性、各自负责：谁被读，谁的那一份自愈（只改自己 + 重着色）；没被读的由旧址转发指针兜着 + remap 收尾补漏（与读屏障幂等）。正确性锚点只有一条：<strong>旧址回收至少推到下一轮周期</strong>——转发信息的寿命 &gt; 任何引用的寿命，"读到已回收的旧址"不会发生。</p></div>
+  <h3>ZGC 里有 Young/Major/Mixed/Full GC 吗？⭐（术语纠偏）</h3>
+  <table>
+    <tr><th>时代</th><th>GC 种类</th></tr>
+    <tr><td>JDK 11~20（单代 ZGC）</td><td><strong>全没有</strong>。不分代 → 不存在"只收年轻代"的动作，Minor/Major/Mixed 之分都不成立。只有一种循环：<strong>并发标记 → 并发转移</strong>，整堆滚动进行；触发不看"Eden 满"，按分配压力自适应启动下一轮</td></tr>
+    <tr><td>JDK 21+（分代 ZGC，JEP 439）</td><td>概念回归但换名：<strong>Minor cycle</strong>（高频，只收年轻代）+ <strong>Major cycle</strong>（低频，标记+转移全堆）——术语叫 cycle，不再叫 GC</td></tr>
+  </table>
+  <p>极端兜底不是 Full GC，而是 <strong>Allocation Stall（分配停顿）</strong>：内存还没腾出来时业务线程短暂等待——GC 本身快，等待有界（毫秒级）；真跟不上才 OOM。单代 ZGC 的日志里看不到 "GC (Allocation Failure)" 这类词汇。</p>
+  <div class="box note"><p><strong>"代价 ~10% 吞吐"的口径</strong>：吞吐 = 用户代码运行时间 / 总时间（时间口径）≈ 单位时间处理请求量（产出口径）——同机同压，G1 每秒 10 万 → ZGC ~9 万。损失构成：① 读屏障检查开销（每次引用加载都有，大头）② GC 并发线程抢 CPU ③ 转发表等内存开销。<strong>反直觉点</strong>：若原来 G1 常打几秒 Full GC，切 ZGC 后积压/超时/重试消失，总吞吐有时反而更好——所以答"典型 10% 左右，看负载特征"，是量级不是定律。</p></div>
+  <div class="box note"><p>顺带记住同路线的 <strong>Shenandoah</strong>（Red Hat，用转发指针而非染色指针，思路殊途同归）和 <strong>Generational ZGC（JDK 21）</strong>——能带出这两个名字，说明你在跟这条线的最新进展。</p></div>
+</section>
+
+<section id="choose">
+  <h2><span class="no">08</span>怎么选：一张决策表</h2>
+  <table>
+    <tr><th>场景</th><th>选择</th><th>理由</th></tr>
+    <tr><td>小内存 / 客户端 / 边缘</td><td>Serial</td><td>协调开销最小，简单即快</td></tr>
+    <tr><td>后台批处理 / 吞吐优先</td><td>Parallel</td><td>STW 长一次没关系，总吞吐最大</td></tr>
+    <tr><td>通用在线服务（JDK 8 存量）</td><td>ParNew + CMS（或直接评估升级）</td><td>低停顿诉求的老组合，盯 concurrent mode failure</td></tr>
+    <tr><td>通用在线服务（JDK 9+，堆 6G+）</td><td><strong>G1（默认）</strong></td><td>停顿可预测、无碎片，平衡首选</td></tr>
+    <tr><td>大堆 + 超低延迟 SLA（金融/交易/网关）</td><td><strong>ZGC</strong></td><td>停顿与堆大小无关，用 ~10% 吞吐买 P99</td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题框架</strong>：先问自己三个问题——<strong>要吞吐还是要延迟？堆多大？JDK 什么版本？</strong>答案基本就定了。把这"三问"说出来再给结论，比直接报名字更像做过决策的人。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">09</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：G1 和 CMS 的区别（必考）→</strong>→ 五点：①Region 化逻辑分代 vs 物理连续分代；②SATB vs 增量更新；③标记-整理（Region 间复制）无碎片 vs 标记-清除有碎片；④停顿可预测（软目标建模）vs 尽力而为；⑤大对象 Humongous 专门处理 vs 直接进老年代。</li>
+    <li><strong>追问链：JDK 9 为什么默认 G1 →</strong>→ 多核大内存时代在线服务都在意延迟；CMS 的碎片与并发失败维护成本高；G1 全场景均衡且自适应 → 再追问：G1 会退化为 Full GC 吗 → 会（分配赶不上回收/Humongous 挤爆），链第 06 节。</li>
+    <li><strong>追问链：CMS 为什么从来没当过默认 →</strong>→ 默认 = 开箱即用可预测；CMS 必须调启动阈值才稳、并发失败退化不可预测（Serial Old 全停）、碎片只进不出 → 但它是并发收集的开路先锋，暴露的三大问题直接催生 G1/ZGC → 再追问：ParNew 为什么被移除 → 唯一搭档是 CMS，CMS 移除即失去存在意义（JDK 14）。</li>
+    <li><strong>追问链：MaxGCPauseMillis 设 10ms →</strong>→ 软目标不是硬承诺 → 每次 CSet 极小 → 回收速率 &lt; 分配速率 → 老年代持续涨 → 退化 Full GC → 一次 10s 的停顿换掉了每次 200ms，完全本末倒置。</li>
+    <li><strong>追问链：G1 有 Major GC 吗 →</strong>→ 没有独立 Major GC（老术语，CMS 语境）；老年代回收 = 并发标记（只排队不回收）+ Mixed GC（真收割）→ 再追问：Mixed 几轮收摊 → 最多 8 轮（G1MixedGCCountTarget），可回收垃圾 &lt;5%（G1HeapWastePercent）提前结束；Full GC 是兜底灾难不是常态。</li>
+    <li><strong>追问链：G1 里 Survivor 还是俩吗 →</strong>→ 不是，没有 S0/S1 半区交换了；Eden/Survivor 只是 Region 的角色标签，每次 Young GC 现场挑空闲 Region 当新 Survivor，按存活量给几片（不是对半），旧 Region 整体释放即整理。</li>
+    <li><strong>追问链：ZGC 怎么知道地址"所有指向都转移完了" →</strong>→ 不存在全局判定，按引用惰性各自负责：谁被读谁自愈（转发指针 → 新地址 + 重着色），没被读的由 remap 收尾补漏；正确性锚点 = 旧址回收推到下一轮周期 → 再追问：单代 ZGC 有 Full GC 吗 → 没有，兜底是 Allocation Stall（有界的毫秒级等待，真跟不上才 OOM）。</li>
+    <li><strong>追问链：ZGC 的吞吐代价怎么定义 →</strong>→ 吞吐 = 用户代码时间占比 ≈ 单位时间请求量；~10% 的构成 = 读屏障开销 + 并发线程抢 CPU + 转发表内存 → 反直觉收尾：原本常打 Full GC 的服务切 ZGC，总吞吐可能反而升。</li>
+    <li><strong>陷阱：CMS 的"并发"= 没有停顿 →</strong>→ 初始标记和重新标记都 STW，只是短；并发失败时更是全停。</li>
+    <li><strong>陷阱：G1 不需要分代了 →</strong>→ 逻辑上仍分代（Eden/Survivor/Old Region 角色），只是不要求物理连续；JDK 21 前 ZGC 才是真正不分代。</li>
+    <li><strong>场景题：老年代锯齿正常但基线缓涨 →</strong>→ GC 能回收但回不到原位：疑似泄漏（对象被 Root 长期引用）或缓存类对象真实变多 → 用第 07 章的 jstat 趋势 + dump 对比法确认。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">10</span>面试自查清单</h2>
+  <ol>
+    <li>演进表能默写，且能用"换代价"主线串讲（并行→并发→可预测→与堆无关）。</li>
+    <li>版本账本三行指纹：JDK 8 默认 PS+PO、9 起默认 G1、CMS 弃 9 移 14（ParNew 同批移除）；"CMS 为什么没当过默认"能答出"不可预测 + 需调参 + 碎片只进不出"。</li>
+    <li>CMS 四阶段 + 哪两段 STW；三个代价（CPU 敏感 / 浮动垃圾与 concurrent mode failure 退化 / 碎片）。</li>
+    <li>美团两案例能讲成故事：空间震荡（Xms=Xmx）、过早晋升（Survivor 太小，日志识别法）。</li>
+    <li>三色标记漏标两条件 + 增量更新 / SATB 分别破坏哪个条件、各自归 CMS / G1。</li>
+    <li>G1：Region 模型、四种角色（含 Humongous）、RSet 作用、Young/Mixed GC、停顿软目标语义、"不手动设 Xmn"铁律。</li>
+    <li>G1 进阶：Eden/Survivor 只是 Region 角色标签（无半区交换，年轻代 5%~60% 动态）；三种 STW（Young/Mixed/Full）的触发、时长、收摊条件；"没有 Major GC"术语纠偏；IHOP 默认 45% 且 JDK 9+ 自适应。</li>
+    <li>ZGC：染色指针 + 读屏障 + 并发整理如何把停顿与堆大小解耦；知道分代 ZGC（21）。</li>
+    <li>ZGC 进阶：并发搬对象的自愈链（染色指针 → 读屏障 → 转发指针，按引用惰性修复 + remap 补漏，旧址回收推下一轮）；单代无 Minor/Major/Mixed、兜底是 Allocation Stall；吞吐 ~10% 的口径与构成、"延迟换吞吐可能倒挂"。</li>
+    <li>选型三问（延迟/堆大小/JDK 版本）+ 决策表能现场走一遍。</li>
+  </ol>
+  <div class="pager">
+    <a href="04-GC基础.html">⬅ 上一章：GC 基础</a>
+    <a class="next" href="06-内存泄漏.html">下一章：内存泄漏与 OOM →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源交叉生成）：① 蓝本 AlgoMaster Java 课程 JVM 章；② <a href="https://javaguide.cn/java/jvm/jvm-garbage-collection.html">JavaGuide · JVM 垃圾回收详解</a>（收集器对比口径）；③ <a href="https://pdai.tech/md/java/jvm/java-jvm-x-overview.html">pdai.tech JVM 系列</a>（GC 篇）；④ 美团技术团队：<a href="https://tech.meituan.com/2020/11/12/Java-9-CMS-GC.html">《Java中9种常见的CMS GC问题分析与解决》</a>（空间震荡 / 过早晋升案例）、<a href="https://tech.meituan.com/2020/08/06/ZGC-in-Meituan.html">《新一代垃圾回收器ZGC的探索与实践》</a>；既有笔记 Java/java 基础.md 收集器节（900-939 行：Serial/Parallel 特点、CMS 四阶段、G1 Region 与年轻代 GC 全部并入）；2026-11-24 补：收集器版本账本（JEP 291/363/248/366/333/377/379/439）、「CMS 从未当过默认收集器」归因、G1 Eden/Survivor 角色化（无半区交换、占比动态）与三种 STW 回收（Major GC 术语纠偏、JEP 307、IHOP 自适应）、ZGC 演进对照与自愈链（按引用惰性修复、remap 补漏）、单代 GC 种类澄清（Allocation Stall）与吞吐代价口径（当次会话讨论沉淀）。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">03 JVM 与内存模型</a> · 第 05 章 垃圾收集器</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>

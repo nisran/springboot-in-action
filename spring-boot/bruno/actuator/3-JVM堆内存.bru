@@ -1,0 +1,23 @@
+meta {
+  name: JVM 堆内存
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/actuator/metrics/jvm.memory.used
+  body: none
+  auth: none
+}
+
+docs {
+  配合 oom/1-触发泄漏 边漏边点：value 持续上涨不回落，就是笔记里
+  「老年代基线缓涨」的实时版；跑 3-断引用 后再点，应看到明显下降。
+}
+
+tests {
+  test("metrics name", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().name).to.eql("jvm.memory.used");
+  });
+}

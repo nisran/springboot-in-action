@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 04 章 · GC 基础 — JVM 与内存模型</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 03 JVM 与内存模型</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#alive">判断对象存活 ⭐</a>
+  <a href="#refs">四种引用 ⭐</a>
+  <a href="#algo">三大回收算法</a>
+  <a href="#generational">分代收集与堆布局</a>
+  <a href="#promote">晋升老年代四规则 ⭐</a>
+  <a href="#types">Minor · Major · Full GC</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="03-对象与内存.html">⬅ 上一章：03 对象与内存布局</a>
+  <a href="05-垃圾收集器.html">下一章：05 垃圾收集器 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 04 章 · GC 基础</h1>
+    <div class="sub">可达性分析 · 四种引用 · 三大算法 · 分代与晋升规则 —— 垃圾回收的语言层共识，下一章收集器的地基</div>
+    <div class="meta">
+      <span>⭐ 高频：GC Roots 有哪些 · 强软弱虚 · 什么时候进老年代 · 什么时候 Full GC</span>
+      <span>蓝本：AlgoMaster Java 课程 JVM 章</span>
+      <span class="tag exist">三源生成：JavaGuide + pdai ✅</span>
+      <span class="tag exist">已合并：java 基础.md 垃圾回收节（842-939 行）✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>怎么判断一个对象能不能回收？引用计数法和可达性分析的区别？⭐</li>
+      <li>GC Roots 有哪些？（至少说五种）⭐⭐</li>
+      <li>强、软、弱、虚四种引用的区别？各自的实际应用？⭐⭐</li>
+      <li>WeakHashMap 为什么能自动清理？ThreadLocal 的 Entry 为什么用弱引用？（联动题）</li>
+      <li>标记-清除、复制、标记-整理三种算法的流程和优缺点？⭐</li>
+      <li>为什么新生代用复制算法，老年代不用？</li>
+      <li>对象什么时候进入老年代？（四条规则说全）⭐⭐</li>
+      <li>Minor GC / Major GC / Full GC 的区别？什么时候触发 Full GC？⭐⭐（最高频场景题的根）</li>
+      <li>一个对象可以逃过 GC 一次吗？（finalize）</li>
+    </ol>
+  </div>
+  <p>这一章背题的人最多、翻车的也最多：四种引用和"什么时候 Full GC"几乎场场必问。<strong>主线是"判活 → 引用强度 → 算法 → 分代策略"</strong>，每一步都为下一章的收集器（CMS/G1/ZGC）铺垫——三色标记、SATB 这些深水区概念都从这章的可达性分析长出来。</p>
+</section>
+
+<section id="alive">
+  <h2><span class="no">02</span>判断对象存活 ⭐</h2>
+  <h3>引用计数法（笔记并入：反面教材）</h3>
+  <ul>
+    <li>规则：被引用 +1，引用失效 -1，计数为 0 即可回收（笔记原文）。实现简单、判定高效，<strong>但循环引用永远不为 0</strong>——A 引用 B、B 引用 A，谁也死不了。主流 JVM 不用它（Python/部分语言用"循环检测器"补救）。</li>
+  </ul>
+  <h3>可达性分析（主流方案）</h3>
+  <ul>
+    <li>从 <strong>GC Roots</strong> 出发向下搜索，能到达的对象存活；到达不了的，判定可回收。循环引用的对象只要从 Roots 够不着，照样回收——根治循环依赖问题。</li>
+  </ul>
+  <table>
+    <tr><th>GC Roots（五种，背全 ⭐）</th><th>说明</th></tr>
+    <tr><td>虚拟机栈中引用的对象</td><td>各线程栈帧的局部变量（方法参数、临时变量）——最重要的 Roots</td></tr>
+    <tr><td>方法区/元空间中类静态变量引用的对象</td><td>static 字段（JDK 7+ 静态变量随 Class 在堆，但作为 Roots 的地位不变）</td></tr>
+    <tr><td>方法区中常量引用的对象</td><td>字符串常量池等常量引用</td></tr>
+    <tr><td>本地方法栈 JNI 引用的对象</td><td>native 代码持有的对象</td></tr>
+    <tr><td>JVM 内部引用与活跃线程</td><td>基本类型 Class 对象、常驻异常对象、系统类加载器；正在运行的线程本身</td></tr>
+  </table>
+  <h3>finalize：对象的"一次逃生"（笔记并入）</h3>
+  <ul>
+    <li>被判死亡的对象若重写了 finalize() 且未执行过，会被放进 F-Queue 由低优先级线程执行——finalize 里把自己赋给某个引用即可<strong>逃生一次</strong>。</li>
+    <li>笔记原文的三条批判照收：<strong>不确定什么时候调用</strong>（等 GC 心情）、给 GC 添麻烦（可能逃过回收）、<strong>JDK 9 起 deprecated</strong>。生产结论：资源清理用 try-with-resources，别碰 finalize。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：先"引用计数有循环引用问题，HotSpot 用可达性分析"，然后主动把 GC Roots 报全——多数人只能报两三种，五种报齐这一题就直接拉开差距。</p></div>
+</section>
+
+<section id="refs">
+  <h2><span class="no">03</span>四种引用 ⭐⭐（笔记并入 + 场景补全）</h2>
+  <table>
+    <tr><th>引用</th><th>回收时机</th><th>实际应用（面试要能报出）</th></tr>
+    <tr><td><strong>强引用</strong> Strong</td><td>永不回收：只要强引用在，OOM 也不回收（笔记：最常见的，不会被清理）</td><td>普通赋值 <code>Object o = new Object()</code>；ArrayList 里放着的都是强引用</td></tr>
+    <tr><td><strong>软引用</strong> Soft</td><td><strong>内存不足时</strong>才清理（笔记：有用但非必要，避免 OOM）</td><td>内存敏感缓存（图片缓存、页面缓存）：内存够就留着，快 OOM 了自动让路</td></tr>
+    <tr><td><strong>弱引用</strong> Weak</td><td><strong>只要发生 GC 就清理</strong>（笔记原话）</td><td><code>WeakHashMap</code>（笔记：缓存生命周期很短）；<strong>ThreadLocalMap 的 Entry</strong>（key 弱引用，链 <a href="../02-concurrency/09-并发容器.html">02-concurrency/09</a>）</td></tr>
+    <tr><td><strong>虚引用</strong> Phantom</td><td>不影响对象生命周期，<strong>不能 get 到对象</strong>（笔记），唯一作用：对象被回收时收到"通知"</td><td>堆外内存回收：<code>DirectByteBuffer</code> 的 Cleaner 机制（配合引用队列回收 native 内存，链 <a href="01-运行时数据区.html">第 01 章 直接内存</a>）</td></tr>
+  </table>
+  <ul>
+    <li><strong>引用队列（ReferenceQueue，笔记并入）</strong>：软/弱/虚引用创建时可关联一个 ReferenceQueue；引用的对象被清理时，该引用本身入队——<strong>"对象死了"这件事的通知机制</strong>，虚引用清理堆外内存就靠它。</li>
+    <li>强度排序：强 &gt; 软 &gt; 弱 &gt; 虚。记忆锚点：<strong>软 = 内存不足才死（保数据）；弱 = GC 就死（保时效）；虚 = 死时通知（管身后事）</strong>。</li>
+  </ul>
+</section>
+
+<section id="algo">
+  <h2><span class="no">04</span>三大回收算法（笔记并入，优缺点照收）</h2>
+  <table>
+    <tr><th>算法</th><th>流程</th><th>优点</th><th>缺点（笔记口径）</th></tr>
+    <tr><td><strong>标记-清除</strong><br>Mark-Sweep</td><td>标记：从 GC Roots 标记所有可达对象；清除：遍历堆回收未标记的</td><td>效率高、实现直接（笔记：效率高）</td><td><strong>内存碎片</strong>（笔记：内存地址不连续）——碎片多了大对象放不下，提前触发下一次 GC</td></tr>
+    <tr><td><strong>复制</strong><br>Copying</td><td>内存分两块只用一块；存活对象复制到另一块，整块清空已用区</td><td>无碎片、分配快（指针碰撞）（笔记：没有碎片、简单高效）</td><td>内存利用率只有 50%（笔记原文）；<strong>存活对象多时复制成本高</strong></td></tr>
+    <tr><td><strong>标记-整理</strong><br>Mark-Compact</td><td>标记所有可达对象 → 存活对象向一端移动 → 清理边界外内存</td><td>无碎片 + 内存利用率高</td><td><strong>移动对象成本高，需要 STW</strong>（笔记原文）——存活对象多时最痛</td></tr>
+  </table>
+  <div class="box warn"><p><strong>勘误说明</strong>：原笔记此处把"复制"算法误写成了"标记-整理"标题（内存分两块/利用率 50% 的是复制），已修正。三个算法名的对应关系按本表背：碎片问题选整理、效率问题选清除、新生代选复制。</p></div>
+  <div class="box note"><p><strong>为什么没有"最好"的算法</strong>：清除怕碎片、复制怕存活多、整理怕移动贵——三条互相矛盾的代价线，催生了<strong>分代收集</strong>：按对象存活特征分区，各区用各自最划算的算法（下一节）。</p></div>
+</section>
+
+<section id="generational">
+  <h2><span class="no">05</span>分代收集与堆布局（笔记 Minor GC 全流程并入）</h2>
+  <h3>分代假设：对象存活两极分化</h3>
+  <ul>
+    <li>绝大多数对象<strong>朝生夕死</strong>（请求级临时对象）；熬过数次 GC 的对象大概率会活很久（配置、缓存、连接）。把两者混在一起治理，哪种算法都吃亏——分开治理。</li>
+  </ul>
+  <h3>Minor GC 完整流程（笔记原文展开）</h3>
+  <pre><code>① 分配：新对象优先在 Eden 区分配（TLAB 内免竞争，见第 03 章）
+② 填满：Eden 空间不足 → 触发 Minor GC
+③ 标记：对新生代做可达性分析，标记存活对象
+④ 复制清除：
+     Eden + 正在使用的 Survivor（如 S0）的存活对象 → 复制到另一块
+     空的 Survivor（S1）；【存活对象年龄 +1】；直接清空 Eden 和 S0
+⑤ 晋升：年龄达到阈值（默认 15）→ 晋升（Promote）到老年代
+⑥ 例外：大对象直接进老年代；S1 装不下的存活对象也直接进老年代</code></pre>
+  <ul>
+    <li><strong>为什么 Survivor 是两块</strong>：一块用一块空，复制后有干净的目标地；如果只有一块，Eden 存活对象复制进去后自己也碎片化了。8:1:1 是因为<strong>新生代存活率通常 < 10%</strong>——10% 的 Survivor 空间足以接住，90% 的 Eden 留给分配。</li>
+    <li><strong>老年代用标记-清除或标记-整理</strong>（笔记：对老年代标记清除或标记整理）：存活率高，复制算法代价爆炸。CMS 用清除（避免 STW 整理）、G1 用整理（Region 间复制），差异在 <a href="05-垃圾收集器.html">第 05 章</a>。</li>
+  </ul>
+</section>
+
+<section id="promote">
+  <h2><span class="no">06</span>晋升老年代：四条规则 ⭐⭐</h2>
+  <table>
+    <tr><th>#</th><th>规则</th><th>要点</th></tr>
+    <tr><td>①</td><td>年龄达到阈值</td><td><code>-XX:MaxTenuringThreshold=15</code>（上限 15 的原因：对象头 4 位年龄字段，链 <a href="03-对象与内存.html">第 03 章</a>）</td></tr>
+    <tr><td>②</td><td>动态年龄判断</td><td>Survivor 中<strong>同龄对象总大小超过 Survivor 一半</strong>，该年龄及以上的对象直接晋升——不等熬到 15，防止 Survivor 被"中生代"挤爆</td></tr>
+    <tr><td>③</td><td>大对象直接进老年代</td><td><code>-XX:PretenureSizeThreshold</code>：大对象（大数组/大字符串）避免在 Eden/Survivor 间反复复制，一步到位</td></tr>
+    <tr><td>④</td><td>空间分配担保</td><td>Minor GC 前检查：老年代可用 &lt; 历次晋升平均大小 → 直接 Full GC 先腾地方（老年代都装不下就别 Y 了，链下一节）</td></tr>
+  </table>
+  <div class="box warn"><p><strong>高频陷阱</strong>："熬过 15 次 Minor GC 就进老年代"只对了一半——<strong>动态年龄判断</strong>（同龄超半提前晋升）和<strong>大对象直入</strong>经常先发生。答"什么时候进老年代"必须四条全报。</p></div>
+</section>
+
+<section id="types">
+  <h2><span class="no">07</span>Minor · Major · Full GC</h2>
+  <table>
+    <tr><th>类型</th><th>回收区域</th><th>触发</th><th>速度</th></tr>
+    <tr><td><strong>Minor / Young GC</strong></td><td>新生代（Eden + 一个 Survivor）</td><td>Eden 满</td><td>快（存活少、复制少），频繁但便宜</td></tr>
+    <tr><td><strong>Major GC / Old GC</strong></td><td>老年代</td><td>老年代空间不足（含 CMS 的并发收集）</td><td>慢（存活多）</td></tr>
+    <tr><td><strong>Full GC</strong></td><td>整堆 + 方法区（元空间）</td><td>见下六种</td><td>最慢，STW 最重——一切调优都在少 Full GC</td></tr>
+  </table>
+  <h3>Full GC 的六种触发（背全 ⭐⭐）</h3>
+  <ol>
+    <li>老年代空间不足（晋升放不下 / 大对象直入失败）;</li>
+    <li><strong>空间分配担保失败</strong>：Minor GC 前检查老年代可用 &lt; 历次晋升平均值；</li>
+    <li>元空间不足（类加载到 MetaspaceSize 水位 / 动态类爆炸）；</li>
+    <li><code>System.gc()</code> 建议（显式 GC，多数收集器直接 Full GC——CMS 可配 -XX:+ExplicitGCInvokesConcurrent 改并发）；</li>
+    <li>CMS 的 <strong>promotion failed / concurrent mode failure</strong>：并发回收期间对象晋升失败 → 退化为 Serial Old 单线程整理（链 <a href="05-垃圾收集器.html">第 05 章</a>）；</li>
+    <li>jmap -histo:live 等命令触发的Full 统计（排查时注意别在生产乱敲，链 <a href="07-调优与排查.html">第 07 章</a>）。</li>
+  </ol>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：为什么新生代用复制 →</strong>→ 存活率低，复制成本最小且无碎片 → 为什么老年代不用 → 存活率高，复制=全量搬家；用清除（CMS）或整理（G1）。</li>
+    <li><strong>追问链：可达性分析怎么面对并发修改 →</strong>→ GC 标记时应用还在跑，对象引用还在变 → 三色标记 + 漏标两种解法（增量更新/SATB）——这是 <a href="05-垃圾收集器.html">第 05 章 CMS vs G1</a> 的核心分叉点，先埋个钩子。</li>
+    <li><strong>追问：GC Roots 为什么不含"堆里对象引用的对象" →</strong>→ 可达性分析的搜索空间就是从 Roots 出发的引用闭包，堆内互相引用只是闭包内部的边——从任何 Root 够不着的子图整体回收（循环引用能死的原因）。</li>
+    <li><strong>陷阱：软引用缓存 = 绝对安全 →</strong>→ 软引用在内存临界时成批死亡可能引发<strong>回收风暴</strong>（缓存集体失效 → 重建风暴）；大缓存要用容量上限（Caffeine/LRU）而不是只靠软引用。</li>
+    <li><strong>陷阱："Full GC 就是 Major GC" →</strong>→ 多数语境 Full ≈ 整堆 + 元空间；老年代收集器是 CMS 时，"Major/CMS GC"（并发、老年代）与 Full（STW 退化）要分开说，链 <a href="05-垃圾收集器.html">第 05 章</a>。</li>
+    <li><strong>场景题：接口每请求 new 大 list，Full GC 频繁 →</strong>→ 优先怀疑过早晋升（大对象直入或 Survivor 太小）→ 看 GC 日志里晋升量与对象年龄分布 → 分页/流式处理减少大对象，链 <a href="07-调优与排查.html">第 07 章</a>的日志分析法。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>引用计数 vs 可达性分析（循环引用）一句话；GC Roots 五种能报全。</li>
+    <li>finalize 的"一次逃生" + JDK 9 deprecated 的三条批判。</li>
+    <li>四种引用的回收时机 + 每种至少一个真实应用（WeakHashMap/ThreadLocal/Cleaner）。</li>
+    <li>ReferenceQueue 的通知机制与虚引用回收堆外内存的关系。</li>
+    <li>三大算法的流程与优缺点表能默写，说得出"分代就是按存活率分算法"。</li>
+    <li>Minor GC 六步流程；两块 Survivor 与 8:1:1 的原因。</li>
+    <li>晋升老年代四条规则（阈值/动态年龄/大对象/担保）一条不落。</li>
+    <li>Full GC 六种触发能数全，并与第 05 章 CMS 退化场景接得上。</li>
+  </ol>
+  <div class="pager">
+    <a href="03-对象与内存.html">⬅ 上一章：对象与内存布局</a>
+    <a class="next" href="05-垃圾收集器.html">下一章：垃圾收集器 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源交叉生成）：① 蓝本 AlgoMaster Java 课程 JVM 章；② <a href="https://javaguide.cn/java/jvm/jvm-garbage-collection.html">JavaGuide · JVM 垃圾回收详解</a>（算法/分代/堆布局口径）；③ <a href="https://pdai.tech/md/java/jvm/java-jvm-x-overview.html">pdai.tech JVM 系列</a>（GC 篇）；既有笔记 Java/java 基础.md 垃圾回收节（842-939 行：四种引用与 ReferenceQueue、Minor GC 流程、引用计数弊端、三算法优缺点全部并入，一处算法名笔误已修正）。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">03 JVM 与内存模型</a> · 第 04 章 GC 基础</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>

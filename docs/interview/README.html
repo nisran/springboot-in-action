@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Java 后端面试知识地图 · 总目录</title>
+<style>
+  :root {
+    --bg:#f6f7fb; --paper:#fff; --ink:#1f2430; --muted:#6b7280; --line:#e5e7eb;
+    --primary:#4f46e5; --primary-soft:#eef2ff; --accent:#7c3aed;
+    --green:#059669; --green-soft:#ecfdf5; --amber:#b45309; --amber-soft:#fffbeb;
+    --red:#b91c1c; --red-soft:#fef2f2; --blue:#1d4ed8; --blue-soft:#eff6ff;
+    --purple:#6d28d9; --purple-soft:#f5f3ff; --sidebar-w:264px; --radius:12px;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:15px;color:var(--primary);padding:0 8px 12px;letter-spacing:.5px}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:920px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:56px 40px 44px;margin:0 -32px 40px}
+  header.hero .inner{max-width:920px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:32px;line-height:1.35}
+  header.hero .sub{font-size:16px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:25px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  p{margin:10px 0} ul,ol{padding-left:26px} li{margin:6px 0}
+  strong{color:#111827} a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none} tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .tag{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .tag.plan{background:var(--amber-soft);color:var(--amber)}
+  .tag.exist{background:var(--green-soft);color:var(--green)}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand">🎯 Java 面试知识地图</div>
+  <a href="#map">面试全景图</a>
+  <a href="#boards">18 大板块导航</a>
+  <a href="#route" class="lvl2">学习路线建议</a>
+  <a href="#mapping" class="lvl2">课程映射表</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">板块直达</div>
+  <a href="01-java/README.html">01 Java 语言核心</a>
+  <a href="02-concurrency/README.html">02 Java 并发编程</a>
+  <a href="03-jvm/README.html">03 JVM 与内存模型</a>
+  <a href="04-spring/README.html">04 Spring 生态</a>
+  <a href="05-dsa/README.html">05 数据结构与算法</a>
+  <a href="06-sql/README.html">06 数据库与 SQL</a>
+  <a href="07-LLD/README.html">07 LLD 低阶设计</a>
+  <a href="08-HLD/README.html">08 HLD 系统设计</a>
+  <a href="09-api-design/README.html">09 API 设计</a>
+  <a href="10-microservices/README.html">10 微服务与分布式</a>
+  <a href="11-kafka/README.html">11 消息队列 Kafka</a>
+  <a href="12-os/README.html">12 操作系统</a>
+  <a href="13-networks/README.html">13 计算机网络</a>
+  <a href="14-ai-engineering/README.html">14 AI 工程</a>
+  <a href="15-ml-system-design/README.html">15 ML 系统设计</a>
+  <a href="16-behavioral/README.html">16 行为面与求职</a>
+  <a href="17-business/README.html">17 业务领域知识</a>
+  <a href="18-devops/README.html">18 DevOps 与云原生</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>Java 后端面试知识地图</h1>
+    <div class="sub">覆盖 Java 后端 + AI 方向的全栈面试知识体系 · 18 大板块 · 约 228 个章节 + 88 道设计题</div>
+    <div class="meta">
+      <span>蓝本：AlgoMaster 21 门课程</span>
+      <span>两大设计教程：LLD 33 题 / HLD 55 题</span>
+      <span>已有笔记以 ✅ 标注为底</span>
+    </div>
+  </div>
+</header>
+
+<div class="box note">
+  <p><strong>状态标记</strong>：<span class="tag plan">📐 目录已建 · 内容待写</span> 其余板块目前为此状态；<span class="tag exist">✅ 内容已写</span> 如 01-java、02-concurrency（各 15 章）、03-jvm（7 章，三源交叉生成）、04-spring（9 章，四源交叉生成，含笔记 JPA/Security 两专章）、18-devops（8 章，2026-11-10 建，Docker/K8s/CI-CD/可观测性）、10-microservices（02 DDD 章）、08-HLD（19 性能指标与压测，2026-11-10，多源网络收集）已完成；
+  <span class="tag exist">✅ 已有笔记</span> 表示仓库顶层已有对应笔记，写章节时以它为底补缺口（文件仍在 <code>Java/</code>、<code>数据库/</code>、<code>ai/</code> 等原位置）。</p>
+</div>
+
+<section id="map">
+  <h2><span class="no">一</span>面试全景图</h2>
+  <p>一次典型的 Java 后端社招面试流程与各板块的对应关系：</p>
+  <table>
+    <thead><tr><th>面试轮次</th><th>考察内容</th><th>对应板块</th></tr></thead>
+    <tbody>
+      <tr><td>一面（技术基础）</td><td>算法 + Java 语言 / 集合 / 并发基础</td><td>01、02、05</td></tr>
+      <tr><td>二面（深度）</td><td>项目深挖 + 并发 / JVM / 数据库 / Spring + 业务常识</td><td>02、03、04、06、17</td></tr>
+      <tr><td>三面（设计）</td><td>LLD 或 HLD + 微服务 / 中间件</td><td>07、08、10、11</td></tr>
+      <tr><td>交叉 / 加面</td><td>API 设计、计算机基础、AI 方向（视岗位）</td><td>09、12、13、14、15、18</td></tr>
+      <tr><td>HR 面</td><td>行为面、职业规划</td><td>16</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="boards">
+  <h2><span class="no">二</span>18 大板块导航</h2>
+  <table>
+    <thead><tr><th>#</th><th>板块</th><th>目录</th><th>蓝本 / 已有笔记</th></tr></thead>
+    <tbody>
+      <tr><td>01</td><td><strong>Java 语言核心</strong></td><td><a href="01-java/README.html">01-java/</a></td><td><a href="https://algomaster.io/learn/java">AlgoMaster Java</a>（442 讲）；<a href="../Java/java%20基础.md">java 基础</a> ✅</td></tr>
+      <tr><td>02</td><td><strong>Java 并发编程</strong></td><td><a href="02-concurrency/README.html">02-concurrency/</a></td><td><a href="https://algomaster.io/learn/concurrency-interview">Concurrency Interview</a>（97 讲）+ Java 课程并发章</td></tr>
+      <tr><td>03</td><td><strong>JVM 与内存模型</strong></td><td><a href="03-jvm/README.html">03-jvm/</a></td><td>Java 课程 JMM 章 + 面试通行考点</td></tr>
+      <tr><td>04</td><td><strong>Spring 与框架生态</strong></td><td><a href="04-spring/README.html">04-spring/</a></td><td><a href="../Java/Spring.md">Spring</a> ✅ 为底，补面试考点</td></tr>
+      <tr><td>05</td><td><strong>数据结构与算法</strong></td><td><a href="05-dsa/README.html">05-dsa/</a></td><td><a href="https://algomaster.io/learn/dsa">AlgoMaster DSA</a>（50+ 模式）；<a href="../Java/数据结构与算法.md">数据结构与算法</a> ✅</td></tr>
+      <tr><td>06</td><td><strong>数据库与 SQL</strong></td><td><a href="06-sql/README.html">06-sql/</a></td><td><a href="https://algomaster.io/learn/sql-interview/course-roadmap">SQL Interview</a>（136 章）；<a href="../数据库/MySQL.md">MySQL</a>、<a href="../数据库/PG.md">PG</a> ✅</td></tr>
+      <tr><td>07</td><td><strong>LLD 低阶设计</strong> ⭐</td><td><a href="07-LLD/README.html">07-LLD/</a></td><td>OOP → SOLID → UML → 23 模式 → 并发 → <strong>33 道实战题</strong></td></tr>
+      <tr><td>08</td><td><strong>HLD 系统设计</strong> ⭐</td><td><a href="08-HLD/README.html">08-HLD/</a></td><td>基础 → 技术深挖 → 20 模式 → <strong>55 道设计题</strong></td></tr>
+      <tr><td>09</td><td><strong>API 设计</strong></td><td><a href="09-api-design/README.html">09-api-design/</a></td><td><a href="https://algomaster.io/learn/api-design">API Design</a>（124 章）</td></tr>
+      <tr><td>10</td><td><strong>微服务与分布式</strong></td><td><a href="10-microservices/README.html">10-microservices/</a></td><td><a href="https://algomaster.io/learn/microservices">Microservices</a>（71 章）；<a href="../Java/微服务&分布式.md">微服务&分布式</a> ✅</td></tr>
+      <tr><td>11</td><td><strong>消息队列与 Kafka</strong></td><td><a href="11-kafka/README.html">11-kafka/</a></td><td><a href="https://algomaster.io/learn/kafka">Kafka</a>（110 章）</td></tr>
+      <tr><td>12</td><td><strong>操作系统</strong></td><td><a href="12-os/README.html">12-os/</a></td><td><a href="https://algomaster.io/learn/operating-systems">Operating Systems</a>（153 章）</td></tr>
+      <tr><td>13</td><td><strong>计算机网络</strong></td><td><a href="13-networks/README.html">13-networks/</a></td><td><a href="https://algomaster.io/learn/computer-networks">Computer Networks</a>（111 章）</td></tr>
+      <tr><td>14</td><td><strong>AI 工程（Java+AI）</strong></td><td><a href="14-ai-engineering/README.html">14-ai-engineering/</a></td><td><a href="https://algomaster.io/learn/ai-engineering/course-roadmap">AI Engineering</a>（87 章）；<a href="../ai/AI.md">AI</a>、<a href="../ai/java%20AI%20方向面试.md">java AI 方向面试</a> ✅</td></tr>
+      <tr><td>15</td><td><strong>ML 系统设计</strong></td><td><a href="15-ml-system-design/README.html">15-ml-system-design/</a></td><td><a href="https://algomaster.io/learn/ml-system-design/course-roadmap">ML System Design</a>（53 章）</td></tr>
+      <tr><td>16</td><td><strong>行为面与求职</strong></td><td><a href="16-behavioral/README.html">16-behavioral/</a></td><td><a href="https://algomaster.io/learn/behavioral/what-are-behavioral-interviews">Behavioral</a> + <a href="https://algomaster.io/learn/job-search/the-hiring-funnel">Job Search</a></td></tr>
+      <tr><td>17</td><td><strong>业务领域知识</strong></td><td><a href="17-business/README.html">17-business/</a></td><td><a href="https://github.com/macrozheng/mall">mall</a> + <a href="https://github.com/doocs/advanced-java">advanced-java</a> + 牛客面经（无现成题库，广撒网目录 · 边学边补）</td></tr>
+      <tr><td>18</td><td><strong>DevOps 与云原生</strong></td><td><a href="18-devops/README.html">18-devops/</a></td><td>无蓝本（自建目录）：Docker 官方文档 + <a href="https://kubernetes.io/zh-cn/docs/home/">K8s 中文文档</a> + Google SRE + DORA + Argo（Docker·K8s·CI/CD·可观测性 8 章，2026-11-10 完成）</td></tr>
+    </tbody>
+  </table>
+  <div class="box warn">
+    <p><strong>其他技术栈</strong>（不属于本教程体系，笔记在仓库顶层）：<a href="../GoLang.md">GoLang.md</a>（参考 <a href="https://algomaster.io/learn/go">AlgoMaster Go</a>）、<a href="../UI/Vue.md">UI/Vue</a>、<a href="../Other.md">Other.md</a></p>
+  </div>
+</section>
+
+<section id="route">
+  <h2><span class="no">三</span>学习路线建议</h2>
+  <h3>社招 Java 后端（约 3 个月）</h3>
+  <ol>
+    <li>第 1~4 周：01~04（语言 + 并发 + JVM + Spring）刷面经 + 05 算法每天 2 题</li>
+    <li>第 5~6 周：06（数据库）+ 10~11（微服务 + Kafka）</li>
+    <li>第 7~10 周：<strong>07-LLD 33 题</strong>（每天 1 题精做）</li>
+    <li>第 11~12 周：<strong>08-HLD 挑 20 道精做</strong> + 16 行为面建故事库</li>
+  </ol>
+  <h3>校招 / 1~3 年经验</h3>
+  <p>05 算法权重最高，07-LLD 优先于 08-HLD，HLD 掌握高频 15 题即可。</p>
+  <h3>AI 方向（Java + AI）</h3>
+  <p>在社招路线上，把 14（AI 工程）+ 15（ML 系统设计）替换部分 HLD 时间；RAG / Agent / MCP 是当前热点。</p>
+  <div class="box tip">
+    <p><strong>每日节奏</strong>：算法 2 题（05）保持手感 + 一个知识板块推进一个章节。</p>
+  </div>
+</section>
+
+<section id="mapping">
+  <h2><span class="no">四</span>AlgoMaster 21 门课程与板块映射</h2>
+  <table>
+    <thead><tr><th>课程</th><th>对应板块</th></tr></thead>
+    <tbody>
+      <tr><td>DSA / Java / Concurrency / SQL / Behavioral / Job Search</td><td>05 / 01+03 / 02 / 06 / 16</td></tr>
+      <tr><td>System Design Fundamentals / System Design Interviews</td><td>08（+10、12、13 部分）</td></tr>
+      <tr><td>Low Level Design</td><td>07</td></tr>
+      <tr><td>Microservices / API Design / Kafka</td><td>10 / 09 / 11</td></tr>
+      <tr><td>Operating Systems / Computer Networks</td><td>12 / 13</td></tr>
+      <tr><td>AI Engineering / ML System Design</td><td>14 / 15</td></tr>
+      <tr><td>（无对应课程）业务领域知识 / DevOps 与云原生</td><td>17 / 18 —— 自建目录：面经 + 官方文档 + 开源项目</td></tr>
+      <tr><td>Python / C++ / C# / Go / Git</td><td>不在本教程范围（Go 见顶层 GoLang.md）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>Java 后端面试知识地图 · interview/ · 2026-10 建立 · 2026-11 扩至 18 板块</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+</script>
+</body>
+</html>

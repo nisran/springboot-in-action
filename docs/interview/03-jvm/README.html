@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 · JVM 与内存模型 — Java 后端面试知识地图</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .chapters{list-style:none;padding:0;margin:16px 0}
+  .chapters li{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;margin:8px 0}
+  .chapters .ch-no{display:inline-block;min-width:46px;font-weight:700;color:var(--primary)}
+  .chapters .ch-title{font-weight:600}
+  .chapters .ch-desc{color:var(--muted);font-size:14px;margin-top:2px}
+  .tag{display:inline-block;padding:1px 10px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .tag.plan{background:var(--amber-soft);color:var(--amber)}
+  .tag.exist{background:var(--green-soft);color:var(--green)}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="../README.html">⬅ Java 面试知识地图</a></div>
+  <a href="#toc">章节目录</a>
+  <a href="#checklist">面试自查清单</a>
+  <a href="#sources">三 资料来源（三源）</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">相邻板块</div>
+  <a href="../02-concurrency/README.html">← 02 Java 并发编程</a>
+  <a href="../04-spring/README.html">04 Spring 生态 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>03 · JVM 与内存模型</h1>
+    <div class="sub">运行时数据区 · 类加载 · GC 与调优排查 —— 二面高频</div>
+    <div class="meta">
+      <span>蓝本：AlgoMaster Java 课程 JVM 章 + 面试通行考点</span>
+      <span class="tag exist">✅ 7 章内容已写完（2026-10-21）</span>
+      <span class="tag exist">三源交叉生成 ✅ JavaGuide + pdai + 美团</span>
+      <span class="tag exist">已有笔记：java 基础.md JVM 节 ✅ 已并入</span>
+    </div>
+  </div>
+</header>
+
+<div class="box note">
+  <p><strong>关联</strong>：并发可见性（happens-before）在 <a href="../02-concurrency/README.html">02-concurrency</a>；GC 与容器内存的坑见 <a href="../12-os/README.html">12-os/11 容器</a>；页面置换、进程内存见 OS 板块。</p>
+</div>
+
+<section id="toc">
+  <h2><span class="no">01</span>章节目录</h2>
+  <ul class="chapters">
+    <li><span class="ch-no">01</span><a class="ch-title" href="01-运行时数据区.html">运行时数据区</a> ⭐<div class="ch-desc">堆 / 虚拟机栈 / 本地方法栈 / 方法区与元空间 / 程序计数器 / 直接内存 / 栈帧结构</div></li>
+    <li><span class="ch-no">02</span><a class="ch-title" href="02-类加载.html">类加载机制</a> ⭐<div class="ch-desc">加载-验证-准备-解析-初始化 / 双亲委派 ⭐ / 触发初始化时机 / 打破双亲委派（SPI、热部署）</div></li>
+    <li><span class="ch-no">03</span><a class="ch-title" href="03-对象与内存.html">对象与内存布局</a><div class="ch-desc">对象创建流程 / 对象头 Mark Word（与锁升级呼应）/ 指针压缩 / 字符串常量池 ⭐ / intern 陷阱</div></li>
+    <li><span class="ch-no">04</span><a class="ch-title" href="04-GC基础.html">GC 基础</a> ⭐<div class="ch-desc">可达性分析 / 四种引用（强软弱虚）⭐ / 标记-清除·复制·标记-整理 / 分代假设</div></li>
+    <li><span class="ch-no">05</span><a class="ch-title" href="05-垃圾收集器.html">垃圾收集器</a> ⭐<div class="ch-desc">Serial / Parallel / CMS（废弃但常问）/ G1 ⭐（Region、卡表、Mixed GC）/ ZGC（染色指针、读屏障）/ 怎么选</div></li>
+    <li><span class="ch-no">06</span><a class="ch-title" href="06-内存泄漏.html">内存泄漏与 OOM</a><div class="ch-desc">泄漏场景（ThreadLocal、静态集合、未关资源）/ OOM 类型 / 弱引用治 ThreadLocal ⭐</div></li>
+    <li><span class="ch-no">07</span><a class="ch-title" href="07-调优与排查.html">调优与排查实战</a> ⭐⭐<div class="ch-desc">常用参数 / jps·jstat·jmap·jstack / Arthas / CPU 100% 排查流程 ⭐ / 内存泄漏排查流程 ⭐ / GC 日志分析</div></li>
+  </ul>
+  <div class="box warn">
+    <p><strong>去重约定</strong>：「CPU 100% 排查」<strong>主阵地在本章</strong>（JVM 视角：jstack + Arthas），<a href="../12-os/README.html">12-os/12 排查工具</a>只讲 OS 视角（top/strace/perf）并链接过来；ThreadLocal 泄漏原理归本章 06，并发侧使用方式见 <a href="../02-concurrency/README.html">02-concurrency/09</a>。</p>
+  </div>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">02</span>面试自查清单（高频 Top 8）</h2>
+  <ol>
+    <li>JVM 运行时内存区域，哪些线程私有？</li>
+    <li>什么时候会发生 Full GC？怎么减少？</li>
+    <li>G1 和 CMS 的区别？</li>
+    <li>双亲委派是什么？为什么？怎么打破？</li>
+    <li>强/软/弱/虚引用的区别与应用？</li>
+    <li>CPU 飙到 100% 怎么排查？（说全流程）</li>
+    <li>内存泄漏和内存溢出的区别？举三个泄漏例子</li>
+    <li>对象什么时候进老年代？（年龄阈值、大对象、动态晋升）</li>
+  </ol>
+</section>
+
+<section id="sources">
+  <h2><span class="no">03</span>资料来源 —— 三源交叉</h2>
+  <p>本板块 7 章为 2026-10-21 <strong>三源交叉一次生成</strong>（不同于 02-concurrency 的"先写后并"）：蓝本定覆盖面、②定面试口径、③定源码与工具深度、美团定生产案例；既有笔记（java 基础.md 805-1031 行 JVM 节）全部并入并补齐其 TODO。每章 hero 标「三源生成 ✅」，章末挂来源框。</p>
+  <table>
+    <thead><tr><th>来源</th><th>角色</th><th>入口</th></tr></thead>
+    <tbody>
+      <tr><td>① AlgoMaster Java 课程 JVM 章 + 面试通行考点</td><td>蓝本 · 覆盖面</td><td><a href="https://algomaster.io/learn/java">algomaster.io/learn/java</a></td></tr>
+      <tr><td><strong>② JavaGuide JVM 专题</strong></td><td>面试口径 · 问法与答法深度</td><td><a href="https://javaguide.cn/java/jvm">javaguide.cn/java/jvm</a>（<a href="https://javaguide.cn/java/jvm/memory-area.html">内存区域</a> / <a href="https://javaguide.cn/java/jvm/class-loading-process.html">类加载</a> / <a href="https://javaguide.cn/java/jvm/jvm-garbage-collection.html">垃圾回收</a> / <a href="https://javaguide.cn/java/jvm/jvm-interview-questions.html">面试题总结</a>）</td></tr>
+      <tr><td><strong>③ pdai.tech JVM 系列</strong></td><td>源码与工具深度（jstat/jmap/jstack 实战）</td><td><a href="https://pdai.tech/md/java/jvm/java-jvm-x-overview.html">pdai.tech JVM 知识体系</a>（<a href="https://pdai.tech/md/java/jvm/java-jvm-debug-tools-list.html">调试排错工具单</a>）</td></tr>
+      <tr><td><strong>④ 美团技术团队</strong>（场景源）</td><td>7 年经验 · GC 生产案例</td><td><a href="https://tech.meituan.com/2020/11/12/Java-9-CMS-GC.html">《Java中9种常见的CMS GC问题》</a>（空间震荡/过早晋升案例） · <a href="https://tech.meituan.com/2020/08/06/ZGC-in-Meituan.html">《ZGC的探索与实践》</a></td></tr>
+      <tr><td>⑤ 既有笔记</td><td>底稿（已并入）</td><td><code>Java/java 基础.md</code> JVM 节（805-1031 行）</td></tr>
+    </tbody>
+  </table>
+  <h3>每章取材映射</h3>
+  <table>
+    <thead><tr><th>章</th><th>② JavaGuide 取哪页</th><th>③ pdai 取哪篇</th><th>场景源</th></tr></thead>
+    <tbody>
+      <tr><td>01 运行时数据区</td><td>内存区域详解（对象创建/分配策略）</td><td>JVM 内存结构篇</td><td>—（元空间演进含 CMS 文背景）</td></tr>
+      <tr><td>02 类加载机制</td><td>类加载过程详解 + 面试题总结</td><td>类加载篇</td><td>—</td></tr>
+      <tr><td>03 对象与内存布局</td><td>内存区域详解（对象访问/常量池）+ 面试题</td><td>内存结构篇</td><td>—</td></tr>
+      <tr><td>04 GC 基础</td><td>垃圾回收详解（算法/分代/引用）</td><td>GC 篇</td><td>—</td></tr>
+      <tr><td>05 垃圾收集器</td><td>垃圾回收详解（收集器对比）</td><td>GC 篇</td><td>美团 CMS 九问（空间震荡/过早晋升）+ ZGC 实践 ⭐</td></tr>
+      <tr><td>06 内存泄漏与 OOM</td><td>面试题总结（排查部分）</td><td>调试排错篇</td><td>美团 CMS 文（MetaSpace OOM 案例）</td></tr>
+      <tr><td>07 调优与排查实战</td><td>专题：JVM 参数 + 监控与故障处理工具</td><td>调试排错工具单 ⭐</td><td>美团 CMS 文（GC 震荡识别法）</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · 03 JVM 与内存模型</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0px -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+</script>
+</body>
+</html>

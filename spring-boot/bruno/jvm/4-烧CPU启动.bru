@@ -1,0 +1,18 @@
+meta {
+  name: CPU 烧CPU启动
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/cpu/start
+  body: none
+  auth: none
+}
+
+docs {
+  点火后请求立即返回，专属线程 cpu-burn-demo 独占一个核。
+  演示动线：top -Hp <pid> 找最耗 CPU 的 tid → printf "%x\n" <tid> 转十六进制
+  → jstack <pid> 连抓 3 次（间隔 5s）grep nid=0x… → 三次行号相同 = 死循环实锤。
+  灭火调 /cpu/stop，不用重启应用。
+}

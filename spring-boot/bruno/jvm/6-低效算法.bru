@@ -1,0 +1,21 @@
+meta {
+  name: CPU 低效算法
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/cpu/slow
+  body: none
+  auth: none
+}
+
+params:query {
+  n: 100000
+}
+
+docs {
+  O(n²) 冒泡排序，占住 Tomcat 请求线程（http-nio-8080-exec-N）几十秒后自动返回。
+  期间抓 jstack 看第二种指纹：行号在 bubbleSort 几行之间跳动，但出不了同一个方法。
+  n=100000 本机约几十秒；嫌久可调小（如 30000）。
+}

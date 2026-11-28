@@ -1,0 +1,21 @@
+meta {
+  name: OOM 泄漏现状
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/oom/heap/status
+  body: none
+  auth: none
+}
+
+docs {
+  只查静态集合当前持有量，不触发分配。
+}
+
+tests {
+  test("status 200", function() {
+    expect(res.getStatus()).to.equal(200);
+  });
+}

@@ -1,0 +1,16 @@
+meta {
+  name: CPU 烧CPU停止
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/cpu/stop
+  body: none
+  auth: none
+}
+
+docs {
+  置 volatile 开关为 false，cpu-burn-demo 在下一圈退出并消失。
+  返回累计步数，证明线程确实一直在跑而不是空转挂起。
+}

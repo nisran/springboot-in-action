@@ -1,0 +1,16 @@
+meta {
+  name: threaddump 线程转储
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/actuator/threaddump
+  body: none
+  auth: none
+}
+
+docs {
+  跑 oom/1-触发泄漏 期间请求它：能看到 Tomcat 工作线程卡在
+  OomDemoController.leak 的 Thread.sleep 上，无需重启即可取证。
+}

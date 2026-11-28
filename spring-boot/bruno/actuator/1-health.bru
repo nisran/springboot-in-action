@@ -1,0 +1,22 @@
+meta {
+  name: health 健康检查
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/actuator/health
+  body: none
+  auth: none
+}
+
+docs {
+  show-details: always，能看到各组件（diskSpace/ping 等）明细。
+}
+
+tests {
+  test("health UP", function() {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getBody().status).to.eql("UP");
+  });
+}

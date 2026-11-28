@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 07 章 · 调优与排查实战 — JVM 与内存模型</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 03 JVM 与内存模型</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#tools">排查工具全景</a>
+  <a href="#jstat">jstat 与 GC 判读 ⭐</a>
+  <a href="#jmap">jmap 与 dump</a>
+  <a href="#cpu">CPU 100% 全流程 ⭐⭐</a>
+  <a href="#leak">内存泄漏排查全流程 ⭐</a>
+  <a href="#arthas">Arthas</a>
+  <a href="#params">常用参数速查</a>
+  <a href="#gclog">GC 日志分析</a>
+  <a href="#method">调优心法</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="06-内存泄漏.html">⬅ 上一章：06 内存泄漏与 OOM</a>
+  <a href="../04-spring/README.html">04 Spring 生态 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 07 章 · 调优与排查实战</h1>
+    <div class="sub">工具链 jstat·jmap·jstack·Arthas · CPU 100% 全流程 · 内存泄漏全流程 · GC 日志判读 · 参数速查 —— 二面场景题的主产地</div>
+    <div class="meta">
+      <span>⭐⭐ 必考：CPU 100% 排查全流程 · Full GC 频繁怎么查 · 内存泄漏排查</span>
+      <span>蓝本：AlgoMaster Java 课程 JVM 章 + 面试通行考点</span>
+      <span class="tag exist">三源生成：JavaGuide + pdai + 美团 ✅</span>
+      <span class="tag exist">已合并：java 基础.md JVM参数/OOM/CPU飙升节（971-1031 行）✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>线上服务 CPU 飙到 100%，说说你的排查全过程。⭐⭐（场景题之王，必须说到命令级）</li>
+      <li>服务突然变慢/接口 RT 突增，你会从哪几个方向查？</li>
+      <li>Full GC 频繁，怎么一步步定位原因？⭐⭐</li>
+      <li>怀疑内存泄漏，你的完整排查流程？用哪些工具？⭐</li>
+      <li>jstat、jmap、jstack 分别是干什么的？常用姿势？</li>
+      <li>线上能直接 jmap dump 吗？有什么风险？⭐（考生产意识）</li>
+      <li>怎么判断是内存泄漏还是内存不足？</li>
+      <li>JVM 调优你实际做过什么？（7 年经验必问，要讲自己的案例）</li>
+      <li>Arthas 用过哪些功能？和 jdk 自带工具比优势在哪？</li>
+    </ol>
+  </div>
+  <p>本章是整个 03 板块的<strong>实战收口</strong>，也是"背题者"和"干过活的人"分界最明显的地方：<strong>排查流程要能说到命令级、每一步说得出"看什么、异常长什么样、下一步干什么"</strong>。笔记里的 top + jstack 两步定位是骨架，本章把它扩成完整闭环。</p>
+</section>
+
+<section id="tools">
+  <h2><span class="no">02</span>排查工具全景（笔记工具清单并入扩展）</h2>
+  <table>
+    <tr><th>工具</th><th>干什么</th><th>常用姿势</th></tr>
+    <tr><td><code>jps</code></td><td>找 Java 进程 pid</td><td>jps -l（全限定类名）</td></tr>
+    <tr><td><code>jstat</code></td><td>GC / 类加载 / JIT 实时统计</td><td>jstat -gcutil pid 1000（每秒一行百分比）——<strong>排查 GC 问题的第一入口</strong></td></tr>
+    <tr><td><code>jinfo</code></td><td>查 / 改运行中 JVM 参数</td><td>jinfo -flag MaxHeapSize pid</td></tr>
+    <tr><td><code>jmap</code></td><td>堆快照 / 对象统计</td><td>jmap -histo pid（直方图）；jmap -dump:live,format=b,file=xx.hprof pid</td></tr>
+    <tr><td><code>jstack</code></td><td>线程快照（栈 dump）</td><td>jstack pid；jstack -l pid（带锁信息）——CPU 问题与死锁的入口</td></tr>
+    <tr><td><code>jcmd</code></td><td>瑞士军刀（JDK 8+，统一替代上面多个）</td><td>jcmd pid GC.heap_info / VM.native_memory / Thread.print</td></tr>
+    <tr><td>MAT / VisualVM / JConsole</td><td>GUI 分析（笔记列入）</td><td>MAT 分析 dump（Leak Suspects + Dominator Tree）；VisualVM/JConsole 看 JVM 运行态</td></tr>
+    <tr><td><strong>Arthas</strong></td><td>阿里在线诊断（生产标配）</td><td>见第 07 节</td></tr>
+  </table>
+  <div class="box tip"><p><strong>记忆框架</strong>：四个 j 命令各管一件事——<strong>jstat 管"GC 好不好"、jmap 管"堆里有什么"、jstack 管"线程在干什么"、jps 管"谁是谁"</strong>；GUI 管深度分析，Arthas 管生产热修诊断。</p></div>
+</section>
+
+<section id="jstat">
+  <h2><span class="no">03</span>jstat 与 GC 趋势判读 ⭐</h2>
+  <pre><code>jstat -gcutil &lt;pid&gt; 1000     # 每秒输出一次各代使用百分比与 GC 次数
+  S0     S1     E      O      M     YGC   YGCT   FGC  FGCT   GCT
+  0.00  95.2  80.3   61.4  94.1   523  12.30    8   9.87  22.17
+# S0/S1: 两块 Survivor  E: Eden  O: 老年代  M: 元空间
+# YGC/YGCT: Young 次数/总耗时   FGC/FGCT: Full 次数/总耗时   GCT: GC 总耗时</code></pre>
+  <h3>两条判读铁律（泄漏判定的核心）</h3>
+  <ul>
+    <li><strong>健康曲线：老年代锯齿</strong>——Full GC / 并发回收后 O 列<strong>能跌回原位</strong>。锯齿的"牙"高一点没关系，只要基线不涨。</li>
+    <li><strong>泄漏曲线：老年代阶梯</strong>——每次回收后 O 的低点<strong>一次比一次高</strong>（基线缓涨），最终逼近 100% 稳定 OOM。看到阶梯 → 启动 <a href="#leak">第 05 节泄漏流程</a>。</li>
+    <li>加分判读：YGC 次数猛涨但 O 不涨 → 多半是流量大/新生代小；FGC 每次耗时（FGCT/FGC）越来越长 → 老年代对象越来越多或碎片化（CMS）。</li>
+  </ul>
+</section>
+
+<section id="jmap">
+  <h2><span class="no">04</span>jmap 与 dump：看堆里有什么</h2>
+  <pre><code># ① 直方图：按类统计对象数与占用（最轻量，先看这个）
+jmap -histo &lt;pid&gt; | head -20
+#    num   #instances   #bytes  class name
+#    1:      1203456   512MB    [B                    ← byte[] 异常大？查大对象来源
+#    2:       890123   301MB    java.util.HashMap$Node ← 静态 Map 灌爆？
+
+# ② 完整堆快照（给 MAT 用）
+jmap -dump:live,format=b,file=heap.hprof &lt;pid&gt;   # live: 只dump存活对象</code></pre>
+  <div class="box warn"><p><strong>生产意识题：线上能直接 jmap dump 吗？⭐</strong>dump 需要<strong>借安全点（safepoint）暂停所有线程、串行遍历整堆</strong>——大堆（几十 G）会停顿几十秒，线上高峰期执行等于主动事故。正确姿势：① 低峰期摘流量后执行；② 优先用 <code>-XX:+HeapDumpOnOutOfMemoryError</code> 提前埋好自动 dump；③ 只要粗略分布先用 -histo（轻得多）。能主动说出风险与替代方案，就是"上过生产"的信号。</p></div>
+  <p>MAT 三板斧：<strong>Leak Suspects</strong>（自动怀疑报告）→ <strong>Dominator Tree</strong>（谁支配最多内存）→ <strong>Path to GC Roots</strong>（谁在保活，排除弱/软引用）——链 <a href="06-内存泄漏.html">第 06 章</a>处置四步。</p>
+</section>
+
+<section id="cpu">
+  <h2><span class="no">05</span>CPU 100% 排查全流程 ⭐⭐（笔记 top+jstack 并入完整化）</h2>
+  <pre><code># ① 找到吃 CPU 的【进程】
+top                              # 记下 Java 进程 pid，确认 %CPU ≈ 100
+
+# ② 找到进程里吃 CPU 的【线程】
+top -Hp &lt;pid&gt;                    # -H 显示线程级，记下最耗 CPU 的线程 pid（如 25390）
+
+# ③ 线程号转 16 进制（jstack 里线程 nid 是 16 进制）
+printf "%x\n" 25390              # → 632e
+
+# ④ 拿线程栈，定位到具体代码行
+jstack &lt;pid&gt; | grep -A 30 "nid=0x632e"
+#    "biz-worker-3" #33 runnable  ← 看 RUNNABLE 的栈顶：
+#        at com.xx.OrderService.calcPrice(OrderService.java:87)  ← 就是它
+
+# ⑤ 对症下药（见下方四类原因）</code></pre>
+  <h3>CPU 高的四类原因（笔记四条并入展开）</h3>
+  <table>
+    <tr><th>原因</th><th>栈上长什么样</th><th>处置</th></tr>
+    <tr><td><strong>死循环/低效算法</strong></td><td>业务栈帧 RUNNABLE 停在同一行</td><td>改代码（边界条件、正则回溯、HashMap 死循环式 jdk7 bug 已成历史）</td></tr>
+    <tr><td><strong>频繁 GC</strong></td><td>最耗 CPU 的是 <code>GC task thread</code> / <code>VM Thread</code>，业务线程多在 BLOCKED/GC 相关</td><td>转 <a href="#jstat">jstat 判读</a>：泄漏？堆小？大对象？——<strong>GC 线程吃 CPU 是"果"，堆的问题才是"因"</strong></td></tr>
+    <tr><td><strong>死锁</strong></td><td>jstack 末尾直接打印 <code>Found one Java-level deadlock</code>，点名互相持有的锁</td><td>按提示修锁顺序 / tryLock 超时（链 <a href="../02-concurrency/11-并发挑战.html">02-concurrency/11</a>）</td></tr>
+    <tr><td><strong>密集运算</strong></td><td>业务栈正常、确实是计算（序列化、加密、报表）</td><td>异步化/扩容/优化算法——这是"业务真需要"，不是故障</td></tr>
+  </table>
+  <div class="box tip"><p><strong>OS 视角分流（去重约定）</strong>：本流程是 JVM 主阵地；<code>us</code> 高走本章，<code>sy</code>/<code>si</code> 高、load 高但 CPU 不高的 OS 层问题（上下文切换、页错误）在 <a href="../12-os/README.html">12-os 排查工具</a>。一句"先看 top 里 us 还是 sy"就能体现分流意识。</p></div>
+</section>
+
+<section id="leak">
+  <h2><span class="no">06</span>内存泄漏排查全流程 ⭐</h2>
+  <pre><code># ① 确认趋势（是不是泄漏）
+jstat -gcutil &lt;pid&gt; 5000        # 老年代基线 30 分钟内缓涨？→ 疑似泄漏
+# ② 低峰期抓证据
+jmap -dump:live,format=b,file=heap1.hprof &lt;pid&gt;    # 第一份 dump
+# （间隔一段时间再抓第二份，对比增长更硬核）
+# ③ MAT 分析
+#    Leak Suspects → Dominator Tree → 找异常大的支配者
+# ④ 找到"谁在保活"
+#    右键对象 → Path to GC Roots → exclude weak/soft references
+#    → 链头通常是：static 字段 / ThreadLocal Entry / 未关闭的连接 / ClassLoader
+# ⑤ 回到代码修引用（对照第 06 章八大场景表对症）</code></pre>
+  <ul>
+    <li><strong>区分泄漏 vs 容量不足</strong>（高频追问）：泄漏——回收后基线持续上涨、dump 里同一批对象只增不减；容量不足——锯齿正常但整体水位高、dump 里是"合理的业务对象"（正常缓存/正常请求积压）。前者修引用，后者扩容或降占用。</li>
+    <li>加分的硬核操作：<strong>两份 dump 对比</strong>（MAT 的 compare baskets / histo diff）——只涨不跌的类就是嫌疑对象，比单份 dump 有说服力得多。</li>
+  </ul>
+</section>
+
+<section id="arthas">
+  <h2><span class="no">07</span>Arthas：生产在线诊断</h2>
+  <ul>
+    <li><strong>为什么生产爱用</strong>：attach 到运行中进程、<strong>不重启</strong>、开箱即用、开销小——把"重启试试"变成"当场看"。</li>
+    <li><code>dashboard</code>：一屏总览（线程/内存/GC）——替代 jps+jstat+top 的第一眼。</li>
+    <li><code>thread -n 3</code>：最耗 CPU 的 3 个线程栈（<strong>第 05 节四步的命令级平替</strong>）；<code>thread -b</code>：直接找阻塞源头/死锁。</li>
+    <li><code>profiler start/stop</code>：生成<strong>火焰图</strong>（async-profiler），CPU 热点一目了然——比单看某个线程更全局。</li>
+    <li><code>watch 类 方法 '{params,returnObj,throwExp}'</code>：不重启观察线上方法出入参——排查"偶发坏数据"神器。</li>
+    <li><code>heapdump</code>：等同于 jmap dump（同样注意停顿风险）。</li>
+  </ul>
+  <div class="box note"><p>答题时给一个自己的案例最有说服力，例如："一次接口偶发 500ms 毛刺，arthas trace 方法链发现是某个缓存未命中走了全量 DB 查询"——工具 + 场景 + 结论三件套。</p></div>
+</section>
+
+<section id="params">
+  <h2><span class="no">08</span>常用参数速查（笔记参数节并入扩展）</h2>
+  <table>
+    <tr><th>类别</th><th>参数</th><th>说明</th></tr>
+    <tr><td rowspan="3">堆</td><td><code>-Xms = -Xmx</code></td><td>初始 = 最大（笔记列入），避免动态扩缩震荡（链 <a href="05-垃圾收集器.html">第 05 章美团案例</a>）</td></tr>
+    <tr><td><code>-Xmn / -XX:SurvivorRatio=8</code></td><td>新生代大小 / Eden:S 比例（G1 下不要手动设 Xmn）</td></tr>
+    <tr><td><code>-XX:MaxTenuringThreshold=15</code></td><td>晋升年龄上限</td></tr>
+    <tr><td>元空间</td><td><code>-XX:MetaspaceSize / MaxMetaspaceSize</code></td><td>前者是首触 Full GC 的水位，后者才是上限（链 <a href="01-运行时数据区.html">第 01 章</a>）</td></tr>
+    <tr><td rowspan="2">G1（笔记并入）</td><td><code>-XX:MaxGCPauseMillis=200</code></td><td>最大 GC 停顿（毫秒）——软目标，设太小反而退化（链 <a href="05-垃圾收集器.html">第 05 章</a>）</td></tr>
+    <tr><td><code>-XX:G1HeapRegionSize=4m</code></td><td>Region 大小（笔记注解：region 一半要能承受 90% 的对象——避免过多 Humongous）</td></tr>
+    <tr><td rowspan="3">事故三件套</td><td><code>-XX:+HeapDumpOnOutOfMemoryError</code></td><td>OOM 自动 dump（必须事前配）</td></tr>
+    <tr><td><code>-XX:HeapDumpPath=...</code></td><td>dump 落盘目录</td></tr>
+    <tr><td><code>-Xlog:gc*:file=gc.log</code></td><td>GC 日志（JDK 9+ 语法；8 用 -XX:+PrintGCDetails）</td></tr>
+  </table>
+</section>
+
+<section id="gclog">
+  <h2><span class="no">09</span>GC 日志判读（一段样例走一遍）</h2>
+  <pre><code>[gc,start] GC(412) Pause Young (Normal)
+[gc,heap] GC(412) Eden regions: 612-&gt;0(612)      ← Eden 612 个 Region 清空
+[gc,heap] GC(412) Old regions: 120-&gt;128(512)      ← 老年代 120→128：晋升了 8 个 Region
+[gc,heap] GC(412) Humongous regions: 2-&gt;2         ← 大对象区域没变
+[info] GC(412) Pause Young 210M-&gt;96M(1G) 23.5ms   ← 堆 210M→96M，停顿 23.5ms ✓
+
+# 判读三问：
+# ① 停顿多少？——23.5ms 对目标 200ms，健康
+# ② 每次 Young GC 晋升多少？——8 Region：偏高的话查"过早晋升"（对象没死透就进老年代）
+# ③ 老年代整体趋势？——拉长时间轴看基线（第 03 节 jstat 同款判读在日志层的版本）</code></pre>
+  <ul>
+    <li><strong>过早晋升的日志指纹（美团文方法）</strong>：每次 Young GC 晋升量大、但老年代涨完很快又跌（晋升进去的对象接着死了）——说明 Survivor 装不下/年龄阈值动态判断提前放行，治法在 <a href="05-垃圾收集器.html">第 05 章 CMS 案例</a>。</li>
+    <li>GC 日志是"事后诸葛"里信息密度最高的材料：次数、耗时、各代变化、晋升量全在里面——<strong>排查 GC 问题的顺序永远是 jstat 看趋势 → gc 日志看细节 → dump 看对象</strong>。</li>
+  </ul>
+</section>
+
+<section id="method">
+  <h2><span class="no">10</span>调优心法（7 年经验的答法）</h2>
+  <ol>
+    <li><strong>先观测后动手</strong>：任何参数调整前必须有基线数据（jstat/GC 日志/监控），调完有对比——没有 before/after 的调优是玄学。</li>
+    <li><strong>多数"JVM 调优"其实是修代码</strong>：一次查百万行、无界缓存、忘 remove、循环里拼大字符串——参数治不了这些。<strong>把最常见的真实案例说出来，比背参数表值钱十倍</strong>。</li>
+    <li><strong>一次只动一处</strong>：多参数同改等于不知道谁起作用；改一处、压测、对比、再决定。</li>
+    <li><strong>别抄模板</strong>：网上"-Xmx4g -XX:+UseG1GC 万金油"式配置不问场景；参数跟着"堆大小 / 延迟诉求 / 收集器"三要素走（链 <a href="05-垃圾收集器.html">第 05 章选型三问</a>）。</li>
+  </ol>
+</section>
+
+<section id="followup">
+  <h2><span class="no">11</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>场景题：服务突然变慢，先查什么 →</strong>→ 开场分流三连：<code>top</code> 看 CPU（us/sy）→ <code>jstat</code> 看是不是 GC 停顿（FGC 涨没涨）→ 看监控是不是下游/DB 慢。三条路各走一步再深入——展示的是"分诊"意识而不是上来就背 jstack。</li>
+    <li><strong>场景题：Full GC 频繁五步 →</strong>→ ① jstat 确认频率与耗时 → ② GC 日志看触发原因（promotion failed？元空间？System.gc？）→ ③ dump 看老年代里是什么 → ④ 对照六种触发（链 <a href="04-GC基础.html">第 04 章</a>）定位 → ⑤ 治理（修泄漏/调新生代/换收集器）。</li>
+    <li><strong>追问：为什么 dump 要安全点 →</strong>→ 遍历堆对象需要一致性视图，所有线程停在安全点才能保证堆结构不被并发修改——顺带解释了 jmap 停顿的本质（第 04 节）。</li>
+    <li><strong>陷阱：jstack 抓一次就下结论 →</strong>→ 单次快照可能正好错过；CPU 问题抓 3~5 次间隔几秒，反复出现在同一栈帧才算实锤。</li>
+    <li><strong>陷阱：把调优答成背参数 →</strong>→ 面试官要的是案例与方法论：观测→定位→改动→验证的闭环（第 10 节四条心法就是答案骨架）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">12</span>面试自查清单</h2>
+  <ol>
+    <li>CPU 100% 四步（top → top -Hp → printf %x → jstack grep）能白板写出命令。</li>
+    <li>CPU 高四类原因的栈上指纹能对号入座，GC 线程吃 CPU 知道转 jstat。</li>
+    <li>jstat -gcutil 字段含义 + 锯齿 vs 阶梯两条判读铁律。</li>
+    <li>jmap 两姿势（histo/dump）+ dump 的安全点停顿风险与生产替代方案。</li>
+    <li>泄漏五步流程 + "泄漏 vs 容量不足"判据 + 双 dump 对比加分项。</li>
+    <li>Arthas 至少三个功能与适用场景（thread/profiler/watch）。</li>
+    <li>参数表：事故三件套必须事前配；G1 两参数的软目标语义（笔记并入的都能讲出"为什么"）。</li>
+    <li>GC 日志三问判读 + 过早晋升的日志指纹。</li>
+    <li>调优四心法（观测先行 / 多数是修代码 / 一次一处 / 不抄模板）+ 自己的一个真实案例。</li>
+  </ol>
+  <div class="pager">
+    <a href="06-内存泄漏.html">⬅ 上一章：内存泄漏与 OOM</a>
+    <a class="next" href="../04-spring/README.html">04 Spring 生态（下一板块）→</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源交叉生成）：① 蓝本 AlgoMaster Java 课程 JVM 章 + 面试通行考点；② <a href="https://javaguide.cn/java/jvm">JavaGuide JVM 专题</a>（JVM 参数总结 + JDK 监控与故障处理工具）；③ <a href="https://pdai.tech/md/java/jvm/java-jvm-debug-tools-list.html">pdai.tech · 调试排错工具单</a>（jmap 安全点/dump 细节）；④ 美团 <a href="https://tech.meituan.com/2020/11/12/Java-9-CMS-GC.html">《Java中9种常见的CMS GC问题》</a>（GC 日志判读与过早晋升识别）；既有笔记 Java/java 基础.md JVM参数与调优 / OOM / CPU飙升节（971-1031 行：参数、工具清单、OOM 处置、top+jstack 定位法全部并入完整化）。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">03 JVM 与内存模型</a> · 第 07 章 调优与排查实战</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>

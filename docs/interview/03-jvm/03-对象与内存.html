@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 03 章 · 对象与内存布局 — JVM 与内存模型</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 03 JVM 与内存模型</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#create">对象创建五步 ⭐</a>
+  <a href="#layout">内存布局：对象头</a>
+  <a href="#compress">指针压缩</a>
+  <a href="#access">访问定位：句柄 vs 直接指针</a>
+  <a href="#pool">字符串常量池与 intern ⭐</a>
+  <a href="#escape">逃逸分析与栈上分配</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="02-类加载.html">⬅ 上一章：02 类加载机制</a>
+  <a href="04-GC基础.html">下一章：04 GC 基础 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 03 章 · 对象与内存布局</h1>
+    <div class="sub">对象创建五步 · 对象头与 Mark Word · 指针压缩 · 字符串常量池 intern 陷阱 · 逃逸分析 —— 对象在 JVM 里的一生</div>
+    <div class="meta">
+      <span>⭐ 高频：new 的五步 · new String 几个对象 · 对象一定在堆上吗</span>
+      <span>蓝本：AlgoMaster Java 课程 JVM 章</span>
+      <span class="tag exist">三源生成：JavaGuide + pdai ✅</span>
+      <span class="tag exist">与 01-java/02 对象章节互链去重 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>new 一个对象，JVM 里发生了什么？（五步说全）⭐⭐</li>
+      <li>对象分配内存时怎么保证并发安全？指针碰撞和空闲列表是什么？</li>
+      <li>对象的内存布局？一个空对象占多少字节？⭐</li>
+      <li>对象头里有什么？Mark Word 在无锁/偏向/轻量级/重量级下分别存什么？（与锁升级联动）</li>
+      <li>什么是指针压缩？为什么堆超过 32GB 要特别小心？⭐</li>
+      <li>对象访问定位有哪两种方式？HotSpot 用的哪种？各有什么利弊？</li>
+      <li>String s = new String("ab") 创建了几个对象？⭐（高频到烂，但仍会考）</li>
+      <li>intern 的作用？JDK 7 前后 intern 的行为有什么变化？⭐</li>
+      <li>对象一定分配在堆上吗？（逃逸分析 / 标量替换）⭐</li>
+    </ol>
+  </div>
+  <p>本章是第 01 章（区域）与 <a href="../02-concurrency/03-互斥与同步.html">02-concurrency/03 锁升级</a>的交汇点：<strong>对象头里的 Mark Word 既是内存布局知识，也是锁升级的载体</strong>；字符串常量池则是"背题重灾区"，死记答案容易，理解常量池位置演变才答得稳。</p>
+</section>
+
+<section id="create">
+  <h2><span class="no">02</span>对象创建五步 ⭐⭐</h2>
+  <pre><code>new Object()
+   │
+   ① 类加载检查：常量池定位符号引用 → 类是否已加载/解析/初始化过？
+   │    没加载 → 先走第 02 章的类加载（这是两章的接缝）
+   ② 分配内存：从堆中划出一块确定大小的空间
+   │    规则A 指针碰撞：堆绝对规整（标记-整理后）→ 移动分界指针即可
+   │    规则B 空闲列表：堆碎片化 → 维护"哪里空闲"的列表去匹配
+   │    并发安全：TLAB（见下）或 CAS + 失败重试
+   ③ 零值初始化：内存全部置零 —— 这就是字段不赋值也有默认值的原因
+   ④ 设置对象头：Mark Word（hash/GC年龄/锁标志）+ 类型指针（哪个类的实例）
+   ⑤ 执行 &lt;init&gt;：构造函数 + 字段初始化 —— Java 代码视角的"对象诞生"</code></pre>
+  <h3>TLAB：分配的并发安全答案 ⭐</h3>
+  <ul>
+    <li>堆是共享的，两个线程同时分配会争抢同一块地址。JDK 默认用 <strong>TLAB（Thread Local Allocation Buffer）</strong>：Eden 里给每个线程划一小块<strong>私有分配缓冲</strong>，线程在自己的 TLAB 里分配——纯指针移动、无竞争；TLAB 用完再申请新的一块（申请时才需要同步）。</li>
+    <li>TLAB 装不下的大对象（或绕过场景）用 <strong>CAS + 失败重试</strong>直接在堆上分配。</li>
+    <li>-XX:+UseTLAB 默认开启；"分配"这个动作的答案链：优先栈上（逃逸分析）→ TLAB → Eden 堆 → 大对象直入老年代。</li>
+  </ul>
+  <div class="box tip"><p><strong>答题口径</strong>：五步报完后主动补一句"其中 ③ 的零值初始化解释了字段默认值、② 的 TLAB 解释了高并发下分配为什么快"——把步骤和"现象"挂钩，比背流程高一个层次。</p></div>
+</section>
+
+<section id="layout">
+  <h2><span class="no">03</span>内存布局：对象头 · 实例数据 · 对齐填充</h2>
+  <pre><code>普通对象（64 位 JVM，开指针压缩）
+┌───────────────────────────────────────┐
+│ Mark Word（8B）：hash / GC 年龄 / 锁标志 │  ← 对象头
+│ 类型指针 KlassPointer（4B 压缩/8B）      │
+├───────────────────────────────────────┤
+│ 实例数据：字段值（long/double 对齐排列…） │  ← HotSpot 字段重排优化
+├───────────────────────────────────────┤
+│ 对齐填充：补齐到 8 字节的整数倍           │
+└───────────────────────────────────────┘
+数组对象额外多一块 4B 的 length（所以 new int[0] 也有 16B）
+new Object() = 8 (MarkWord) + 4 (Klass) + 4 (填充) = 16 字节</code></pre>
+  <ul>
+    <li><strong>Mark Word 到底是什么</strong>：每个对象自带的 <strong>8 字节元数据槽位</strong>（64 位 JVM 的一个机器字长，HotSpot 源码里是 oopDesc 的第一个字段 <code>_mark</code>）。JVM 让它<strong>分时复用</strong>——对象处于不同阶段时，同一块 8 字节被写入不同元数据，靠<strong>末 2 位锁标志位</strong>判别当前含义。名字由来：Mark 源自 GC 标记用途，Word = 机器字长。为什么要复用？堆里对象以亿计，<code>new Object()</code> 的 16B 里头已占 12B——每种元数据各开一个字段，头开销吃不消。</li>
+  </ul>
+  <table>
+    <tr><th>状态（64 位 JVM）</th><th>末 2 位</th><th>Mark Word 里存什么</th></tr>
+    <tr><td>无锁</td><td>01</td><td>identity hashCode(31) + 分代年龄(4)</td></tr>
+    <tr><td><strong>偏向锁</strong> *</td><td>01（可偏向位=1）</td><td>持有线程 ID(54) + epoch(2)——与 hashCode 抢同一片位，<strong>调过 identity hashCode 的对象不能再偏向</strong></td></tr>
+    <tr><td><strong>轻量级锁</strong></td><td>00</td><td>指向栈帧 Lock Record 的指针(62)——原 Mark Word 先复制进 Lock Record（Displaced Mark Word），解锁时抄回</td></tr>
+    <tr><td><strong>重量级锁</strong></td><td>10</td><td>指向 C++ ObjectMonitor 的指针(62)</td></tr>
+    <tr><td>GC 标记中</td><td>11</td><td>GC 运行期临时征用：标记位 / 转发指针——名字里的 Mark 就源于此</td></tr>
+  </table>
+  <p>* 偏向锁 JDK 15 废弃（JEP 374）、JDK 18 代码移除，现代 JVM 只剩 无锁→轻量级→重量级 三级。<strong>锁升级主线</strong>（各级为什么存在、怎么逐级膨胀）在 <a href="../02-concurrency/03-互斥与同步.html">02-concurrency/03 锁升级</a>——这里认"它是什么"，那里讲"它怎么变"。</p>
+  <p><strong>JOL 实测</strong>（JDK 21，<code>ClassLayout.parseInstance(o).toPrintable()</code>，同一对象的四个时刻——末 2 位的变化肉眼可见）：</p>
+  <pre><code>① 刚 new（未调 hashCode）  0x0000000000000001   末2位 01 无锁；age 0，hash 还没算
+② 调过 hashCode()         0x0000002a65fe7c01   末2位 01 仍无锁；31 位 hash 写入高位
+③ synchronized 持有中     0x000000016f552b00   末2位 00 轻量级锁 → 指向栈上 Lock Record
+④ 解锁后                  0x0000002a65fe7c01   末2位 01；hash/age 原样抄回
+   —— ③④ 连看 = Displaced Mark Word 机制实证：62 位拿去存指针，原数据先存栈再恢复</code></pre>
+  <ul>
+    <li><strong>GC 年龄用 4 位存储 → 上限 15</strong>，这就是 <code>-XX:MaxTenuringThreshold</code> 不能超过 15 的底层原因。</li>
+    <li>验证工具：<strong>JOL（Java Object Layout）</strong>，依赖 <code>org.openjdk.jol:jol-core</code>，一行 <code>ClassLayout.parseInstance(obj).toPrintable()</code> 打印真实布局；JDK 15+ 紧凑对象头实验（JDK 25 默认化）可把对象头压到 8 字节，见 <a href="../01-java/14-新特性演进.html">01-java/14 新特性</a>。</li>
+  </ul>
+</section>
+
+<section id="compress">
+  <h2><span class="no">04</span>指针压缩（Compressed Oops）</h2>
+  <ul>
+    <li><strong>问题</strong>：64 位 JVM 里引用是 64 位，对象里的引用字段、Klass 指针都变大一倍，小对象们白白多耗内存。</li>
+    <li><strong>做法</strong>：堆 ≤ 4GB 时，用 32 位"地址偏移"代替 64 位指针（8 字节对齐保证偏移可反推真实地址），<code>-XX:+UseCompressedOops</code> 默认开启。</li>
+    <li><strong>32GB 临界（高频）</strong>：偏移量按 8 字节粒度编址，32 位偏移最多表示 <strong>32GB</strong>。堆一旦超过 32GB，压缩失效、全部指针变回 64 位——<strong>内存不增反降</strong>（对象头/引用膨胀吃掉的比多给的堆还多）。实践经验：要么 ≤ 31GB，要么直接跳到 40GB+ 才划算。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>："堆 33GB 比 31GB 能放更多对象"——错，33GB 时指针压缩关闭，实际可用容量反而可能更小。这是 JVM 参数里少见的"非单调"行为，也是这题的价值所在。</p></div>
+</section>
+
+<section id="access">
+  <h2><span class="no">05</span>访问定位：句柄池 vs 直接指针</h2>
+  <p>栈帧里的引用怎么找到堆里的对象（Java 侧语义在 <a href="../01-java/02-面向对象.html">01-java/02 面向对象</a>已讲，这里补 JVM 视角的利弊表）：</p>
+  <table>
+    <tr><th>方式</th><th>结构</th><th>优点</th><th>缺点</th></tr>
+    <tr><td><strong>句柄池</strong></td><td>引用 → 句柄（稳定地址）→ 对象本体</td><td>GC 移对象只改句柄里的指针，引用本身不动</td><td>多一次寻址开销；句柄池本身占内存</td></tr>
+    <tr><td><strong>直接指针</strong></td><td>引用直接指向对象本体（对象头里带类型指针）</td><td>访问快（省一次跳转）</td><td>GC 移动对象要更新所有引用（但 GC 本来就要遍历）</td></tr>
+  </table>
+  <p><strong>HotSpot 用直接指针</strong>——访问是最高频操作，用移动成本换访问速度。追问点：G1 这类会整理内存的收集器为什么也敢用直接指针？因为移动发生在 STW 或读屏障保护下，引用更新是收集器自己负责的。</p>
+</section>
+
+<section id="pool">
+  <h2><span class="no">06</span>字符串常量池与 intern ⭐</h2>
+  <h3>位置演变（先答对位置再谈其他）</h3>
+  <ul>
+    <li>JDK 6 及以前：字符串常量池在<strong>永久代</strong>；JDK 7 起<strong>移入堆中</strong>（永久代紧张 + 想让堆 GC 顺手回收无引用的池内字符串）。intern 的行为也随之改变。</li>
+  </ul>
+  <h3>经典题一：new String("ab") 创建几个对象</h3>
+  <pre><code>String s = new String("ab");
+// 答案：1 或 2 个
+//  · 堆里 new 的这个对象：一定创建
+//  · 池里的 "ab"：如果此前池中没有（首次出现），字面量在类加载的
+//    解析/首次使用时入池 —— 也算一个；池里已有就只有 1 个
+// 补充：byte[] value 数组（JDK 9 起是 byte[]）不算"new 出的对象"层次里的答案</code></pre>
+  <h3>经典题二：intern 的 JDK 7 变化（区分度题）</h3>
+  <pre><code>String s = new String("a") + new String("b");   // 堆里动态拼出 "ab"（StringBuilder）
+// 此刻：池中没有 "ab"（运行期拼接不进池），堆里有一个 s 指向的 "ab"
+
+String interned = s.intern();
+System.out.println(s == interned);
+// JDK 6：false —— intern 把对象复制一份进永久代，返回永久代里那个
+// JDK 7+：true  —— 池中首次出现时，intern 直接把【堆里这个对象的引用】
+//                   存入池中并返回它 —— 不再复制，s 与 interned 是同一个
+
+String lit = "ab";        // 此时池里已有（指向 s 那个对象）
+System.out.println(lit == s);   // JDK 7+ true；JDK 6 false —— 经典变体</code></pre>
+  <ul>
+    <li><strong>intern 语义</strong>：池里已有 equals 相等的字符串 → 返回池内那个；没有 → 入池并返回（JDK 7+ 存引用，JDK 6 复制本体）。</li>
+    <li><strong>编译期折叠</strong>：<code>"a" + "b"</code> 两个字面量拼接，编译器直接常量折叠成 "ab" 入池——和运行期 <code>new String("a")+new String("b")</code>（StringBuilder.append，不进池）路径完全不同，这是这类题的判断关键。</li>
+  </ul>
+  <div class="box note"><p><strong>7 年经验口径</strong>：别在生产上用 intern 做大规模去重优化——JDK 7 后池在堆里能被回收，但 StringTable（Hashtable 结构，默认 1009 桶）在大量 intern 下哈希碰撞严重；要做重复字符串压缩优先看 <code>-XX:StringTableSize</code> 或业务级缓存。</p></div>
+</section>
+
+<section id="escape">
+  <h2><span class="no">07</span>逃逸分析与"栈上分配"</h2>
+  <ul>
+    <li><strong>逃逸分析</strong>是 JIT 的分析手段：判断对象是否会"逃出"方法/线程（被外部引用、返回、赋给静态字段）。</li>
+    <li><strong>标量替换（主要落地形式）</strong>：对象不逃逸时，JIT 干脆<strong>不创建对象</strong>，把它的字段拆成独立局部变量（标量）放栈/寄存器——对象从未在堆上存在过，GC 都不用管。HotSpot 实际做的是标量替换，而非真的"在栈上分配完整对象"。</li>
+    <li><strong>-XX:+DoEscapeAnalysis</strong> 默认开启（JDK 7+）。</li>
+    <li>所以"对象一定在堆上吗"的严谨答案：<strong>规范层面对象在堆分配；HotSpot 实现上，不逃逸的小对象可能被标量替换优化掉，根本不占堆</strong>。典型受益者：临时包装类、循环内小对象。</li>
+  </ul>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：对象头为什么和锁升级有关 →</strong>→ Mark Word 复用：无锁/hashCode → 偏向/线程ID → 轻量级/LockRecord 指针 → 重量级/Monitor 指针（链 <a href="../02-concurrency/03-互斥与同步.html">02-concurrency/03</a>）。</li>
+    <li><strong>追问（加分）：对象算过 hashCode 还能偏向吗 →</strong>→ 不能：Mark Word 无锁态才放得下 hashCode，一旦调用过 identity hashCode，无法再进入偏向状态（两者抢同一个位置）——把两章知识串起来的加分细节。</li>
+    <li><strong>追问：为什么必须 8 字节对齐 →</strong>→ 指针压缩按 8 字节粒度编址、CPU 按字长取数效率；代价由对齐填充兜底。相邻字段挤在同一缓存行的"伪共享"是另一回事，链 <a href="../02-concurrency/05-无锁编程.html">02-concurrency/05 @Contended</a>。</li>
+    <li><strong>陷阱：new String("ab") 答"2 个"不看条件 →</strong>→ 要看池里有没有；严谨答法是"1 个确定 + 1 个条件"。</li>
+    <li><strong>陷阱：intern 一定省内存 →</strong>→ 见上面 StringTable 碰撞与回收语义，大规模 intern 是反模式。</li>
+    <li><strong>场景题：大量小对象创建导致 GC 压力大，怎么办 →</strong>→ 先确认是否可被逃逸分析吃掉（局部小对象别赋给外部）→ 减少包装（int 换 Integer、可变复用 StringBuilder）→ 大促型请求对象考虑对象池（谨慎）。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>创建五步能按序报出，讲得清 TLAB 解决分配并发安全的原理与分配优先级链。</li>
+    <li>内存布局三段（对象头/实例数据/填充）+ new Object() = 16B 的算法；数组的 length 块。</li>
+    <li>Mark Word 与锁状态复用关系一句话；MaxTenuringThreshold ≤ 15 的底层原因。</li>
+    <li>指针压缩原理（32 位偏移）+ 32GB 临界的非单调现象。</li>
+    <li>句柄 vs 直接指针利弊表 + HotSpot 的选择及理由。</li>
+    <li>两道 String 经典题能分 JDK 6 / 7+ 讲清 intern 行为差异，说得出编译期折叠与运行期拼接的分界。</li>
+    <li>"对象一定在堆上吗"能答出规范与 HotSpot 实现（标量替换）两个层次。</li>
+  </ol>
+  <div class="pager">
+    <a href="02-类加载.html">⬅ 上一章：类加载机制</a>
+    <a class="next" href="04-GC基础.html">下一章：GC 基础 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源交叉生成）：① 蓝本 AlgoMaster Java 课程 JVM 章；② <a href="https://javaguide.cn/java/jvm/memory-area.html">JavaGuide · Java 内存区域详解</a>（对象创建/访问定位）与 <a href="https://javaguide.cn/java/jvm/jvm-interview-questions.html">JVM 面试题总结</a>（常量池/intern 口径）；③ <a href="https://pdai.tech/md/java/jvm/java-jvm-x-overview.html">pdai.tech JVM 系列</a>（对象布局/逃逸分析）；与 01-java/02、02-concurrency/03 按去重约定互链。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">03 JVM 与内存模型</a> · 第 03 章 对象与内存布局</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>

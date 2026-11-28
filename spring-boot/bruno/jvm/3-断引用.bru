@@ -1,0 +1,15 @@
+meta {
+  name: OOM 断引用
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/oom/heap/clear
+  body: none
+  auth: none
+}
+
+docs {
+  对症下药演示：断开 static 集合引用，之后对照 target/logs/gc.log 看老年代回落。
+}

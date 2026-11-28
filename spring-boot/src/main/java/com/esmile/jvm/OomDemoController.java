@@ -1,4 +1,4 @@
-package com.esmile.oom;
+package com.esmile.jvm;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +33,9 @@ public class OomDemoController {
     /** 泄漏根：static 字段 → GC Root，直到进程退出前从不释放 */
     static final List<byte[]> LEAK = new ArrayList<>();
 
+    /** 实际累计字节数：块大小可由请求参数随机，不能按固定块大小反推 */
+    static final java.util.concurrent.atomic.AtomicLong TOTAL_BYTES = new java.util.concurrent.atomic.AtomicLong();
+
     private static final MemoryMXBean MEMORY = ManagementFactory.getMemoryMXBean();
 
     /** 触发泄漏：每轮分配 chunkMb 大小的块塞进静态集合，直到堆耗尽抛 OutOfMemoryError */
@@ -44,10 +47,11 @@ public class OomDemoController {
         while (true) {
             final byte[] chunk = new byte[chunkMb * 1024 * 1024];
             LEAK.add(chunk);
+            TOTAL_BYTES.addAndGet(chunk.length);
             round++;
             if (round % 5 == 0) {
                 log.info("第{}轮：累计持有{}MB，堆已用{}MB（上限见 VM options -Xmx）",
-                        round, LEAK.size() * chunkMb, usedHeapMb());
+                        round, TOTAL_BYTES.get() / (1024 * 1024), usedHeapMb());
             }
             try {
                 Thread.sleep(intervalMs);
@@ -62,14 +66,15 @@ public class OomDemoController {
     @GetMapping("/heap/status")
     public String status() {
         return String.format("静态集合持有 %d 个块 / %dMB；堆已用 %dMB",
-                LEAK.size(), LEAK.size() * 8, usedHeapMb());
+                LEAK.size(), TOTAL_BYTES.get() / (1024 * 1024), usedHeapMb());
     }
 
     /** 对症下药演示：断引用后这些块在下一次 GC 即被回收 */
     @PostMapping("/heap/clear")
     public String clear() {
-        final int mb = LEAK.size() * 8;
+        final long mb = TOTAL_BYTES.get() / (1024 * 1024);
         LEAK.clear();
+        TOTAL_BYTES.set(0);
         log.info("已断开引用 {}MB，下次 GC 回收", mb);
         return "已断开引用 " + mb + "MB，观察 gc.log 里老年代是否回落";
     }

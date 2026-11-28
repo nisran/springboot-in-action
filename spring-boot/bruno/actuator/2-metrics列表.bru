@@ -1,0 +1,15 @@
+meta {
+  name: metrics 指标清单
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/actuator/metrics
+  body: none
+  auth: none
+}
+
+docs {
+  返回全部可用指标名；找 jvm.memory.*、jvm.gc.* 开头的即是 JVM 内存与 GC 指标。
+}

@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 01 章 · 运行时数据区 — JVM 与内存模型</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 03 JVM 与内存模型</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#area">五区域总览</a>
+  <a href="#pc">程序计数器</a>
+  <a href="#stack">虚拟机栈与栈帧 ⭐</a>
+  <a href="#heap">堆与分代</a>
+  <a href="#method">方法区与元空间 ⭐</a>
+  <a href="#direct">直接内存</a>
+  <a href="#exception">各区异常对照 ⭐</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="02-类加载.html">下一章：02 类加载机制 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 01 章 · 运行时数据区</h1>
+    <div class="sub">堆 · 栈 · 方法区与元空间 · 程序计数器 · 直接内存 —— JVM 的地皮怎么划，每块地上会出什么事故</div>
+    <div class="meta">
+      <span>⭐ 高频：线程私有 vs 共享 · 元空间演进 · 各区 OOM</span>
+      <span>蓝本：AlgoMaster Java 课程 JVM 章</span>
+      <span class="tag exist">三源生成：JavaGuide + pdai ✅</span>
+      <span class="tag exist">已合并：java 基础.md 内存结构节 ✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>JVM 运行时数据区有哪几块？哪些线程私有、哪些线程共享？⭐（入场券，答不全直接扣分）</li>
+      <li>程序计数器为什么必须有？它会发生 OOM 吗？</li>
+      <li>栈帧里面有什么？一个方法调用到返回在栈上发生了什么？⭐</li>
+      <li>StackOverflowError 和 OutOfMemoryError 什么区别？栈会 OOM 吗？⭐</li>
+      <li>-Xss 调大有什么代价？</li>
+      <li>方法区、永久代、元空间是什么关系？JDK 8 为什么用元空间替掉永久代？⭐（高频）</li>
+      <li>字符串常量池在堆里还是方法区里？</li>
+      <li>直接内存是运行时数据区吗？-XX:MaxDirectMemorySize 不设会怎样？</li>
+      <li>生产上 -Xms 和 -Xmx 为什么通常设成一样大？⭐（美团 CMS 文的真实案例）</li>
+    </ol>
+  </div>
+  <p>这一章是整个 JVM 板块的地基：后面 GC 讲的是<strong>堆</strong>怎么清理，类加载讲的是<strong>方法区</strong>怎么填，调优排查全是在这几块区域上看指标。答题要带着<strong>"区域 → 存什么 → 会出什么事故 → 出了事故看哪个指标"</strong>四连的意识，而不是背五个名字。</p>
+</section>
+
+<section id="area">
+  <h2><span class="no">02</span>五区域总览：一张图 + 一张表</h2>
+  <pre><code>                    JVM 运行时数据区（JDK 8+）
+ ┌─────────────── 线程私有（每个线程一份）───────────────┐
+ │  程序计数器        虚拟机栈            本地方法栈        │
+ │  (字节码行号)      (栈帧:方法调用)     (native 方法)    │
+ └──────────────────────────────────────────────────────┘
+ ┌─────────────── 线程共享（整个 JVM 一份）──────────────┐
+ │  堆 Heap                                              │
+ │  ├─ 新生代 (Eden : S0 : S1 = 8 : 1 : 1)               │
+ │  └─ 老年代 Old                                        │
+ │  方法区（JDK 8+ 由元空间 Metaspace 实现，在本地内存）   │
+ └──────────────────────────────────────────────────────┘
+ ┌─────────────── 不属于运行时数据区 ────────────────────┐
+ │  直接内存 Direct Memory（NIO 堆外，也受 JVM 参数约束）  │
+ └──────────────────────────────────────────────────────┘</code></pre>
+  <table>
+    <tr><th>区域</th><th>线程</th><th>存什么</th><th>会出什么事故</th></tr>
+    <tr><td>程序计数器</td><td>私有</td><td>当前线程执行的字节码指令地址</td><td><strong>唯一不会 OOM</strong>的区域</td></tr>
+    <tr><td>虚拟机栈</td><td>私有</td><td>栈帧（局部变量表、操作数栈、动态链接、返回地址）</td><td>StackOverflowError；线程过多时 OOM</td></tr>
+    <tr><td>本地方法栈</td><td>私有</td><td>native 方法的栈帧（HotSpot 与虚拟机栈合一实现）</td><td>同上</td></tr>
+    <tr><td>堆</td><td>共享</td><td>对象实例、数组（GC 主战场）</td><td><code>OutOfMemoryError: Java heap space</code></td></tr>
+    <tr><td>方法区（元空间）</td><td>共享</td><td>类元信息、运行时常量池、JIT 编译后代码缓存</td><td><code>OutOfMemoryError: Metaspace</code></td></tr>
+    <tr><td>直接内存</td><td>共享</td><td>NIO DirectByteBuffer 等堆外缓冲</td><td><code>OutOfMemoryError: Direct buffer memory</code></td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题口径</strong>：先一句话"线程私有的三块：计数器、虚拟机栈、本地方法栈；共享的两块：堆和方法区"，再主动补"JDK 8 起方法区由元空间在<strong>本地内存</strong>实现，堆外还有直接内存也归 JVM 管"——这三句说完，这题的层次感就有了。</p></div>
+</section>
+
+<section id="pc">
+  <h2><span class="no">03</span>程序计数器（PC Register）</h2>
+  <ul>
+    <li><strong>是什么</strong>：一块很小的内存，记录<strong>当前线程执行到的字节码指令地址</strong>（字节码解释器工作时就是靠改变这个值来选取下一条要执行的字节码指令）。</li>
+    <li><strong>为什么必须有</strong>：Java 的多线程靠 CPU 轮转切换实现——线程切换后必须能<strong>恢复到正确的执行位置</strong>，每条线程就需要一个独立的计数器互不影响。它是"线程私有"这个设计的直接原因之一。</li>
+    <li><strong>执行 native 方法时</strong>：计数值为 undefined（native 代码不归字节码解释器管）。</li>
+    <li><strong>唯一不会 OOM</strong>：《JVM 规范》中唯一没有规定任何 OutOfMemoryError 情形的区域——它只存一个地址，大小固定且极小。这题常作为"暖场送分"出现。</li>
+  </ul>
+</section>
+
+<section id="stack">
+  <h2><span class="no">04</span>虚拟机栈与栈帧 ⭐</h2>
+  <p>除 native 方法（走本地方法栈）外，<strong>所有 Java 方法的调用执行都靠虚拟机栈</strong>（笔记原文口径）：每个方法从调用到返回，对应一个<strong>栈帧（Stack Frame）</strong>的压入与弹出。栈由一个个栈帧组成——<strong>栈有多深，取决于调用链有多长</strong>。</p>
+  <h3>栈帧四件套</h3>
+  <table>
+    <tr><th>部分</th><th>存什么</th><th>面试展开点</th></tr>
+    <tr><td><strong>局部变量表</strong></td><td>方法参数与局部变量：基本类型的值、对象引用（存的只是"指向堆的地址"，对象本体在堆）</td><td>以 slot 为单位，long/double 占两个 slot；大小编译期就确定</td></tr>
+    <tr><td><strong>操作数栈</strong></td><td>方法执行的中转站：运算的中间结果在此压栈/出栈</td><td>Java 字节码是<strong>基于操作数栈的指令集</strong>——见下面 i = i++ 的字节码示例</td></tr>
+    <tr><td><strong>动态链接</strong></td><td>指向运行时常量池中该方法的引用，支持运行期<strong>多态的虚调用</strong></td><td>与静态链接（解析期已确定的调用）相对，展开在 <a href="../01-java/03-继承与多态.html">01-java/03 继承与多态</a></td></tr>
+    <tr><td><strong>方法返回地址</strong></td><td>正常返回恢复上层方法的 PC 值；异常返回还要查异常表</td><td>finally 就是通过异常表+athrow 实现的，链 <a href="../01-java/07-异常处理.html">01-java/07 异常处理</a></td></tr>
+  </table>
+  <pre><code>// 操作数栈是什么（补齐笔记 TODO）：i = i++ 的字节码真相
+int i = 1;
+i = i++;                       // 结果 i 还是 1！
+// 字节码： 1 iconst_1      → 常量 1 压入操作数栈
+//         3 istore_1       → 弹出栈顶存入局部变量表 slot 1（i=1）
+//         4 iload_1        → i 的值压栈（栈顶=1）
+//         5 iinc 1, 1      → 局部变量表里的 i 直接 +1（i=2，不经过栈！）
+//         8 istore_1       → 把栈顶的旧值 1 弹出存回 i（i 又变回 1）
+// 一切"反直觉"的自增题，本质是：iinc 改的是局部变量表，操作数栈里躺的还是旧值</code></pre>
+  <h3>两种栈事故：SOE vs 栈 OOM</h3>
+  <pre><code>// StackOverflowError：单线程内调用链太深（递归没有出口是经典成因）
+private int depth = 0;
+public void recurse() { depth++; recurse(); }   // Exception in thread "main"
+                                                // java.lang.StackOverflowError</code></pre>
+  <ul>
+    <li><strong>StackOverflowError</strong>：线程请求的栈深度 &gt; 虚拟机允许的深度。单线程的深递归、方法互相循环调用、超大的单个方法（栈帧装不下）。</li>
+    <li><strong>OutOfMemoryError（栈也能 OOM）</strong>：扩展栈容量时申请不到足够内存，或<strong>不停创建新线程</strong>——每线程一份数，线程本身吃的就是进程内存（<code>unable to create new native thread</code>）。注意后者不是堆的问题，加 -Xmx 反而更糟（堆大了，留给线程栈的进程内存更少）。</li>
+    <li><strong>-Xss</strong>（如 <code>-Xss512k</code>）设置单线程栈大小，默认约 1MB。调大 = 单线程能递归更深，但同样进程内存下<strong>能创建的线程数变少</strong>——栈大小是"深度"和"线程数"之间的预算分配，不是越大越好。</li>
+  </ul>
+  <div class="box warn"><p><strong>陷阱</strong>："StackOverflowError 是 Error 所以 JVM 就崩了"——错，SOE 只杀死当前线程，其他线程照常；同样 OOM 也未必让进程退出（被 catch 或只影响一个请求线程）。"进程到底活没活着"要看具体影响范围，这也是线上"偶发 OOM 但服务还在"的原因。</p></div>
+</section>
+
+<section id="heap">
+  <h2><span class="no">05</span>堆：对象的家与 GC 主战场</h2>
+  <ul>
+    <li><strong>存什么</strong>：对象实例与数组（笔记原文）；几乎所有对象实例都在堆分配（逃逸分析的"标量替换"是例外，见 <a href="03-对象与内存.html">第 03 章</a>）。</li>
+    <li><strong>分代布局（笔记并入）</strong>：新生代 <strong>Eden : S0 : S1 = 8 : 1 : 1</strong>（-XX:SurvivorRatio=8），新生代外是老年代。为什么这么分：<strong>分代假设</strong>——绝大多数对象朝生夕死，把"新对象"和"老顽固"分开治理，各自用最划算的算法（完整推理链在 <a href="04-GC基础.html">第 04 章</a>）。</li>
+    <li><strong>对象在哪分配</strong>：优先 TLAB（Thread Local Allocation Buffer，线程私有分配缓冲，分配动作免竞争免同步——深入在 <a href="03-对象与内存.html">第 03 章</a>）；大对象直接进老年代。</li>
+    <li><strong>对象的一生（先建立主画面）</strong>：新对象<strong>出生在 Eden</strong>（TLAB 就是在 Eden 里划的私有缓冲）→ Minor GC 后<strong>幸存的</strong>才进 S0/S1（from/to 来回倒，经受考验）→ 年龄 ≥15 晋升老年代（新生代 : 老年代默认 ≈ 1:2）。<strong>Survivor 是幸存者中转站，不是出生地</strong>——流转细节见 <a href="04-GC基础.html">第 04 章</a>。</li>
+    <li><strong>Eden 满了触发 Minor GC</strong>；老年代空间不足、担保失败、元空间满等触发 Full GC（触发链完整版在 <a href="04-GC基础.html">第 04 章</a>）。</li>
+  </ul>
+  <h3>堆参数速记</h3>
+  <table>
+    <tr><th>参数</th><th>含义</th><th>生产要点</th></tr>
+    <tr><td><code>-Xms / -Xmx</code></td><td>初始堆大小 / 最大堆大小</td><td><strong>通常设成一样大</strong>，理由见下面的美团案例</td></tr>
+    <tr><td><code>-Xmn</code></td><td>新生代大小（堆 − 新生代 = 老年代）</td><td>G1 下不要手动设（链 <a href="05-垃圾收集器.html">第 05 章</a>）</td></tr>
+    <tr><td><code>-XX:SurvivorRatio=8</code></td><td>Eden 与单个 Survivor 的比例</td><td>默认 8，即 8:1:1</td></tr>
+    <tr><td><code>-XX:MaxTenuringThreshold=15</code></td><td>晋升老年代的年龄阈值上限</td><td>4 位存储上限就是 15（链 <a href="03-对象与内存.html">第 03 章</a>对象头）</td></tr>
+  </table>
+  <div class="box note"><p><strong>为什么 -Xms = -Xmx（美团 CMS 文案例之一：动态扩容空间震荡）</strong>：Xms ≠ Xmx 时堆可动态伸缩——流量高峰堆扩容，流量回落 JVM 又把空闲内存<strong>还给操作系统</strong>（缩容由 GC 后的空闲率触发）；下一次流量来再扩，扩容缩容都会伴随额外 GC 压力，表现为<strong>GC 时间毛刺周期性震荡</strong>。设成相等后堆尺寸固定，避免这类自找的抖动。这是"参数为什么这么配"能讲到生产级的一个样板答案。</p></div>
+</section>
+
+<section id="method">
+  <h2><span class="no">06</span>方法区与元空间 ⭐</h2>
+  <h3>方法区存什么（规范概念）</h3>
+  <ul>
+    <li>类的元信息（字段、方法字节码）、<strong>运行时常量池</strong>（类的符号引用表，类加载后从 class 文件常量池放入）、JIT 编译后的代码缓存。</li>
+    <li>演进注意：<strong>JDK 7 起静态变量、字符串常量池已移到堆</strong>；方法区里留下的是类元信息和运行时常量池。很多人背"静态变量在方法区"是 JDK 6 的答案。</li>
+  </ul>
+  <h3>永久代 → 元空间（JDK 8）⭐ 高频</h3>
+  <p>方法区是<strong>规范里的逻辑概念</strong>，永久代（PermGen）/元空间（Metaspace）是<strong>HotSpot 的两代实现</strong>。JDK 8 彻底移除永久代，改为在<strong>本地内存（native memory）</strong>上实现元空间。为什么换：</p>
+  <ul>
+    <li><strong>永久代大小难定</strong>：永久代在堆内、有 -XX:MaxPermSize 上限，加载类多的应用（动态代理、脚本引擎）频繁 <code>OutOfMemoryError: PermGen space</code>；元空间在本地内存，默认只受进程内存限制（更要主动设 -XX:MaxMetaspaceSize 兜底！）。</li>
+    <li><strong>为融合铺路</strong>：HotSpot 与 JRockit 合并路线中，JRockit 从没有永久代概念，去掉它减少合并阻力。</li>
+    <li>字符串常量池在 JDK 7 已经先搬进堆（它的回收收益归堆 GC），永久代最后的存在理由也消失了。</li>
+  </ul>
+  <div class="box warn"><p><strong>两个易混参数</strong>：<code>-XX:MetaspaceSize</code> 是<strong>首次触发 Full GC 的元空间使用水位</strong>（默认很小 ~21M，动态类多的应用会被频繁 Full GC，应调大），<strong>不是</strong>元空间上限；上限是 <code>-XX:MaxMetaspaceSize</code>。面试能把这两个参数区分开，说明真在生产上看过元空间问题。</p></div>
+</section>
+
+<section id="direct">
+  <h2><span class="no">07</span>直接内存（堆外内存）</h2>
+  <ul>
+    <li><strong>不是运行时数据区</strong>的一部分，但 JVM 参数管得到它：NIO 的 <code>ByteBuffer.allocateDirect()</code> 分配堆外缓冲，避免堆内堆外来回复制（零拷贝基础之一，机制链 <a href="../12-os/README.html">12-os</a>）。</li>
+    <li><strong>不受 -Xmx 管辖，但默认上限 ≈ Xmx</strong>（-XX:MaxDirectMemorySize 单独设置）。堆外内存泄漏（Netty 池化缓冲未释放、DirectByteBuffer 被静态引用）时 Xmx 调多大都没用——排查手段在 <a href="07-调优与排查.html">第 07 章</a>（NMT / DirectByteBuffer 计数）。</li>
+    <li>DirecByteBuffer 本身的回收依赖<strong>虚引用 + ReferenceQueue</strong>（Cleaner 机制）——四种引用的落地案例在 <a href="04-GC基础.html">第 04 章</a>。</li>
+  </ul>
+</section>
+
+<section id="exception">
+  <h2><span class="no">08</span>各区异常对照表 ⭐（背这张表）</h2>
+  <table>
+    <tr><th>异常</th><th>区域</th><th>典型触发</th><th>第一排查动作</th></tr>
+    <tr><td><code>StackOverflowError</code></td><td>虚拟机栈</td><td>深递归、循环调用</td><td>看栈帧顶部的重复方法名（异常信息自带）</td></tr>
+    <tr><td><code>OOM: Java heap space</code></td><td>堆</td><td>对象太多/太大、泄漏</td><td><code>-XX:+HeapDumpOnOutOfMemoryError</code> + MAT，链 <a href="06-内存泄漏.html">第 06 章</a></td></tr>
+    <tr><td><code>OOM: GC overhead limit exceeded</code></td><td>堆</td><td>98% 时间在 GC 却回收不到 2% 空间（临 OOM 前的"放弃信号"）</td><td>同堆 OOM；通常是内存将满</td></tr>
+    <tr><td><code>OOM: Metaspace</code></td><td>元空间</td><td>动态类爆炸：CGLIB 代理、Groovy 脚本、反射</td><td><code>jstat -gc</code> 看 M 区，链 <a href="06-内存泄漏.html">第 06 章</a></td></tr>
+    <tr><td><code>OOM: unable to create new native thread</code></td><td>栈/进程内存</td><td>线程无限创建（不是堆的问题！）</td><td><code>jstack</code> 数线程、查线程池是否失控</td></tr>
+    <tr><td><code>OOM: Direct buffer memory</code></td><td>直接内存</td><td>堆外缓冲泄漏/未设上限</td><td>NMT / Netty 泄露检测，链 <a href="07-调优与排查.html">第 07 章</a></td></tr>
+  </table>
+  <div class="box tip"><p><strong>答题技巧</strong>：被问"哪些区域会 OOM"，先说"除程序计数器外都可能"，然后<strong>按区域报异常名</strong>——把这张表背下来，比背概念多拿一档分。</p></div>
+</section>
+
+<section id="followup">
+  <h2><span class="no">09</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：为什么要分代 →</strong>→ 分代假设（对象存活时间两极分化）→ 新生代用复制算法、老年代用标记清除/整理（链 <a href="04-GC基础.html">第 04 章</a>）。</li>
+    <li><strong>追问链：元空间为什么会满 →</strong>→ 动态生成类：CGLIB/Spring 代理、Groovy 每个脚本一个类、频繁反射 → 为什么"重启就好了"→ 类加载器泄漏的温床，展开在 <a href="06-内存泄漏.html">第 06 章</a>。</li>
+    <li><strong>追问链：-Xss 越大越好吗 →</strong>→ 单线程递归更深，但进程内存固定下线程数上限变低 → 什么系统会故意调小 → 高线程数服务（早期 Web 容器）。</li>
+    <li><strong>陷阱：静态变量到底在哪 →</strong>→ JDK 7+ 在堆（随 Class 对象），"方法区"是 JDK 6 旧答案。</li>
+    <li><strong>陷阱：栈溢出只发生在递归 →</strong>→ 还有方法互相调用成环、单个方法超大（一次压入的栈帧超过剩余栈空间）、以及深递归序列化/JSON 解析（调用链层叠而非显式递归）。</li>
+    <li><strong>追问：常量池在堆还是方法区 →</strong>→ 分开答：运行时常量池（类符号引用）在元空间；字符串常量池 JDK 7 起在堆——展开在 <a href="03-对象与内存.html">第 03 章</a>（intern 陷阱）。</li>
+    <li><strong>场景题：服务启动没多久就 Full GC，之后稳定 →</strong>→ 大概率是 <code>MetaspaceSize</code> 默认太小，类加载到 21M 水位触发扩容 Full GC——一个参数的事，但它考的是你分得清元空间两个参数。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">10</span>面试自查清单</h2>
+  <ol>
+    <li>五区域张口就来，私有/共享分得清，能一句话说出每块"存什么 + 会出什么事故"。</li>
+    <li>程序计数器的作用（线程切换恢复）+ 唯一不 OOM 的原因。</li>
+    <li>栈帧四件套能各说一句；能用 i = i++ 的字节码讲清操作数栈与局部变量表的分工。</li>
+    <li>SOE 与栈 OOM 的区别（深度 vs 容量），-Xss 的权衡（深度换线程数）。</li>
+    <li>堆分代比例 8:1:1 与分代假设一句话；Xms=Xmx 的生产理由（空间震荡）。</li>
+    <li>永久代 → 元空间的三个原因；MetaspaceSize 与 MaxMetaspaceSize 的区别。</li>
+    <li>静态变量/字符串常量池的位置演进（JDK 7 分水岭）。</li>
+    <li>各区异常对照表能默写（6 种 OOM/SOE 对应区域与第一排查动作）。</li>
+  </ol>
+  <div class="pager">
+    <a href="README.html">⬅ 03 板块目录</a>
+    <a class="next" href="02-类加载.html">下一章：类加载机制 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源交叉生成）：① 蓝本 AlgoMaster Java 课程 JVM 章；② <a href="https://javaguide.cn/java/jvm/memory-area.html">JavaGuide · Java 内存区域详解</a>（对象创建/分配/各区细节口径）；③ <a href="https://pdai.tech/md/java/jvm/java-jvm-x-overview.html">pdai.tech JVM 系列</a>（内存结构与参数）；④ 美团 <a href="https://tech.meituan.com/2020/11/12/Java-9-CMS-GC.html">《Java中9种常见的CMS GC问题》</a>（动态扩容空间震荡案例）；既有笔记 Java/java 基础.md 内存结构节（807-841 行，含操作数栈 TODO 已补齐）。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">03 JVM 与内存模型</a> · 第 01 章 运行时数据区</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,1 +1,9 @@
-
+# Actuator：本地练习全开；生产环境必须改成白名单按需暴露
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always

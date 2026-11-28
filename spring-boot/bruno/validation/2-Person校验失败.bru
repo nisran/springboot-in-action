@@ -1,0 +1,28 @@
+meta {
+  name: Person 校验失败 400
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/person
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "name": "a",
+    "age": 17
+  }
+}
+
+docs {
+  name 少于 2 字符 + age 低于 18，双约束同时违规，应返回 400 ProblemDetail。
+}
+
+tests {
+  test("status 400", function() {
+    expect(res.getStatus()).to.equal(400);
+  });
+}

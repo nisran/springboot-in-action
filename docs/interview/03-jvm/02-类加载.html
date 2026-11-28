@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>第 02 章 · 类加载机制 — JVM 与内存模型</title>
+<style>
+  :root{--bg:#f6f7fb;--paper:#fff;--ink:#1f2430;--muted:#6b7280;--line:#e5e7eb;--primary:#4f46e5;--primary-soft:#eef2ff;--accent:#7c3aed;--green:#059669;--green-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--blue:#1d4ed8;--blue-soft:#eff6ff;--purple:#6d28d9;--purple-soft:#f5f3ff;--sidebar-w:264px;--radius:12px}
+  *{box-sizing:border-box}html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:16px;line-height:1.85}
+  #progress{position:fixed;top:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:99}
+  nav.toc{position:fixed;top:0;left:0;bottom:0;width:var(--sidebar-w);background:var(--paper);border-right:1px solid var(--line);overflow-y:auto;padding:24px 16px 48px;z-index:10}
+  nav.toc .brand{font-weight:700;font-size:14px;margin-bottom:10px}
+  nav.toc .brand a{color:var(--primary);text-decoration:none}
+  nav.toc a{display:block;padding:6px 10px;margin:1px 0;border-radius:8px;color:#4b5563;text-decoration:none;font-size:13.5px;line-height:1.5}
+  nav.toc a:hover{background:var(--primary-soft);color:var(--primary)}
+  nav.toc a.lvl2{padding-left:24px;font-size:12.5px;color:#6b7280}
+  nav.toc a.active{background:var(--primary-soft);color:var(--primary);font-weight:600}
+  nav.toc .sep{border-top:1px solid var(--line);margin:12px 0}
+  main{margin-left:var(--sidebar-w);padding:0 32px 80px}
+  .container{max-width:880px;margin:0 auto}
+  header.hero{background:linear-gradient(135deg,#312e81 0%,#4f46e5 55%,#7c3aed 100%);color:#fff;border-radius:0 0 20px 20px;padding:52px 40px 40px;margin:0 -32px 40px}
+  header.hero .inner{max-width:880px;margin:0 auto}
+  header.hero h1{margin:0 0 12px;font-size:30px;line-height:1.35}
+  header.hero .sub{font-size:15.5px;opacity:.92;margin-bottom:20px}
+  header.hero .meta{display:flex;flex-wrap:wrap;gap:10px}
+  header.hero .meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:3px 12px;border-radius:999px;font-size:12.5px}
+  section{margin:48px 0}
+  h2{font-size:24px;margin:0 0 12px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+  h2 .no{display:inline-block;background:var(--primary);color:#fff;font-size:14px;border-radius:8px;padding:2px 10px;margin-right:12px;vertical-align:4px}
+  h3{font-size:19px;margin:32px 0 10px;color:#111827}
+  h4{font-size:16px;margin:22px 0 8px;color:#111827}
+  p{margin:10px 0}ul,ol{padding-left:26px}li{margin:6px 0}
+  strong{color:#111827}a{color:var(--primary)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;background:var(--paper);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  th{background:#f3f4f6;text-align:left;padding:10px 14px;font-weight:700;border-bottom:2px solid var(--line);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}tbody tr:nth-child(even){background:#fafafa}
+  code{font-family:"SF Mono",Menlo,Consolas,"JetBrains Mono",monospace;background:#eef2ff;color:#3730a3;padding:1.5px 6px;border-radius:6px;font-size:.88em}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:16px 18px;overflow-x:auto;font-size:13.5px;line-height:1.7;margin:14px 0}
+  pre code{background:none;color:inherit;padding:0;font-size:inherit}
+  pre .cm{color:#94a3b8}
+  pre .tok-c{color:#94a3b8;font-style:italic}
+  pre .tok-k{color:#c084fc}
+  pre .tok-t{color:#7dd3fc}
+  pre .tok-s{color:#7ee787}
+  pre .tok-n{color:#fbbf24}
+  pre .tok-a{color:#fb923c}
+  pre{position:relative}
+  pre .copy-btn{position:absolute;top:8px;right:8px;opacity:.45;transition:opacity .2s;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#cbd5e1;font-size:12px;line-height:1;padding:5px 10px;border-radius:7px;cursor:pointer;user-select:none;font-family:inherit}
+  pre:hover .copy-btn{opacity:1}
+  pre .copy-btn:active{background:rgba(255,255,255,.16)}
+  .box{border-radius:var(--radius);padding:14px 20px;margin:18px 0;border:1px solid var(--line);background:var(--paper)}
+  .box p:first-of-type{margin-top:0}.box p:last-child{margin-bottom:0}
+  .note{background:var(--primary-soft);border-color:#c7d2fe}
+  .tip{background:var(--green-soft);border-color:#a7f3d0}
+  .warn{background:var(--amber-soft);border-color:#fde68a}
+  .qa{border-left:4px solid var(--primary)}
+  .qa ol{margin:6px 0 0}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center}
+  .pager{display:flex;justify-content:space-between;gap:12px;margin-top:48px}
+  .pager a{flex:1;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 18px;text-decoration:none;color:var(--ink);font-size:14px}
+  .pager a:hover{border-color:var(--primary);color:var(--primary)}
+  .pager .next{text-align:right}
+  @media (max-width:900px){nav.toc{display:none}main{margin-left:0;padding:0 18px 60px}header.hero{margin:0 -18px 30px}}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<nav class="toc">
+  <div class="brand"><a href="README.html">⬅ 03 JVM 与内存模型</a></div>
+  <a href="#qa">面试怎么考</a>
+  <a href="#lifecycle">生命周期七阶段</a>
+  <a href="#five">五阶段细拆 ⭐</a>
+  <a href="#init">初始化与触发时机</a>
+  <a href="#loader">类加载器与双亲委派 ⭐</a>
+  <a href="#break">打破双亲委派</a>
+  <a href="#unload">类卸载</a>
+  <a href="#followup">高频追问与陷阱</a>
+  <a href="#checklist">自查清单</a>
+  <div class="sep"></div>
+  <div class="brand" style="font-size:12.5px;color:#6b7280">章节导航</div>
+  <a href="01-运行时数据区.html">⬅ 上一章：01 运行时数据区</a>
+  <a href="03-对象与内存.html">下一章：03 对象与内存布局 →</a>
+</nav>
+<main><div class="container">
+
+<header class="hero">
+  <div class="inner">
+    <h1>第 02 章 · 类加载机制</h1>
+    <div class="sub">加载·验证·准备·解析·初始化 · 双亲委派 ⭐ · 打破它的三种姿势 —— 类是怎么从 class 文件变成可用的类的</div>
+    <div class="meta">
+      <span>⭐ 高频：五阶段各自做什么 · 双亲委派为什么 · 怎么打破</span>
+      <span>蓝本：AlgoMaster Java 课程 JVM 章</span>
+      <span class="tag exist">三源生成：JavaGuide + pdai ✅</span>
+      <span class="tag exist">已合并：java 基础.md 类加载节（940-968 行）✅</span>
+    </div>
+  </div>
+</header>
+
+<section id="qa">
+  <h2><span class="no">01</span>面试怎么考</h2>
+  <div class="box note qa">
+    <ol>
+      <li>讲一下类加载的完整过程？五个阶段各自做什么？⭐</li>
+      <li><code>static int a = 100;</code> 这个 100 是什么时候赋的？准备阶段还是初始化阶段？⭐（最爱挖的细节）</li>
+      <li>符号引用和直接引用的区别？解析发生在什么阶段？</li>
+      <li>什么情况会触发类的初始化？new 一个数组会触发吗？子类引用父类静态变量呢？⭐</li>
+      <li>双亲委派是什么？为什么这么设计？⭐⭐</li>
+      <li>自己写一个 java.lang.String 能被加载吗？为什么？</li>
+      <li>怎么打破双亲委派？举两个真实的框架例子。⭐</li>
+      <li>JDBC 的 DriverManager 是怎么做到"父加载器加载的类用到子加载器的实现"的？</li>
+      <li>Class.forName 和 ClassLoader.loadClass 的区别？⭐</li>
+      <li>类什么时候会被卸载？为什么热部署容易 Metaspace 泄漏？</li>
+    </ol>
+  </div>
+  <p>类加载的主线是<strong>"过程 → 时机 → 层级 → 打破"</strong>四段：五阶段是骨架，初始化触发时机和准备阶段赋值是最爱挖的细节，双亲委派及其打破是 7 年经验层的分水岭——能讲到 Tomcat 隔离和 SPI 逆向加载，说明你在框架层面真用过类加载器。</p>
+</section>
+
+<section id="lifecycle">
+  <h2><span class="no">02</span>类的生命周期：七个阶段</h2>
+  <pre><code>加载 ──► 验证 ──► 准备 ──► 解析 ──► 初始化 ──► 使用 ──► 卸载
+└────────── 链接(Linking) ──────────┘
+        （验证+准备+解析三步合称链接，笔记原文口径）</code></pre>
+  <ul>
+    <li>前五个阶段按顺序<strong>开始</strong>，但不强制按顺序完成（解析阶段可以滞后到运行期——支持 Java 的动态绑定/晚期绑定）。</li>
+    <li>类加载器的规则（笔记原文）：<strong>按需加载，同一个类只加载一次</strong>——"同一个类"的判定是 <strong>类加载器实例 + 全限定名</strong> 一起，两个不同加载器加载同名类得到的 Class 不相等（这是 Tomcat 隔离的基础）。</li>
+  </ul>
+</section>
+
+<section id="five">
+  <h2><span class="no">03</span>五阶段细拆 ⭐（笔记并入 + 补全）</h2>
+  <table>
+    <tr><th>阶段</th><th>做什么</th><th>面试细节点</th></tr>
+    <tr><td><strong>加载</strong></td><td>通过全限定名（如 <code>java.lang.String</code>）读取二进制字节流 → 方法区生成类元数据 → 堆中创建该类的 <code>java.lang.Class</code> 对象</td><td>字节流的来源不限于文件：网络、jar、动态代理生成（这是自定义类加载器的切入点）</td></tr>
+    <tr><td><strong>验证</strong></td><td>检查字节流符合 JVM 规范，不危害虚拟机（文件格式、元数据、字节码、符号引用四类验证）</td><td>-Xverify:none 可关闭加速启动（了解即可，别在生产关）</td></tr>
+    <tr><td><strong>准备</strong></td><td>为<strong>静态变量</strong>分配内存并赋<strong>零值</strong>（不是代码里的初始值！）</td><td>⭐ 最爱挖：见下方代码对比</td></tr>
+    <tr><td><strong>解析</strong></td><td>把常量池内的<strong>符号引用</strong>替换为<strong>直接引用</strong>（笔记原文）</td><td>符号引用 = 用字面量描述目标；直接引用 = 直接指向目标的指针/偏移量</td></tr>
+    <tr><td><strong>初始化</strong></td><td>执行类构造器 <code>&lt;clinit&gt;</code>：静态变量赋代码里的初始值、执行 static 块</td><td>触发时机有严格规定（下一节）；JVM 保证 clinit 的线程安全</td></tr>
+  </table>
+  <pre><code>// 准备 vs 初始化：值到底什么时候赋（高频细节题）
+public static int a = 100;
+// 准备阶段后：a = 0        （零值：int 的零值是 0）
+// 初始化阶段后：a = 100    （执行 &lt;clinit&gt; 里的 putstatic）
+
+public static final int B = 100;
+// 准备阶段就是 100！static final 的编译期常量走 ConstantValue 属性，
+// 准备阶段直接赋予字段码中设定的值 —— 两者的区别就在这里
+
+// 静态代码块也在 clinit 里按源码顺序执行：
+static { log.info("initialized"); }   // 与 static 赋值按书写顺序合并成 clinit</code></pre>
+  <div class="box warn"><p><strong>陷阱</strong>：答"a 在准备阶段就等于 100"是最常见失误。记忆法：<strong>准备给零值，初始化给真值；final 常量（编译期常量）例外，准备期直接给真值</strong>。</p></div>
+</section>
+
+<section id="init">
+  <h2><span class="no">04</span>初始化：触发时机（主动引用 vs 被动引用）</h2>
+  <p>《JVM 规范》规定只有<strong>主动引用</strong>才触发初始化（六种），被动引用不触发——这是"懒加载"的规范基础：</p>
+  <ul>
+    <li>① new / getstatic / putstatic / invokestatic 访问静态字段或静态方法（new 数组除外）；② 反射调用（Class.forName）；③ 初始化一个类时其父类未初始化，先初始化父类；④ main 所在类；⑤ MethodHandle 相关；⑥ 接口带 default 方法时其实现类初始化先触发接口初始化。</li>
+  </ul>
+  <pre><code>// 三大"被动引用"经典例（都不触发初始化，⭐ 高频判断题）
+System.out.println(Sub.HELLO);
+// ① 通过子类引用父类静态字段：只初始化 Father，不初始化 Sub
+//    （HELLO 定义在 Father 里，对 Sub 的静态解析直接定位到 Father）
+
+Father[] arr = new Father[10];
+// ② new 数组：分配数组类型（[LFather;），不初始化 Father
+
+System.out.println(Father.CONSTANT);
+// ③ 引用编译期常量：常量在编译期已存入调用方的常量池，
+//    运行期与 Father 无任何联系 —— Father 根本不会被加载</code></pre>
+  <div class="box note"><p><strong>clinit 的线程安全（加分点）</strong>：JVM 保证一个类的 clinit 在多线程下只被一个线程执行，其余线程阻塞等待——这也是<strong>静态内部类单例天然线程安全</strong>的底层依据（实例化在 <a href="../01-java/15-最佳实践.html">01-java/15 单例模式</a>展开）。注意：如果你的 static 块里造对象，第一个触发初始化的线程要付这个成本（启动慢/首个请求慢的排查点之一）。</p></div>
+</section>
+
+<section id="loader">
+  <h2><span class="no">05</span>类加载器与双亲委派 ⭐⭐</h2>
+  <h3>三层加载器（笔记并入 + JDK 9 更新）</h3>
+  <table>
+    <tr><th>加载器</th><th>实现</th><th>加载什么</th></tr>
+    <tr><td><strong>Bootstrap</strong> 启动类加载器</td><td>C++ 实现（所以<strong>没有父类、Java 里拿不到引用</strong>，显示为 null）</td><td>JAVA_HOME/lib 核心库（String、Object…）</td></tr>
+    <tr><td><strong>Platform/Application</strong></td><td>Java 实现</td><td>JDK 9 前叫 <strong>Extension</strong>（ext 目录）→ JDK 9 起<strong>改名 Platform</strong>（加载平台模块）；Application 加载 classpath 与模块路径</td></tr>
+    <tr><td><strong>自定义</strong> ClassLoader</td><td>继承实现</td><td>笔记场景：类加密加载时解密、热部署、依赖隔离</td></tr>
+  </table>
+  <h3>双亲委派模型（笔记口径规范化）</h3>
+  <p><strong>WHAT</strong>：收到类加载请求，加载器<strong>不先自己加载，而是逐层向上委派</strong>给父加载器；只有父加载器反馈"我加载不了"（范围里找不到该类），子加载器才尝试自己加载。</p>
+  <pre><code>// ClassLoader#loadClass 的骨架（双亲委派的源码落点）
+protected Class&lt;?&gt; loadClass(String name, boolean resolve) {
+    Class&lt;?&gt; c = findLoadedClass(name);            // ① 已加载过直接返回
+    if (c == null) {
+        try { c = parent.loadClass(name, false); }  // ② 先委派给父亲
+        catch (ClassNotFoundException e) { /* 父亲抛了找不到 */ }
+        if (c == null) c = findClass(name);         // ③ 父亲不要，我才自己找
+    }
+    return c;
+}</code></pre>
+  <p><strong>WHY（两个好处，笔记 + 补全）</strong>：</p>
+  <ul>
+    <li><strong>安全（防核心 API 被篡改）</strong>：自定义的 <code>java.lang.String</code> 会被一路委派到 Bootstrap，由它加载 rt.jar 里正牌的 String——你写的那份<strong>根本轮不到加载</strong>（笔记原文场景）。</li>
+    <li><strong>唯一（避免重复加载）</strong>：同一个类永远由同一层加载，JVM 中类只存在一份——保证"类加载器 + 类名"唯一确定一个 Class。</li>
+  </ul>
+</section>
+
+<section id="break">
+  <h2><span class="no">06</span>打破双亲委派的三种姿势 ⭐</h2>
+  <table>
+    <tr><th>姿势</th><th>谁在用</th><th>原理一句话</th></tr>
+    <tr><td><strong>① 重写 loadClass / findClass</strong></td><td>Tomcat、热部署框架</td><td>笔记口径：继承 ClassLoader 重写 loadClass()，先自己加载再委派（顺序反转）</td></tr>
+    <tr><td><strong>② 线程上下文类加载器（SPI）</strong></td><td>JDBC、JNDI、JCE</td><td>父加载器加载的接口需要"逆向"用子加载器加载实现类</td></tr>
+    <tr><td><strong>③ JDK 9 模块化</strong></td><td>JPMS</td><td>类加载委托按模块图走，不再是严格三层链（了解即可）</td></tr>
+  </table>
+  <h3>Tomcat：隔离优先（姿势①的代表）</h3>
+  <ul>
+    <li>需求：一个 Tomcat 跑多个 webapp，<strong>各自的 Spring 版本可能不同</strong>、且同名类互不可见——如果严格双亲委派，第一个加载的 Spring 会污染所有应用。</li>
+    <li>做法：每个 webapp 一个 <code>WebappClassLoader</code>，加载应用自己的类时<strong>先自己找（WEB-INF/classes、lib），找不到再走双亲委派</strong>——顺序反转。但核心类库仍委派（防篡改不变）。</li>
+  </ul>
+  <h3>SPI：父加载器"逆行"（姿势②，最考理解）</h3>
+  <pre><code>// DriverManager 在 rt.jar（Bootstrap 加载），驱动实现在应用 classpath（App 加载）
+// 按双亲委派，Bootstrap 根本"看不见"应用的 mysql Driver —— 死锁式矛盾
+ServiceLoader&lt;Driver&gt; loadedDrivers = ServiceLoader.load(Driver.class);
+// ServiceLoader.load 内部：
+//   ClassLoader cl = Thread.currentThread().getContextClassLoader();
+//   —— 线程上下文类加载器：主线程里默认就是 AppClassLoader
+//   把"该用谁加载"作为线程属性传下去，父层代码拿着子层加载器用
+// 这就是"打破双亲委派"最经典的生产案例：委派链被上下文加载器"抄了近路"</code></pre>
+  <div class="box tip"><p><strong>答"怎么打破双亲委派"</strong>：先说本质（默认"先委派后自己"的顺序，打破 = 反转或绕开），再给两例：Tomcat 为隔离先自己加载；JDBC SPI 用线程上下文类加载器逆向加载实现。有这两个例子，这题就是满分结构。</p></div>
+</section>
+
+<section id="unload">
+  <h2><span class="no">07</span>类卸载：三个条件缺一不可</h2>
+  <ul>
+    <li>该类<strong>所有实例</strong>都已被回收；</li>
+    <li>加载它的 <strong>ClassLoader 已被回收</strong>；</li>
+    <li>对应的 <code>Class 对象</code> 没有被任何地方引用（不能通过反射访问）。</li>
+  </ul>
+  <p>Bootstrap 加载的核心类几乎不可能卸载；应用类想卸载，前提是<strong>连类加载器一起换掉</strong>——这正是热部署的实现原理，也是<strong>元空间泄漏</strong>的源头：旧 loader 若被任何对象引用着，它加载的全部类都卸不掉，每次热部署净增一批类。排查思路链 <a href="06-内存泄漏.html">第 06 章</a>。</li>
+</section>
+
+<section id="followup">
+  <h2><span class="no">08</span>高频追问与陷阱</h2>
+  <ul>
+    <li><strong>追问链：Class.forName vs classLoader.loadClass →</strong>→ forName("X") 加载 + <strong>初始化</strong>（执行 clinit）；loadClass 只加载<strong>不初始化</strong>（到链接为止）→ 追问：谁用 loadClass → 框架延迟初始化（如容器注册阶段只拿 Class 信息）。</li>
+    <li><strong>追问链：静态内部类单例为什么懒加载且线程安全 →</strong>→ 被动引用：持有内部类的实例字段不触发外部类初始化；getInstance 触发内部类初始化，clinit 由 JVM 保证单线程执行——类加载机制替你做了双重检查锁的事。</li>
+    <li><strong>追问：接口有 clinit 吗 →</strong>→ 接口不能有 static 块，但接口变量默认 public static final；接口的"初始化"只在其静态变量非常量或 default 方法被实现类用到时发生——知道接口初始化"惰性更强"即可。</li>
+    <li><strong>追问：一个类可以被打包进两个 jar 让两个加载器各加载一次吗 →</strong>→ 可以，JVM 视为两个不同的 Class，instanceof 互相为 false，强转抛 ClassCastException——依赖冲突"同一个类两个版本"诡异异常的根源。</li>
+    <li><strong>陷阱：准备阶段 static final 就有值 →</strong>→ 只对<strong>编译期常量</strong>（字面量/常量表达式）成立；<code>static final int X = new Random().nextInt()</code> 不是编译期常量，准备期仍是零值。</li>
+    <li><strong>场景题：SPI 加载不到实现类，怎么排查 →</strong>→ ① META-INF/services 文件名/内容写错；② 当前线程上下文类加载器不对（容器线程被改过）；③ 实现类不在 classpath——按这三步走就是实战口径。</li>
+  </ul>
+</section>
+
+<section id="checklist">
+  <h2><span class="no">09</span>面试自查清单</h2>
+  <ol>
+    <li>五阶段各自做什么能张口报出，验证+准备+解析合称链接。</li>
+    <li>准备 vs 初始化的赋值规则：零值/真值/ConstantValue 三种情形，能写代码说明。</li>
+    <li>主动引用六种 + 被动引用三例（子类引用父类静态、new 数组、引用常量）能当判断题答。</li>
+    <li>三层加载器 + JDK 9 的 Extension→Platform 改名；Bootstrap 为什么显示 null。</li>
+    <li>双亲委派 WHAT / loadClass 三步源码骨架 / 两个 WHY（安全 + 唯一）。</li>
+    <li>打破的三种姿势：Tomcat 隔离（先子后父）、SPI 上下文类加载器（父逆行子）、JDK 9 模块。</li>
+    <li>类卸载三条件，能推导出热部署为什么容易 Metaspace 泄漏。</li>
+    <li>forName vs loadClass（初始化与否）与静态内部类单例的关系能串成一条线。</li>
+  </ol>
+  <div class="pager">
+    <a href="01-运行时数据区.html">⬅ 上一章：运行时数据区</a>
+    <a class="next" href="03-对象与内存.html">下一章：对象与内存布局 →</a>
+  </div>
+</section>
+
+<div class="box note">
+  <p><strong>本章来源</strong>（2026-10-21 三源交叉生成）：① 蓝本 AlgoMaster Java 课程 JVM 章；② <a href="https://javaguide.cn/java/jvm/class-loading-process.html">JavaGuide · 类加载过程详解</a> 及 <a href="https://javaguide.cn/java/jvm/jvm-interview-questions.html">JVM 面试题总结</a>（被动引用、双亲委派口径）；③ <a href="https://pdai.tech/md/java/jvm/java-jvm-x-overview.html">pdai.tech JVM 系列</a>（类加载篇）；既有笔记 Java/java 基础.md 类加载节（940-968 行：五阶段、加载器三层、双亲委派与破坏全部并入）。</p>
+</div>
+
+<footer><a href="../README.html">Java 面试知识地图</a> · <a href="README.html">03 JVM 与内存模型</a> · 第 02 章 类加载机制</footer>
+</div></main>
+<script>
+const p=document.getElementById('progress');
+addEventListener('scroll',()=>{const h=document.documentElement;p.style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight)*100)+'%';});
+const links=[...document.querySelectorAll('nav.toc a[href^="#"]')];
+const secs=links.map(a=>document.getElementById(a.getAttribute('href').slice(1))).filter(Boolean);
+const ob=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+e.target.id));}});},{rootMargin:'-40% 0% -55% 0px'});
+secs.forEach(s=>ob.observe(s));
+// 内联轻量 Java 语法高亮（零依赖，保持页面离线自包含）
+(function(){
+  const KW=new Set('abstract assert boolean break byte case catch char class const continue default do double else enum extends final finally float for goto if implements import instanceof int interface long native new package private protected public record return short static strictfp super switch synchronized this throw throws transient try var void volatile while yield true false null'.split(' '));
+  const RE=/(\/\*[\s\S]*?(?:\*\/|$))|(\/\/[^\n]*)|("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])')|(@[A-Za-z_]\w*)|(\b0[xXbB][0-9a-fA-F_]+\b|\b\d[\d_]*(?:\.[\d_]+)?(?:[eE][+-]?\d+)?[fFdDlL]?\b|\.\d[\d_]*(?:[eE][+-]?\d+)?[fFdDlL]?\b)|([A-Za-z_$][\w$]*)/g;
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.querySelectorAll('pre code').forEach(el=>{
+    const src=el.textContent;
+    let out='',last=0,m;RE.lastIndex=0;
+    while((m=RE.exec(src))){
+      out+=esc(src.slice(last,m.index));
+      const t=m[0];
+      if(m[1]||m[2])out+='<span class="tok-c">'+esc(t)+'</span>';
+      else if(m[3])out+='<span class="tok-s">'+esc(t)+'</span>';
+      else if(m[4])out+='<span class="tok-a">'+esc(t)+'</span>';
+      else if(m[5])out+='<span class="tok-n">'+esc(t)+'</span>';
+      else if(KW.has(m[6]))out+='<span class="tok-k">'+esc(m[6])+'</span>';
+      else if(/^[A-Z]/.test(m[6]))out+='<span class="tok-t">'+esc(m[6])+'</span>';
+      else out+=esc(t);
+      last=m.index+t.length;
+    }
+    el.innerHTML=out+esc(src.slice(last));
+  });
+})();
+
+// 代码块一键复制（零依赖，保持页面离线自包含）
+(function(){
+  const done=btn=>{btn.textContent='已复制 ✓';setTimeout(()=>btn.textContent='复制',1200);};
+  const fallback=(text,btn)=>{
+    const ta=document.createElement('textarea');
+    ta.value=text;ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta);ta.select();
+    try{document.execCommand('copy');done(btn);}catch(e){}
+    ta.remove();
+  };
+  document.querySelectorAll('pre').forEach(pre=>{
+    if(pre.querySelector('.copy-btn'))return;
+    const btn=document.createElement('button');
+    btn.className='copy-btn';btn.type='button';btn.textContent='复制';
+    btn.addEventListener('click',()=>{
+      const code=pre.querySelector('code');
+      const text=(code||pre).innerText;
+      if(navigator.clipboard&&navigator.clipboard.writeText)
+        navigator.clipboard.writeText(text).then(()=>done(btn),()=>fallback(text,btn));
+      else fallback(text,btn);
+    });
+    pre.appendChild(btn);
+  });
+})();
+</script>
+</body>
+</html>

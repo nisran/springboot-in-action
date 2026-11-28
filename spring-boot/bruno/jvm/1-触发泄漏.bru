@@ -1,0 +1,21 @@
+meta {
+  name: OOM 触发泄漏
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/oom/heap
+  body: none
+  auth: none
+}
+
+params:query {
+  chunkMb: 8
+  intervalMs: 100
+}
+
+docs {
+  请求会挂住直到 OOM（-Xmx256m 下几秒），随后连接断开 —— 正常现象。
+  dump 只在进程第一次 OOM 时写出；要重放先重启应用。
+}
